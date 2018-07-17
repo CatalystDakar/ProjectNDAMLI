@@ -901,7 +901,7 @@ public class CmMessageRepository90000 extends AbstractMessageRepository {
     
     public static ServerMessage MSG_6003(String paramValue) {
         MessageParameters params = new MessageParameters();
-        //params.addRawString(paramValue);
+        params.addRawString(paramValue);
         return getCommonInstance().getMessage(Messages.MSG_6003, params);
     }
 
