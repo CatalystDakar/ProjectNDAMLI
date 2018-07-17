@@ -497,13 +497,14 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 		log.info("getLookUpValues Enters");
 		startChanges();			
 		PreparedStatement psPreparedStatement = null;
+		QueryIterator<SQLResultRow> resultIterator = null;
 		psPreparedStatement = createPreparedStatement("SELECT DISTINCT "+ key+ ", DESCR FROM "+tableName, "select");
 		psPreparedStatement.setAutoclose(false);
 		Map<String,String> lookUpMap = new HashMap<String, String>();
 		try {
-			QueryIterator<SQLResultRow> result = psPreparedStatement.iterate();
-			while(result.hasNext()) {
-			SQLResultRow lookUpValue= result.next();
+			resultIterator = psPreparedStatement.iterate();
+			while(resultIterator.hasNext()) {
+			SQLResultRow lookUpValue= resultIterator.next();
 			lookUpMap.put(lookUpValue.getString(key).trim(), lookUpValue.getString("DESCR").trim());
 			}
 		} catch (Exception exception) {
@@ -511,6 +512,7 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 			exception.printStackTrace();
 		} finally {
 			psPreparedStatement.close();
+			resultIterator.close();
 			psPreparedStatement = null;
 		}
 		log.info("getLookUpValues ends ");
