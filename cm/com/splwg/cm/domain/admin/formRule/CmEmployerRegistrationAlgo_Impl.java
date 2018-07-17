@@ -44,6 +44,7 @@ import com.splwg.base.domain.todo.role.Role;
 import com.splwg.base.domain.todo.role.Role_Id;
 import com.splwg.cm.domain.common.constant.CmEmployerRegConstant;
 import com.splwg.cm.domain.common.constant.CmEmployerRegHelper;
+import com.splwg.cm.domain.customMessages.CmMessageRepository90000;
 import com.splwg.shared.logging.Logger;
 import com.splwg.shared.logging.LoggerFactory;
 import com.splwg.tax.domain.admin.formType.FormType;
@@ -84,30 +85,36 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 	Calendar calInstacne = Calendar.getInstance();
 	Date statusUploadDate = new Date();
 	String nineaNumber = null;
+	String actualHeader = null;
 
 	@Override
 	public void invoke() {
 
-		/*
-		 * System.out.println("I am In Invoke method " + this.boKey); log.info(
-		 * "I am In Invoke method BO intance Key " + this.boKey);
-		 * this.boInstance = BusinessObjectDispatcher.read(this.boKey, false);
-		 * log.info("I am In Invoke method BO intance " + this.boInstance);
-		 * COTSFieldDataAndMD cots =
-		 * this.boInstance.getFieldAndMDForPath("employerDetails/ninea");
-		 * nineaNumber = cots.getValue().toString();
-		 */
-		String nineaNumber = "909090901";
+		System.out.println("I am In Invoke method " + this.boKey);
+		log.info("I am In Invoke method BO intance Key " + this.boKey);
+		this.boInstance = BusinessObjectDispatcher.read(this.boKey, false);
+		log.info("I am In Invoke method BO intance " + this.boInstance);
+	    COTSFieldDataAndMD<?> cots = this.boInstance.getFieldAndMDForPath("employerDetails/ninea");
+		String nineaNumber = cots.getValue().toString();
+		//String nineaNumber = "254189351";
 		System.out.println("Ninea: " + nineaNumber);// 90909090990EMPLR.xlsx/99009099909099EMPLE.xlsx
 		log.info("Ninea: " + nineaNumber);
 		fileName = nineaNumber + "EMPLR" + ".csv";
 		this.nineaNumber = nineaNumber;
 		boolean fileExist = verifyExistFileInFolder(this.getFilePath() + fileName);
+		String errorCode = null;
 		if (fileExist) {
 			this.processLookup();
-			readCSVAndPostForm(this.getFilePath() + fileName);
+			errorCode = readCSVAndPostForm(this.getFilePath() + fileName);
 		} else {
-			createToDo("", nineaNumber, "", fileName);
+			addError(CmMessageRepository90000.MSG_6000(fileName));
+		}
+		if (errorCode.equalsIgnoreCase("Success")) {
+			addWarning(CmMessageRepository90000.MSG_6001(errorCode));
+		} else if (errorCode.equalsIgnoreCase("Failure")) {
+			addError(CmMessageRepository90000.MSG_6002(errorCode));
+		} else {
+			addError(CmMessageRepository90000.MSG_6003(errorCode));
 		}
 
 	}
@@ -126,7 +133,7 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 	 * 
 	 * @param regFileName
 	 */
-	private void readCSVAndPostForm(String regFileName) {
+	private String readCSVAndPostForm(String regFileName) {
 
 		File file = null;
 		file = new File(regFileName);
@@ -182,6 +189,7 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		Set<String> headerConstants = getHeaderConstants();
 		while (headerIterator.hasNext() && listIterator.hasNext()) {
 			String header = headerIterator.next();
+			actualHeader = header;
 			String value = listIterator.next();
 			try {
 				headerName = URLEncoder.encode(header.trim(), CmEmployerRegConstant.UTF);
@@ -619,7 +627,8 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 					formCreatorList.add(value);
 				}
 			} catch (Exception exception) {
-				log.info("Issue while Processing record: " + headerName);
+				log.info("Error in CSV File: " + headerName);
+				log.info("Error in CSV File: " + headerName);
 				exception.printStackTrace();
 			}
 		}
@@ -632,21 +641,24 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 				log.info("*****Bo Creation Status**** " + processed);
 			} catch (Exception exception) {
 				processed = false;
-				System.out
-						.println("*****Issue in Processing file***** " + fileName + "NineaNumber:: " + this.nineaNumber);
+				System.out.println("*****Issue in Processing file***** " + fileName + "NineaNumber:: " + this.nineaNumber);
 				log.info("*****Issue in Processing file***** " + fileName + "NineaNumber:: " + this.nineaNumber);
 				exception.printStackTrace();
 			}
 		} else {
-			System.out.println("*****Error in CSV File***** " + fileName +"::"+ formCreatorList);
-			log.info("*****Error in CSV File***** " + fileName +"::"+ formCreatorList);
+			System.out.println("*****Error in CSV File***** " + fileName +"::"+actualHeader+"::"+ formCreatorList);
+			log.info("*****Error in CSV File***** " + fileName +"::"+actualHeader+"::"+ formCreatorList);
+			return actualHeader;
 		}
 		
 		if (processed) {
-			customHelper.moveFileToProcessedFolder(fileName, this.getSuccessFilePath());
+			//customHelper.moveFileToProcessedFolder(this.getFilePath()+fileName, this.getSuccessFilePath());
+			return "Success";
 		} else {
-			customHelper.moveFileToFailuireFolder(fileName, this.getErrorFilePath());
+			//customHelper.moveFileToFailuireFolder(this.getFilePath()+fileName, this.getErrorFilePath());
+			return "Failure";
 		}
+		
 	}
 
 	/**
@@ -956,25 +968,30 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		return true;
 	}
 	
-	private Map<String,String> getDcoumentList(String nineaNumber) {
+	private Map<String, String> getDcoumentList(String nineaNumber) {
 
+		log.info("#### getDcoumentList for : " + nineaNumber);
 		PreparedStatement psPreparedStatement = null;
-		Map<String,String> docMap = new HashMap<String, String>();
-				try {
-					psPreparedStatement = createPreparedStatement("SELECT * FROM CM_INT_GED where NINEANUMBER ="+nineaNumber, "select");
-					psPreparedStatement.setAutoclose(false);
-					QueryIterator<SQLResultRow> resultIterator = psPreparedStatement.iterate();
-					while (resultIterator.hasNext()) {
-						SQLResultRow lookUpValue = resultIterator.next();
-						docMap.put(lookUpValue.getString("DOCNAME"), lookUpValue.getString("DOCURL"));
-					}
-				} catch(Exception exception) {
-					exception.printStackTrace();
-			} finally {
-				psPreparedStatement.close();
-				psPreparedStatement = null;
+		Map<String, String> docMap = new HashMap<String, String>();
+		QueryIterator<SQLResultRow> resultIterator = null;
+		try {
+			psPreparedStatement = createPreparedStatement("SELECT * FROM CM_INT_GED where NINEANUMBER =" + nineaNumber,
+					"select");
+			psPreparedStatement.setAutoclose(false);
+			resultIterator = psPreparedStatement.iterate();
+			while (resultIterator.hasNext()) {
+				SQLResultRow lookUpValue = resultIterator.next();
+				docMap.put(lookUpValue.getString("DOCNAME"), lookUpValue.getString("DOCURL"));
+				log.info("#DOCNAME" + lookUpValue.getString("DOCNAME") +"and URL:" + lookUpValue.getString("DOCURL"));
 			}
-			return docMap;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		} finally {
+			psPreparedStatement.close();
+			psPreparedStatement = null;
+			resultIterator.close();
+		}
+		return docMap;
 	}
 
 	/**
@@ -1069,7 +1086,8 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 			COTSInstanceListNode firstRow = list.iterator().next();
 
 			// Return the person entity
-			System.out.println(firstRow.getString("personId"));
+			System.out.println("personId" + firstRow.getString( "personId"));
+			log.info("personId" + firstRow.getString( "personId"));
 			return firstRow.getString("personId");
 
 		}
@@ -1199,13 +1217,13 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		businessServiceInstance.getFieldAndMDForPath("subject").setXMLValue("Batch Update from PSRM");
 		businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-REGTO");
 		businessServiceInstance.getFieldAndMDForPath("toDoRole").setXMLValue(toDoRole.getId().getTrimmedValue());
-		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue("CM-REGFORMSTGULPD");
+		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue("IMMAT_EMPL");
 		businessServiceInstance.getFieldAndMDForPath("messageCategory").setXMLValue("90007");
 		businessServiceInstance.getFieldAndMDForPath("messageNumber").setXMLValue(messageNumber);
 		businessServiceInstance.getFieldAndMDForPath("messageParm1").setXMLValue(messageParam);
 		businessServiceInstance.getFieldAndMDForPath("messageParm2").setXMLValue(nineaNumber);
 		businessServiceInstance.getFieldAndMDForPath("messageParm3").setXMLValue(fileName);
-		businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue("CM-REGFORMSTGULPD");
+		businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue("IMMAT_EMPL");
 
 		BusinessServiceDispatcher.execute(businessServiceInstance);
 		saveChanges();
