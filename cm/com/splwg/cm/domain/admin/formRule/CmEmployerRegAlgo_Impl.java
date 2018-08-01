@@ -88,7 +88,7 @@ public class CmEmployerRegAlgo_Impl extends CmEmployerRegAlgo_Gen implements Bus
 		log.info("I am In Invoke method BO intance Key " + this.boKey);
 		this.boInstance = BusinessObjectDispatcher.read(this.boKey, false);
 		log.info("I am In Invoke method BO intance " + this.boInstance);
-		COTSFieldDataAndMD cots = this.boInstance.getFieldAndMDForPath("employerDetails/ninea");
+		COTSFieldDataAndMD<?> cots = this.boInstance.getFieldAndMDForPath("employerDetails/ninea");
 		nineaNumber = cots.getValue().toString();
 		//String nineaNumber = "459789632";
 		System.out.println("Ninea: " + nineaNumber);//90909090990EMPLR.xlsx/99009099909099EMPLE.xlsx
@@ -179,11 +179,11 @@ public class CmEmployerRegAlgo_Impl extends CmEmployerRegAlgo_Gen implements Bus
 		System.out.println("ArrayList: " + listValues);
 		log.info("ArrayList: " + listValues);
 		processed = formCreator(listValues);
-		if (processed) {
+		/*if (processed) {
 			customHelper.moveFileToProcessedFolder(fileName, this.getSuccessFilePath());
 		} else {
 			customHelper.moveFileToFailuireFolder(fileName, this.getErrorFilePath());
-		}
+		}*/
 	
 	}
 	
@@ -537,47 +537,28 @@ public class CmEmployerRegAlgo_Impl extends CmEmployerRegAlgo_Gen implements Bus
 	
 	private Map<String,String> getDcoumentList(String nineaNumber) {
 
+		log.info("#### getDcoumentList for : " + nineaNumber);
 		PreparedStatement psPreparedStatement = null;
-		Map<String,String> docMap = new HashMap<String, String>();
-		String SOAGED = null;
+		Map<String, String> docMap = new HashMap<String, String>();
+		QueryIterator<SQLResultRow> resultIterator = null;
 		try {
-			psPreparedStatement = createPreparedStatement("select max(id_soaged)+1 as SOAGED from CM_SOAGED", "select");
+			psPreparedStatement = createPreparedStatement("SELECT * FROM CM_INT_GED where NINEANUMBER =" + nineaNumber,
+					"select");
 			psPreparedStatement.setAutoclose(false);
-			QueryIterator<SQLResultRow> resultIterator = psPreparedStatement.iterate();
+			resultIterator = psPreparedStatement.iterate();
 			while (resultIterator.hasNext()) {
 				SQLResultRow lookUpValue = resultIterator.next();
-				SOAGED = lookUpValue.getString("SOAGED");
+				docMap.put(lookUpValue.getString("DOCNAME"), lookUpValue.getString("DOCURL"));
+				log.info("#DOCNAME" + lookUpValue.getString("DOCNAME") +"and URL:" + lookUpValue.getString("DOCURL"));
 			}
-		} catch(Exception exception) {
+		} catch (Exception exception) {
 			exception.printStackTrace();
+		} finally {
+			psPreparedStatement.close();
+			psPreparedStatement = null;
+			resultIterator.close();
 		}
-		try {
-			psPreparedStatement = createPreparedStatement("INSERT INTO CM_SOAGED (ID_SOAGED,NINEANUMBER, STATUS) VALUES ("+SOAGED+","+nineaNumber+",'N');", "insert");
-			psPreparedStatement.setAutoclose(false);
-			int result = psPreparedStatement.executeUpdate();
-			System.out.println("Insert Result:: "  + result);
-				Thread.sleep(10000);
-				
-				try {
-					psPreparedStatement = createPreparedStatement("SELECT * FROM CM_SOAGED where NINEANUMBER ="+nineaNumber, "select");
-					psPreparedStatement.setAutoclose(false);
-					QueryIterator<SQLResultRow> resultIterator = psPreparedStatement.iterate();
-					while (resultIterator.hasNext()) {
-						SQLResultRow lookUpValue = resultIterator.next();
-						docMap.put(lookUpValue.getString("DOCNAME"), lookUpValue.getString("DOCURL"));
-					}
-				} catch(Exception exception) {
-					exception.printStackTrace();
-					
-				}
-				
-			} catch (Exception exception) {
-				exception.printStackTrace();
-			} finally {
-				psPreparedStatement.close();
-				psPreparedStatement = null;
-			}
-			return docMap;
+		return docMap;
 	}
 		
 	
