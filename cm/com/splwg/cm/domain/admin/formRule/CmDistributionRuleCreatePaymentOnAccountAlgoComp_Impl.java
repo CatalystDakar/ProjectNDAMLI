@@ -211,11 +211,11 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 							  Money monthObligationMoney = Money.ZERO;
 							  for(Map.Entry<List<String>, List<Money>> moneyEntry : finalMoneyMap.entrySet()) {
 								  List<String> obligIdList = moneyEntry.getKey();
-								  if(!isNull(moneyEntry) && moneyEntry.getValue().size()>=1) { 
-									  List<Money> moneyList = moneyEntry.getValue();
-									 	for(int i=0;i<moneyList.size();i++){
-									 		monthObligationMoney = moneyList.get(i).add(monthObligationMoney);
-									 	}
+									if (!isNull(moneyEntry) && moneyEntry.getValue().size() >= 1) {
+										List<Money> moneyList = moneyEntry.getValue();
+										for (int i = 0; i < moneyList.size(); i++) {
+											monthObligationMoney = moneyList.get(i).add(monthObligationMoney);
+										}
 									 	if(!monthObligationMoney.isZero() && this.amount.isLessThanOrEqual(monthObligationMoney)) {
 									 		logger.info("###Creating payment for same month obligations####" );
 											System.out.println("###Creating payment for same month obligations####" );
@@ -281,6 +281,66 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 		}
 	} else {
 			logger.info("There is no obligation to pay, getDebtObligation is empty");
+			logger.info("********Creating OverPayment - getDebtObligation is empty and the Amount is*******" + this.amount);						
+			Map<String, String> accountDetailsMap = getAllAccountDetailsFromAccountId(this.characteristicValueFk1);
+			Money overPayAmount = this.amount;
+			Money splitMoney = null;
+			if(!accountDetailsMap.isEmpty()) {
+				String accntId = null;
+				int prorateMoney = 0;
+				Money roundOff = Money.ZERO;
+				int count = 1;
+				for(Map.Entry<String, String> accntIdMap : accountDetailsMap.entrySet()) {
+					if("OLDAGE".equalsIgnoreCase(accntIdMap.getValue())) {
+						accntId = accntIdMap.getKey();
+						if (count == accountDetailsMap.size()) {
+							splitMoney = roundOff;
+						} else {
+							prorateMoney = Math.round(erAmount.getAmount().floatValue() / moneyValue.getAmount().floatValue() * overPayAmount.getAmount().floatValue());
+							splitMoney = new Money(String.valueOf(prorateMoney), new Currency_Id("XOF"));
+						}
+						logger.info("OverPayment amount for Account OLDAGE:: " + prorateMoney);
+					} else if("ATMP".equalsIgnoreCase(accntIdMap.getValue())) {
+						accntId = accntIdMap.getKey();
+						if (count == accountDetailsMap.size()) {
+							splitMoney = roundOff;
+						} else {
+							prorateMoney = Math.round(atmpAmount.getAmount().floatValue() / moneyValue.getAmount().floatValue() * overPayAmount.getAmount().floatValue());
+							splitMoney = new Money(String.valueOf(prorateMoney), new Currency_Id("XOF"));
+						}
+						logger.info("OverPayment amount for Account ATMP:: " + prorateMoney);
+					} else if("PF".equalsIgnoreCase(accntIdMap.getValue())) {
+						accntId = accntIdMap.getKey();
+						if (count == accountDetailsMap.size()) {
+							splitMoney = roundOff;
+						} else {
+							prorateMoney = Math.round(epfAmount.getAmount().floatValue() / moneyValue.getAmount().floatValue() * overPayAmount.getAmount().floatValue());
+							splitMoney = new Money(String.valueOf(prorateMoney), new Currency_Id("XOF"));
+						}
+						logger.info("OverPayment amount for Account PF:: " + prorateMoney);
+					}
+					
+					String obligationId = createObligation(accntId,"DOR", getObligationOverPayment());
+					logger.info("OverPayment Created against the Obligation ID"+ obligationId +"for account ID:"+accntId);
+					
+					ServiceAgreement_Id sa_id = new ServiceAgreement_Id(obligationId);
+					logger.info("ServiceAgreement_Id: " + sa_id);
+					System.out.println("ServiceAgreement_Id, : " + sa_id);
+					debtObligation = (ServiceAgreement) sa_id.getEntity();
+					logger.info("ServiceAgreement: " + debtObligation);
+					System.out.println("ServiceAgreement: " + debtObligation);
+					logger.info("DebtMoney: " + splitMoney);
+					logger.info("Amount before the payment creation:: " + this.amount);
+					System.out.println("Amount before the payment creation:: " + this.amount);
+					if (!splitMoney.isZero() && splitMoney.isPositive()) {
+						this.createFrozenPayment(debtObligation, splitMoney);
+						roundOff = overPayAmount.subtract(splitMoney);
+						logger.info("RoundOff Amount after the payment creation:: " + roundOff);
+						System.out.println("RoundOff Amount after the payment creation:: " + roundOff);
+						count ++;
+					}
+				}
+			}
 	}
 }
 
