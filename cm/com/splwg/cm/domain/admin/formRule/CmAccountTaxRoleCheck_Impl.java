@@ -15,6 +15,8 @@ import com.splwg.base.api.businessService.BusinessServiceInstance;
 import com.splwg.base.domain.common.businessObject.BusinessObject_Id;
 import com.splwg.cm.domain.common.businessComponent.CmPersonSearchComponent;
 import com.splwg.cm.domain.customMessages.CmMessageRepository90000;
+import com.splwg.shared.logging.Logger;
+import com.splwg.shared.logging.LoggerFactory;
 import com.splwg.tax.domain.admin.formRule.ApplyFormRuleAlgorithmInputData;
 import com.splwg.tax.domain.admin.formRule.ApplyFormRuleAlgorithmInputOutputData;
 import com.splwg.tax.domain.admin.formRule.FormRule;
@@ -31,6 +33,8 @@ import com.splwg.tax.domain.customerinfo.person.Person_Id;
  */
 public class CmAccountTaxRoleCheck_Impl extends CmAccountTaxRoleCheck_Gen
 		implements FormRuleBORuleProcessingAlgorithmSpot {
+	
+	Logger log = LoggerFactory.getLogger(CmAccountTaxRoleCheck_Impl.class);
 
 	private ApplyFormRuleAlgorithmInputData applyFormRuleAlgorithmInputData;
 	private ApplyFormRuleAlgorithmInputOutputData applyFormRuleAlgorithmInputOutputData;
@@ -43,7 +47,7 @@ public class CmAccountTaxRoleCheck_Impl extends CmAccountTaxRoleCheck_Gen
 		return perSearch.searchPerson(idType.getEntity(), idNumber);  
 	}
 	
-	
+
 	@Override
 	public void invoke() {
 
@@ -68,14 +72,14 @@ public class CmAccountTaxRoleCheck_Impl extends CmAccountTaxRoleCheck_Gen
 		}
 
 		String idEmployeur = person.getId().getIdValue();
-		List<BigDecimal> listeComptes=getAccountsByIdPerson(idEmployeur);
+		List<String> listeComptes=getAccountsByIdPerson(idEmployeur);
 		if(listeComptes==null){  
 			// message erreur
-			addError(CmMessageRepository90000.MSG_10()); 
+			addError(CmMessageRepository90000.MSG_10());    
 		}
 		else{
-			for(BigDecimal element: listeComptes){
-				String idTaxrole=getTaxRolesByIdAccount(element.toString());
+			for(String idCompte: listeComptes){
+				String idTaxrole=getTaxRolesByIdAccount(idCompte);
 				if(idTaxrole==null){
 					// message erreur
 					addError(CmMessageRepository90000.MSG_10()); 
@@ -84,9 +88,9 @@ public class CmAccountTaxRoleCheck_Impl extends CmAccountTaxRoleCheck_Gen
 		}
   
 	}
-	public List<BigDecimal> getAccountsByIdPerson(String personId) {
-		List<BigDecimal> listeAccounts = new ArrayList<BigDecimal>();
-		;
+	
+	public List<String> getAccountsByIdPerson(String personId) {
+		List<String> listeAccounts = new ArrayList<String>();
 		// Business Service Instance
 		BusinessServiceInstance bsInstance = BusinessServiceInstance.create("C1-GetPersonAccounts");
 
@@ -98,12 +102,22 @@ public class CmAccountTaxRoleCheck_Impl extends CmAccountTaxRoleCheck_Gen
 			COTSInstanceListNode nextElt = iterator.next();
 			System.out.println("AccountId: " + nextElt.getNumber("accountId"));
 			System.out.println("AccountInfo: " + nextElt.getString("accountInfo"));
-			listeAccounts.add(nextElt.getNumber("accountId"));
+			listeAccounts.add(nextElt.getFieldAndMDForPath("accountId").getXMLValue());
 
 		}
 		return listeAccounts;
 	}
 
+	private String completerChaineByZero(String chaine){
+		String result=chaine;
+		while(result.length()!=10){
+			result="0"+result;
+		}
+		System.out.println(result);
+		return result;
+	}
+	
+	
 	public String getTaxRolesByIdAccount(String accountId) {
 
 		// Business Service Instance

@@ -4,25 +4,35 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.splwg.base.api.GenericBusinessObject;
 import com.splwg.base.api.datatypes.DateFormat;
 import com.splwg.base.api.sql.PreparedStatement;
 import com.splwg.base.api.sql.SQLResultRow;
+import com.splwg.shared.logging.Logger;
+import com.splwg.shared.logging.LoggerFactory;
 import com.splwg.tax.domain.admin.accountRelationshipType.AccountRelationshipType_Id;
 import com.splwg.tax.domain.admin.personRelationshipType.PersonRelationshipType_Id;
 import com.splwg.tax.domain.customerinfo.account.Account;
 import com.splwg.tax.domain.customerinfo.account.Account_Id;
 import com.splwg.tax.domain.customerinfo.person.Person;
 import com.splwg.tax.domain.customerinfo.person.Person_Id;
-import com.splwg.cm.domain.common.constant.CmConstants;
-import com.splwg.cm.domain.common.dao.constants.CmPersonRequest;
-import com.splwg.shared.logging.Logger;
-import com.splwg.shared.logging.LoggerFactory;
 
 /**
  * 
  * @author ADA
  */
-public class CmPersonDao extends CmGenericDao<CmPersonDao> {
+public class CmPersonDao extends GenericBusinessObject {
+
+	
+	 /**
+     *  Recherche l acteur principal d un compte
+     */
+    public static final String GET_MAIN_PER_BY_ACCT =
+        "select acct_per.per_id "
+                        + "from ci_acct_per acct_per "
+                        + "where acct_per.acct_id = :pAccountId "
+                        + "and ( acct_per.acct_rel_type_cd = :pMainAcctPer or acct_per.acct_rel_type_cd = :pPrincAcctPer ) "
+                        + "AND ROWNUM = 1";
 
     /**
      * Logger
@@ -37,7 +47,7 @@ public class CmPersonDao extends CmGenericDao<CmPersonDao> {
      * Constructeur
      */
     public CmPersonDao() {
-        super( CmPersonDao.class );
+        super();
     }
 
     /**
@@ -60,7 +70,7 @@ public class CmPersonDao extends CmGenericDao<CmPersonDao> {
     public Person getMainPersonByAccount( Account_Id pAccountId ) {
         final long vTime = LOGGER.infoStart( " + getMainPersonByAccount => " + pAccountId );
 
-        final PreparedStatement vPreparedStatement = this.createPreparedStatement( CmPersonRequest.GET_MAIN_PER_BY_ACCT );
+        final PreparedStatement vPreparedStatement = this.createPreparedStatement( GET_MAIN_PER_BY_ACCT );
         Person vPerson = null;
 
         try {
@@ -94,10 +104,13 @@ public class CmPersonDao extends CmGenericDao<CmPersonDao> {
     public List<Person> searchPersonPersonByRelation( Person_Id pPersonId, PersonRelationshipType_Id pRelationId ) {
         LOGGER.info( "Person id : " + pPersonId );
         LOGGER.info( "Relation Id : " + pRelationId );
+        LOGGER.info( " Relation pRelationId  ########### " + pRelationId.getTrimmedValue() +" ################ " );
         final PreparedStatement vRequest =
-            createPreparedStatement( " SELECT per.PER_ID1, per.PER_ID2 " + " FROM CI_PER_PER per " + " WHERE ( per.PER_ID1 = '"
-                            + pPersonId.getTrimmedValue() + "'" + " OR per.PER_ID2 = '" + pPersonId.getTrimmedValue() + "' )"
-                            + " AND per.PER_REL_TYPE_CD = '" + pRelationId.getTrimmedValue() + "'" );
+            createPreparedStatement( " SELECT per.PER_ID1, per.PER_ID2 " + " FROM CI_PER_PER per " 
+            				+ " WHERE ( per.PER_ID1 = '"
+                            + pPersonId.getTrimmedValue() + "'" + " OR per.PER_ID2 = '" + pPersonId.getTrimmedValue() + "' )");
+                            //+ " AND per.PER_REL_TYPE_CD = '" + pRelationId.getTrimmedValue() + "'" );
+                            
         final List<Person> vList = new ArrayList<Person>();
         try {
             for ( final SQLResultRow vRow : vRequest.list() ) {

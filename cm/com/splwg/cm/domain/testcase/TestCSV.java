@@ -2,13 +2,8 @@ package com.splwg.cm.domain.testcase;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -21,45 +16,8 @@ public class TestCSV {
 	
 	private final static CmEmployerRegHelper customHelper = new CmEmployerRegHelper();
 	private static Boolean checkValidationFlag = false;
-	
-	public void start() {
-		
-	}
-
-	
-	public static void moveFileToFailuireFolder(String fileName, String parameter) {
-		Path fileToMovePath = Paths.get(fileName);
-		Path targetPath = Paths.get(parameter);
-		try {
-			Files.move(fileToMovePath, targetPath.resolve(fileToMovePath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
-		} catch (IOException exception) {
-			// TODO Auto-generated catch block
-			exception.printStackTrace();
-		}
-	}
-	
-	public static void move(String fileName, String parameter) {
-		File file = new File(fileName);
-	    
-	    // renaming the file and moving it to a new location
-	    if(file.renameTo(new File(parameter)))
-	    {
-	        // if file copied successfully then delete the original file
-	        file.delete();
-	        System.out.println("File moved successfully");
-	    }
-	    else
-	    {
-	        System.out.println("Failed to move the file");
-	    }
-	}
-	
 
 	public static void main(String[] args) {
-		TestCSV testCSV = new TestCSV();
-		
-		testCSV.move("D:\\PSRM\\Denash\\Registration\\254189351EMPLR.csv", "D:\\PSRM\\Denash\\Failure\\");
-		//testCSV.moveFileToFailuireFolder("D:\\PSRM\\Denash\\Registration\\254189351EMPLR.csv", "D:\\PSRM\\Denash\\Failure\\");
 		
 		String trimString = "hello    there  i am   here ";
 		trimString = trimString.trim().replaceAll("\\s{2,}", " ");

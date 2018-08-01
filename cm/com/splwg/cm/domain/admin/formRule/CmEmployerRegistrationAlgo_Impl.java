@@ -86,6 +86,7 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 	Date statusUploadDate = new Date();
 	String nineaNumber = null;
 	String actualHeader = null;
+	String processFlowId = null;
 
 	@Override
 	public void invoke() {
@@ -95,8 +96,12 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		this.boInstance = BusinessObjectDispatcher.read(this.boKey, false);
 		log.info("I am In Invoke method BO intance " + this.boInstance);
 	    COTSFieldDataAndMD<?> cots = this.boInstance.getFieldAndMDForPath("employerDetails/ninea");
+	    COTSFieldDataAndMD<?> cotsNode = this.boInstance.getFieldAndMDForPath("processFlowId");
+	    processFlowId = cotsNode.getValue().toString();
+	    System.out.println("processFlowId:: " + processFlowId);
+	    log.info("processFlowId:: " + processFlowId);
 		String nineaNumber = cots.getValue().toString();
-		//String nineaNumber = "254189351";
+		//String nineaNumber = "";
 		System.out.println("Ninea: " + nineaNumber);// 90909090990EMPLR.xlsx/99009099909099EMPLE.xlsx
 		log.info("Ninea: " + nineaNumber);
 		fileName = nineaNumber + "EMPLR" + ".csv";
@@ -186,11 +191,16 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		String establishmentDate = null;
 		String premierEmployeeDate = null;
 		String deliveryDate = null;
+		log.info("Before While:: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+				"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+		System.out.println("Before While:: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+				"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
 		Set<String> headerConstants = getHeaderConstants();
 		while (headerIterator.hasNext() && listIterator.hasNext()) {
 			String header = headerIterator.next();
 			actualHeader = header;
 			String value = listIterator.next();
+			log.info("CSV Value: " + value);
 			try {
 				headerName = URLEncoder.encode(header.trim(), CmEmployerRegConstant.UTF);
 				if (headerName != null && headerName.equalsIgnoreCase(
@@ -282,23 +292,17 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 
 				} else if (!isBlankOrNull(headerName) && headerName.equalsIgnoreCase(
 						URLEncoder.encode(CmEmployerRegConstant.IMMATRICULATION_DATE, CmEmployerRegConstant.UTF))) {
+				
+					log.info("Inside IMMATRICULATION_DATE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside IMMATRICULATION_DATE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					
 					immatriculationDate = value;
-					checkValidationFlag = customHelper.compareDateWithSysDate(value, "lessEqual"); // validating
-																									// with
-																									// current
-																									// date.
-					if (checkValidationFlag != null && !checkValidationFlag) {
-						checkErrorInCSV = true;
-						createToDo(header, nineaNumber, CmEmployerRegConstant.DATE_LESSEQUAL_TODAY_VALID, fileName);
-						log.info("Given->" + header + " Date greater than System Date- " + value + ":" + nineaNumber);
-						break;
-					}
-					if (!checkErrorInCSV) {
-						formCreatorList.add(customHelper.convertDateFormat(value));
-					}
-				} else if (!isBlankOrNull(headerName) && headerName.equalsIgnoreCase(
-						URLEncoder.encode(CmEmployerRegConstant.ESTABLISHMENT_DATE, CmEmployerRegConstant.UTF))) {
-					establishmentDate = value;
+					log.info("Inside IMMATRICULATION_DATE :: after immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside IMMATRICULATION_DATE :: after immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
 					checkValidationFlag = customHelper.compareDateWithSysDate(value, "lessEqual"); 
 					if (checkValidationFlag != null && !checkValidationFlag) {
 						checkErrorInCSV = true;
@@ -306,6 +310,34 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 						log.info("Given->" + header + " Date greater than System Date- " + value + ":" + nineaNumber);
 						break;
 					}
+					log.info("Inside IMMATRICULATION_DATE after value :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside IMMATRICULATION_DATE after value  :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					if (!checkErrorInCSV) {
+						formCreatorList.add(customHelper.convertDateFormat(value));
+					}
+				} else if (!isBlankOrNull(headerName) && headerName.equalsIgnoreCase(
+						URLEncoder.encode(CmEmployerRegConstant.ESTABLISHMENT_DATE, CmEmployerRegConstant.UTF))) {
+					
+					log.info("Inside ESTABLISHMENT_DATE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside ESTABLISHMENT_DATE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					establishmentDate = value;
+					log.info("Inside ESTABLISHMENT_DATE after:: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside ESTABLISHMENT_DATE after:: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					
+					checkValidationFlag = customHelper.compareDateWithSysDate(value, "lessEqual"); 
+					if (checkValidationFlag != null && !checkValidationFlag) {
+						checkErrorInCSV = true;
+						createToDo(header, nineaNumber, CmEmployerRegConstant.DATE_LESSEQUAL_TODAY_VALID, fileName);
+						log.info("Given->" + header + " Date greater than System Date- " + value + ":" + nineaNumber);
+						break;
+					}
+					
 					checkValidationFlag = customHelper.checkDateSunOrSat(value); 
 					if (checkValidationFlag != null && checkValidationFlag) {
 						checkErrorInCSV = true;
@@ -314,8 +346,7 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 								+ nineaNumber);
 						break;
 					}
-					checkValidationFlag = customHelper.compareTwoDates(establishmentDate, immatriculationDate,
-							"greatEqual"); // validate two dates
+					checkValidationFlag = customHelper.compareTwoDates(establishmentDate, immatriculationDate, "greatEqual"); // validate two dates
 					if (checkValidationFlag != null && !checkValidationFlag) {
 						checkErrorInCSV = true;
 						createToDo(header, nineaNumber, CmEmployerRegConstant.DATE_EST_GREAT_IMM, fileName);
@@ -323,11 +354,19 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 								+ value + ":" + nineaNumber);
 						break;
 					}
+					log.info("Inside ESTABLISHMENT_DATE final value :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside ESTABLISHMENT_DATE after value :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
 					if (!checkErrorInCSV) {
 						formCreatorList.add(customHelper.convertDateFormat(value));
 					}
 				} else if (!isBlankOrNull(headerName) && headerName.equalsIgnoreCase(
 						URLEncoder.encode(CmEmployerRegConstant.PREMIER_EMP_DATE, CmEmployerRegConstant.UTF))) {
+					log.info("Inside PREMIER_EMP_DATE  :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside PREMIER_EMP_DATE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
 					premierEmployeeDate = value;
 					checkValidationFlag = customHelper.compareDateWithSysDate(premierEmployeeDate, "lessEqual"); 
 					if (checkValidationFlag != null && !checkValidationFlag) {
@@ -362,11 +401,19 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 								+ value + ":" + nineaNumber);
 						break;
 					}
+					log.info("Inside PREMIER_EMP_DATE after value :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside PREMIER_EMP_DATE after value:: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
 					if (!checkErrorInCSV) {
 						formCreatorList.add(customHelper.convertDateFormat(value));
 					}
 				} else if (!isBlankOrNull(headerName) && headerName.equalsIgnoreCase(
 						URLEncoder.encode(CmEmployerRegConstant.DATE_DE_DELIVRANCE, CmEmployerRegConstant.UTF))) {
+					log.info("Inside DATE_DE_DELIVRANCE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside DATE_DE_DELIVRANCE :: immatriculationDate " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
 					deliveryDate = value;
 					checkValidationFlag = customHelper.compareDateWithSysDate(immatriculationDate, "lessEqual"); 
 					if (checkValidationFlag != null && !checkValidationFlag) {
@@ -375,6 +422,10 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 						log.info("Given->" + header + " Date greater than System Date- " + value + ":" + nineaNumber);
 						break;
 					}
+					log.info("Inside DATE_DE_DELIVRANCE after value :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside DATE_DE_DELIVRANCE after value  :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
 					if (!checkErrorInCSV) {
 						formCreatorList.add(customHelper.convertDateFormat(value));
 					}
@@ -398,8 +449,11 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 				} else if (!isBlankOrNull(headerName) && headerName.equalsIgnoreCase(
 						URLEncoder.encode(CmEmployerRegConstant.DATE_DE_EXPIRATION, CmEmployerRegConstant.UTF))) {
 					checkValidationFlag = customHelper.compareTwoDates(value, deliveryDate, "great"); // validate
-																										// two
-																										// dates
+					log.info("Inside DATE_DE_EXPIRATION :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+					System.out.println("Inside DATE_DE_EXPIRATION:: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate + "value::"+ deliveryDate);
+					
 					if (checkValidationFlag != null && !checkValidationFlag) {
 						checkErrorInCSV = true;
 						createToDo(header, nineaNumber, CmEmployerRegConstant.DATE_DEL_GREAT_EXP, fileName);
@@ -633,6 +687,12 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 			}
 		}
 		System.out.println("Final List formCreatorList::- " + formCreatorList);
+		log.info("Final List formCreatorList::- " + formCreatorList);
+		
+		log.info("Final DATE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+				"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+		System.out.println("Final DATE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
+				"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate + "value::"+ deliveryDate);
 		
 		if(!checkErrorInCSV) {
 			try {
@@ -669,8 +729,8 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 	 * @return
 	 */
 	private boolean formCreator(List<String> listesValues) {
-		log.info("I am Inside Bo Creator" + listesValues.size());
-		System.out.println("I am Inside Bo Creator" + listesValues.size());
+		log.info("I am Inside Bo Creator:: " + listesValues.size());
+		System.out.println("I am Inside Bo Creator:: " + listesValues.size());
 		BusinessObjectInstance boInstance = null;
 
 		boInstance = createFormBOInstance(this.getFormType(), "T-REG-" + getSystemDateTime().toString());
@@ -968,6 +1028,12 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		return true;
 	}
 	
+	/**
+	 * This method used to get the list document related with Ninea from GED
+	 * 
+	 * @param nineaNumber
+	 * @return
+	 */
 	private Map<String, String> getDcoumentList(String nineaNumber) {
 
 		log.info("#### getDcoumentList for : " + nineaNumber);
@@ -1207,9 +1273,10 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 	 * @param fileName
 	 */
 	private void createToDo(String messageParam, String nineaNumber, String messageNumber, String fileName) {
+		log.info("Creating to Do:: messageParam:: " + messageParam+"messageNumber:: "+ messageNumber + "processFlowId " + processFlowId);
+		
 		startChanges();
-		// BusinessService_Id businessServiceId=new
-		// BusinessService_Id("F1-AddToDoEntry");
+		
 		BusinessServiceInstance businessServiceInstance = BusinessServiceInstance.create("F1-AddToDoEntry");
 		Role_Id toDoRoleId = new Role_Id("CM-REGTODO");
 		Role toDoRole = toDoRoleId.getEntity();
@@ -1217,13 +1284,13 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		businessServiceInstance.getFieldAndMDForPath("subject").setXMLValue("Batch Update from PSRM");
 		businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-REGTO");
 		businessServiceInstance.getFieldAndMDForPath("toDoRole").setXMLValue(toDoRole.getId().getTrimmedValue());
-		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue("IMMAT_EMPL");
+		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue(processFlowId);
 		businessServiceInstance.getFieldAndMDForPath("messageCategory").setXMLValue("90007");
 		businessServiceInstance.getFieldAndMDForPath("messageNumber").setXMLValue(messageNumber);
 		businessServiceInstance.getFieldAndMDForPath("messageParm1").setXMLValue(messageParam);
 		businessServiceInstance.getFieldAndMDForPath("messageParm2").setXMLValue(nineaNumber);
 		businessServiceInstance.getFieldAndMDForPath("messageParm3").setXMLValue(fileName);
-		businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue("IMMAT_EMPL");
+		businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue(processFlowId);
 
 		BusinessServiceDispatcher.execute(businessServiceInstance);
 		saveChanges();

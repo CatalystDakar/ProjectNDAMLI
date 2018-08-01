@@ -122,6 +122,15 @@ public class CmMessageRepository90002 extends AbstractMessageRepository {
         params.addRawString(param1);
         return getCommonInstance().getMessage(Messages.MSG_32, params);
     }
+    
+    /**
+     * Message Text: "The selected value %1 (%2) from Extendable Lookup %5, does not have the proper parent; it should be %3 instead of %4."
+     */
+    public static ServerMessage MSG_250() {
+        MessageParameters params = new MessageParameters();
+
+        return getCommonInstance().getMessage(Messages.MSG_250, params);
+    }
 
     /**
     * Message Text: "Person Type %1 does not have a Related Transaction BO"
@@ -242,6 +251,15 @@ public class CmMessageRepository90002 extends AbstractMessageRepository {
         params.addRawString(param5);
         return getCommonInstance().getMessage(Messages.MSG_802, params);
     }
+    
+    
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_300() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_300, params);
+    }
 
     /**
     * Message Text: "test  message hilda"
@@ -252,6 +270,31 @@ public class CmMessageRepository90002 extends AbstractMessageRepository {
         return getCommonInstance().getMessage(Messages.MSG_88888, params);
     }
 
+    /*
+  	 * Author : ADA
+  	 * Algorithme de création de remise en banque
+  	 * */
+
+    //Aucun controle de lot de reglement touves
+  	public static ServerMessage NoDepositControleFound(String pMessage){
+          
+          MessageParameters parms = new MessageParameters();        
+          parms.addField(pMessage);
+          return getCommonInstance().getMessage(Messages.AUCUN_CONTROL_LOT_REGLEMENT, parms);
+      }
+  	
+  	//Plusieurs controle de lot de reglement touves
+  	public static ServerMessage MultipleDepositControleFound(String pMessage){
+          
+          MessageParameters parms = new MessageParameters();        
+          parms.addField(pMessage);
+          return getCommonInstance().getMessage(Messages.PLUSIEURS_CONTROL_LOT_REGLEMENT, parms);
+      }
+  	/*
+  	 * Author : ADA
+  	 * Algorithme de création de remise en banque
+  	 * */
+  	
     public static class Messages {
         /**
         * Message Text: "Variable '%1' must be initialized in '%2' '%3'"
@@ -314,6 +357,12 @@ public class CmMessageRepository90002 extends AbstractMessageRepository {
         public static final int MSG_203 = 203;
 
         /**
+         * Message Text: "The selected value %1 (%2) from Extendable Lookup %5, does not have the proper parent; it should be %3 instead of %4."
+         */
+         public static final int MSG_250 = 250;
+         
+         
+        /**
         * Message Text: "There is no Identification Type associated with column %1."
         */
         public static final int MSG_700 = 700;
@@ -333,10 +382,32 @@ public class CmMessageRepository90002 extends AbstractMessageRepository {
         */
         public static final int MSG_802 = 802;
 
+        
+        /**
+         * Message Text: "Les règlements partiels ne sont pas autorisés."
+         */
+         public static final int MSG_300 = 300;
+         
         /**
         * Message Text: "test  message hilda"
         */
         public static final int MSG_88888 = 88888;
+        
+        /*
+      	 * Author : ADA
+      	 * Algorithme de création de remise en banque
+      	 * */
+        
+        // Aucun controle de lot de reglements n'est trouvé      
+        public static final int AUCUN_CONTROL_LOT_REGLEMENT = 30005;
+        
+        // Plusieurs controle de lot de reglements n'est trouvé      
+        public static final int PLUSIEURS_CONTROL_LOT_REGLEMENT = 30006;
+        
+        /*
+      	 * Author : ADA
+      	 * Algorithme de création de remise en banque
+      	 * */
 
     }
 

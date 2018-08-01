@@ -41,7 +41,6 @@ public final class CmEmployerRegConstant {
 	public static final String EMAIL_EMPLOYER = "Email de l'employeur";
 	public static final String TRADE_REG_NUM = "Numéro de registre du commerce";
 	public static final String PREMIER_EMP_DATE = "Date d’embauche du premier salarié";
-	public static final String TAX_ID_DATE = "Date d'immatriculation fiscale";
 	
 	//String empty check
 	public static final String TYPE_D_EMPLOYEUR = "Type d'employeur";

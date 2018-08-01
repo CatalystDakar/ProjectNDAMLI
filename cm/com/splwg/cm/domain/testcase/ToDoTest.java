@@ -1,7 +1,5 @@
 package com.splwg.cm.domain.testcase;
 
-import java.util.Iterator;
-
 import org.junit.Test;
 
 import com.splwg.base.api.businessObject.COTSInstanceList;
@@ -9,8 +7,11 @@ import com.splwg.base.api.businessObject.COTSInstanceListNode;
 import com.splwg.base.api.businessService.BusinessServiceDispatcher;
 import com.splwg.base.api.businessService.BusinessServiceInstance;
 import com.splwg.base.api.testers.ContextTestCase;
+import com.splwg.base.domain.todo.role.Role;
+import com.splwg.base.domain.todo.role.Role_Id;
 import com.splwg.tax.domain.customerinfo.person.Person;
 import com.splwg.tax.domain.customerinfo.person.Person_Id;
+import com.splwg.tax.domain.processFlow.ProcessFlow_Id;
 
 public class ToDoTest extends ContextTestCase {
 
@@ -18,22 +19,28 @@ public class ToDoTest extends ContextTestCase {
 	public void test() {
 				
 		startChanges();
-		/*BusinessServiceInstance businessServiceInstance = BusinessServiceInstance.create("F1-AddToDoEntry");
+		BusinessServiceInstance businessServiceInstance = BusinessServiceInstance.create("F1-AddToDoEntry");
 		Role_Id toDoRoleId = new Role_Id("CM-REGTODO");
+		
+		ProcessFlow_Id processFlowId = new ProcessFlow_Id("90133679228305");
+		System.out.println(processFlowId.getIdValue());
 		Role toDoRole = toDoRoleId.getEntity();
 		businessServiceInstance.getFieldAndMDForPath("sendTo").setXMLValue("SNDR");
 		businessServiceInstance.getFieldAndMDForPath("subject").setXMLValue("Batch Update from PSRM");
 		businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-REGTO");
 		businessServiceInstance.getFieldAndMDForPath("toDoRole").setXMLValue(toDoRole.getId().getTrimmedValue());
-		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue("CM-REGBT");
+		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue("90133679228305");
 		businessServiceInstance.getFieldAndMDForPath("messageCategory").setXMLValue("90007");
 		businessServiceInstance.getFieldAndMDForPath("messageNumber").setXMLValue("301");
 		businessServiceInstance.getFieldAndMDForPath("messageParm1").setXMLValue("denashkumar@5iapps");
 		businessServiceInstance.getFieldAndMDForPath("messageParm2").setXMLValue(String.valueOf(908070));
-		businessServiceInstance.getFieldAndMDForPath("messageParm3").setXMLValue("Reg.xlsx");
-		businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue("CM-REGBT");*/
+		businessServiceInstance.getFieldAndMDForPath("messageParm3").setXMLValue("Reg.CSV");
+		businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue("90133679228305");
+		BusinessServiceDispatcher.execute(businessServiceInstance);
+		saveChanges();
+		getSession().commit();
 		
-		 BusinessServiceInstance bsInstance = BusinessServiceInstance.create("C1-PersonSearchByIdTypeNumber");
+		 /*BusinessServiceInstance bsInstance = BusinessServiceInstance.create("C1-PersonSearchByIdTypeNumber");
 		  String personId = "";
 		  bsInstance.set("idType", "SCI" );
 		  bsInstance.set("idNumber", "156542689" );
@@ -51,7 +58,7 @@ public class ToDoTest extends ContextTestCase {
 	            // Return the person entity
 	            System.out.println(firstRow.getString("personId"));
 	            
-	        }
+	        }*/
 
 		/*  Iterator<COTSInstanceListNode> iterator = bsInstance.getList("results").iterator();
 		  while (iterator.hasNext()) {
@@ -63,8 +70,7 @@ public class ToDoTest extends ContextTestCase {
 		
 
 		//BusinessServiceDispatcher.execute(businessServiceInstance);
-		saveChanges();
-		getSession().commit();
+	
 		
 	        
 	        // Business Service Instance

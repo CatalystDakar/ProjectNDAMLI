@@ -1,11 +1,12 @@
 package com.splwg.cm.domain.batch;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import com.ibm.icu.text.DateFormat;
-import com.ibm.icu.text.SimpleDateFormat;
+import org.apache.commons.lang.StringUtils;
+
 import com.splwg.base.api.QueryIterator;
 import com.splwg.base.api.batch.CommitEveryUnitStrategy;
 import com.splwg.base.api.batch.JobWork;
@@ -15,6 +16,7 @@ import com.splwg.base.api.batch.ThreadExecutionStrategy;
 import com.splwg.base.api.batch.ThreadWorkUnit;
 import com.splwg.base.api.sql.PreparedStatement;
 import com.splwg.base.api.sql.SQLResultRow;
+import com.splwg.base.support.context.SessionHolder;
 import com.splwg.shared.logging.Logger;
 import com.splwg.shared.logging.LoggerFactory;
 
@@ -56,15 +58,19 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 		public boolean executeWorkUnit(ThreadWorkUnit unit) throws ThreadAbortedException, RunAbortedException {
 			PreparedStatement psPreparedStatement = null;
 			QueryIterator<SQLResultRow> result = null;
+			Date dat = new Date();
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(dat);
+			int year = cal.get(Calendar.YEAR);
+			int month = cal.get(Calendar.MONTH)+1;
+			int date = cal.get(Calendar.DATE);
+			com.splwg.base.api.datatypes.Date dtime = new com.splwg.base.api.datatypes.Date(year, month, date);
 			try {
 				startChanges();
 				psPreparedStatement = createPreparedStatement("SELECT * FROM CI_PEVT_DTL_ST WHERE PEVT_STG_ST_FLG = 'C1UP'");
 				result = psPreparedStatement.iterate();
 				while (result.hasNext()) {
 					SQLResultRow payDetailRow = result.next();
-					DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-					Date date = new Date();
-					String accDate = dateFormat.format(date);
 					boolean validationFlag = checkFieldValidation(payDetailRow);
 						if(!validationFlag){
 							String extRefId = payDetailRow.getString("EXT_REFERENCE_ID"); 
@@ -113,7 +119,7 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 									psPreparedStatement.bindString("EXT_SOURCE_ID", externalSrcId,null);
 									psPreparedStatement.bindString("DST_RULE_CD", this.getParameters().getTypeOfVentilation(),null);
 									psPreparedStatement.bindString("DST_RULE_VALUE", dstRuleValue, null);
-									psPreparedStatement.bindString("ACCOUNTING_DT", accDate, null);
+									psPreparedStatement.bindDate("ACCOUNTING_DT", dtime);
 									psPreparedStatement.bindString("TENDER_TYPE_CD",this.getParameters().getTypeOfBatchSettlement(), null);
 									psPreparedStatement.bindString("CUST_ID", personId, null);
 									psPreparedStatement.bindString("NAME1", personName, null);
@@ -182,29 +188,21 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 			String oblType = this.getParameters().getObligationType();
 			log.info("Batch Parameter Account Type : " + accountType);
 			log.info("Batch Parameter Obligation Type : " + oblType);
-			if(accountType.contains(",")){
 				String accntIdArr[] = accountType.split(",");
 				String oblTypeArr[] = oblType.split(",");
-				if(!isBlankOrNull(accntIdArr[0]) && !isBlankOrNull(accntIdArr[1]) && !isBlankOrNull(accntIdArr[2]) 
-						&& !isBlankOrNull(oblTypeArr[0]) && !isBlankOrNull(oblTypeArr[1]) && !isBlankOrNull(oblTypeArr[2])){
+				accountType = "'" + StringUtils.join(accntIdArr,"','") + "'";
+				oblType = "'" + StringUtils.join(oblTypeArr,"','") + "'";
 				psPreparedStatement = createPreparedStatement("select acct.ACCT_ID from ci_per per, ci_acct_per acctper, ci_acct acct, ci_sa sa"
 											+" where per.per_id=acctper.per_id "
 											+" and acctper.acct_id=acct.acct_id "
 											+" and acct.acct_id=sa.acct_id "
 											+" and per.per_id = \'"+personId+"\' "
-											+" and acct.cust_cl_cd in (\'"+accntIdArr[0]+"\',\'"+accntIdArr[0]+"\',\'"+accntIdArr[2]+"\') "
-											+" and sa.sa_type_cd in (\'"+oblTypeArr[0]+"\',\'"+oblTypeArr[1]+"\',\'"+oblTypeArr[2]+"\') "
+											+" and acct.cust_cl_cd in ("+accountType+") "
+											+" and sa.sa_type_cd in ("+oblType+") "
 											+" and sa.sa_status_flg = '40' ");
 					QueryIterator<SQLResultRow> result = null;
 					try {
 							startChanges();
-							/*psPreparedStatement.bindString("PER_ID", personId, null);
-							psPreparedStatement.bindString("PF", accntIdArr[0], null);
-							psPreparedStatement.bindString("OLDAGE", accntIdArr[1], null);
-							psPreparedStatement.bindString("ATMP", accntIdArr[2], null);
-							psPreparedStatement.bindString("EPF", oblTypeArr[0], null);
-							psPreparedStatement.bindString("EATMP", oblTypeArr[1], null);
-							psPreparedStatement.bindString("ER", oblTypeArr[2], null);*/
 							result = psPreparedStatement.iterate();
 							while (result.hasNext()) {
 							SQLResultRow lookUpValue = result.next();
@@ -217,34 +215,7 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 						psPreparedStatement.close();
 						psPreparedStatement = null;
 					}
-				}
-			}else{
-				psPreparedStatement = createPreparedStatement("select acct.ACCT_ID from ci_per per, ci_acct_per acctper, ci_acct acct, ci_sa sa"
-																+" where per.per_id=acctper.per_id "
-																+" and acctper.acct_id=acct.acct_id "
-																+" and acct.acct_id=sa.acct_id "
-																+" and per.per_id = \'"+personId+"\' "
-																+" and acct.cust_cl_cd in ('PF','OLDAGE','ATMP') "
-																+" and sa.sa_type_cd in ( 'O-EPF', 'EATMP', 'ER') "
-																+" and sa.sa_status_flg = '40' ");
-				QueryIterator<SQLResultRow> result = null;
-				try {
-					startChanges();
-					//psPreparedStatement.bindString("PER_ID", personId, null);
-					result = psPreparedStatement.iterate();
-					while (result.hasNext()) {
-						SQLResultRow lookUpValue = result.next();
-						accntId = lookUpValue.getString("ACCT_ID");
-					}
-				} catch (Exception excep) {
-					log.error("Exception in getting  getAccountId : " + excep);
-				} finally {
-					saveChanges();
-					psPreparedStatement.close();
-					psPreparedStatement = null;
-				}
-			}
-			return accntId;
+				return accntId;
 		}
 		
 		private String getPersonNamePerId(String personId) {
@@ -530,7 +501,7 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 					startChanges();
 					psPreparedStatement.bindString("EXT_SOURCE_ID", externalSrcId, null);
 					psPreparedStatement.bindString("MESSAGE_CAT_NBR", msgCatNbr, null);
-					psPreparedStatement.bindString("MESSAGE_NBR", msgNbr, null);
+					psPreparedStatement.bindString("MESSAGE_NBR", msgNbr, null);	
 					psPreparedStatement.bindString("MESSAGE_TEXT", msgTest, null);
 				if(!isBlankOrNull(extTrasmitId)){
 					psPreparedStatement.bindString("EXT_TRANSMIT_ID", extTrasmitId, null);
@@ -555,3 +526,4 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 	}
 
 }
+

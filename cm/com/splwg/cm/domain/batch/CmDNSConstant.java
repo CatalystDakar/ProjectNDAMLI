@@ -18,7 +18,8 @@ public final class CmDNSConstant {
 	public static final String TOTAL_SALARIES  = "Total salariés";
 	public static final String TOTAL_SALARIES_VERSES = "Total des salaires versés";
 	public static final String INFORMATION_SALARIES = "Informations des salariés";
-	
+	public static final String NUMERO_ASSURE_SOCIAL = "Numéro Assuré Social";
+	public static final String DATE_DE_NASISSANCE = "Date de naissance";
 	public static final String TYPE_PIECE = "Type de pièce";
 	public static final String NUMERO_PIECE = "Numéro de pièce";
 	public static final String NOM = "Nom";
@@ -36,6 +37,13 @@ public final class CmDNSConstant {
 	public static final String MOTIF_SORTIE = "Motif de sortie";
 	public static final String TEMPS_TRAVAIL = "Temps de travail (plein/partiel)";
 	public static final String TRANCHE_TRAVAIL = "Tranche de travail";
+	public static final String TOTAL_SALARIE_IPRES_RG = "Total des salaires assujettis IPRES - RG";
+	public static final String TOTAL_SALARIE_IPRES_RCC = "Total des salaires assujettis IPRES - RCC";
+	public static final String TOTAL_SALARIE_CSS_PF = "Total des salaires assujettis CSS - PF";
+	public static final String TOTAL_SALARIE_CSS_ATMP = "Total des salaires assujettis CSS - ATMP";
+
+	public static final String TOTAL_NOUVEUX_SALARIES = "Total nouveaux salariés";
+
 	
 	public static final String UTF ="UTF-8";
 	public static final String INVALID_DATE_STRING  = "invalidate";
@@ -50,6 +58,8 @@ public final class CmDNSConstant {
 	public static final String NINEA_INVALID = "314";
 	public static final String EMPTY = "328";
 	public static final String BLANK = "BLANK";
+	public static final String RG = "RG";
+	public static final String RCC = "RCC";
 	
 	
 	
@@ -60,7 +70,56 @@ public final class CmDNSConstant {
 			+ ":BUS_OBJ_CD,:BO_STATUS_CD,:C1_FORM_PYMNT_FLG,:C1_FORM_PYMNT_AMT,"
 			+ ":VERSION,to_date(:STATUS_UPD_DTTM,'DD/MM/YYYY'),to_date(:CRE_DTTM,'DD/MM/YYYY'),:BO_DATA_AREA)";
 	
-	public static final String STAGING_FILE_GEN_QUERY = " select "+ //--Employeur
+	public static final String STAGING_FILE_GEN_QUERY = "select "+//--Employeur
+			"per_moral_name.entity_name as raison_sociale "+
+			",address.address1 || ' ' || address.city ||  ' ' || address.country as adresse "+
+			",hist.id_employeur as id_immatriculation "+
+			",per_moral_id.per_id_nbr as NINEA "+
+			",date_debut_periode_cotisation "+
+			",date_fin_periode_cotisation  "+ //--synthes part
+			",null as total_nouveaux_salaries "+
+			",null as total_salaries "+
+			",null as syn_total_sal_plaf_ipres_RG "+
+			",null as syn_total_sal_plaf_ipres_RCC "+
+			",null as syn_total_sal_plaf_css_PF "+
+			",null as syn_total_sal_plaf_css_ATMP "+
+			",null as syn_tal_sal_verses   "+                                          
+			",hist.id_travailleur as Numero_assure_social "+
+			",hist.TYPE_PIECE  "+
+			",hist.NUMERO_PIECE "+
+			",per_phys_name.C1_last_name as nom "+
+			",per_phys_name.C1_first_name as prenom "+
+			",TO_DATE(TO_CHAR(TO_DATE(per_char_phys.adhoc_char_val,'YYYY-MM-DD'),'DD-MON-YY'),'DD-MON-YY') as date_naissance "+
+			", case when hist.EMPLOYE_CADRE = 'true' then 'Cadre' else 'General' end  as regime "+
+			",hist.DATE_EFFET_REGIME "+
+			",'Oui' as RCC "+
+			",case when hist.EMPLOYE_CADRE = 'true' then 'Oui' else 'Non' end  as RG "+
+			",null as TOTAL_SAL_IPRES_RG "+
+			",null as TOTAL_SAL_IPRES_RCC "+
+			",null as TOTAL_SAL_CSS_ATMP "+
+			",null as TOTAL_SAL_CSS_PF "+
+			",hist.SALAIRE_CONTRACTUEL as salaire_reel_brut_percu "+
+			",hist.NATURE_CONTRAT as type_contrat "+
+			",hist.DATE_DEBUT_CONTRAT as date_entree "+
+			",hist.DATE_FIN_CONTRAT as date_sortie "+
+			",hist.TEMPS_PRESENCE_JOUR "+
+			",hist.TEMPS_PRESENCE_HEURES "+
+			",hist.MOTIF_SORTIE "+
+			",hist.id_travailleur "+
+			",hist.TEMPS_DE_TRAVAIL "+
+			",hist.TRANCHE_TRAVAIL "+
+			"from cm_dmt_historique hist "+
+			"inner join ci_per per_phys on (hist.id_travailleur = per_phys.per_id and per_phys.per_type_cd = 'PERSON_PHYS') "+
+			"inner join ci_per per_moral on hist.id_employeur = per_moral.per_id "+
+			"inner join ci_per_name per_moral_name on per_moral_name.per_id = per_moral.per_id "+
+			"inner join ci_per_id per_moral_id on (hist.id_employeur = per_moral_id.per_id and per_moral_id.id_type_cd = 'SCI') "+
+			"inner join ci_per_addr per_addr on per_addr.per_id =  per_moral.per_id "+
+			"inner join c1_address address on address.address_id = per_addr.address_id "+
+			"inner join ci_per_name per_phys_name on per_phys_name.per_id = per_phys.per_id "+
+			"left join ci_per_char per_char_moral on (per_char_moral.per_id = per_moral.per_id and per_char_moral.CHAR_TYPE_CD= 'CM-ACTPR') "+
+			"left join ci_per_char per_char_phys on (per_char_phys.per_id = per_phys.per_id and per_char_phys.CHAR_TYPE_CD = 'CM-DOB')";
+			
+/*			" select "+ //--Employeur
 			" per_moral_name.entity_name as raison_sociale "+
 			" ,address.address1 || ' ' || address.city ||  ' ' || address.country as adresse "+
 			" ,hist.id_employeur as id_immatriculation "+
@@ -98,6 +157,6 @@ public final class CmDNSConstant {
 			" inner join ci_per_addr per_addr on per_addr.per_id =  per_moral.per_id "+
 			" inner join c1_address address on address.address_id = per_addr.address_id "+
 			" inner join ci_per_name per_phys_name on per_phys_name.per_id = per_phys.per_id "+
-			" left join ci_per_char per_char_moral on (per_char_moral.per_id = per_moral.per_id and per_char_moral.CHAR_TYPE_CD= 'CM-ACTPR') ";
+			" left join ci_per_char per_char_moral on (per_char_moral.per_id = per_moral.per_id and per_char_moral.CHAR_TYPE_CD= 'CM-ACTPR') ";*/
 
 }

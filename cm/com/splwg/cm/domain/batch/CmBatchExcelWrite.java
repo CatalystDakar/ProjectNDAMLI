@@ -4,18 +4,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -27,6 +32,9 @@ import com.splwg.base.api.batch.RunAbortedException;
 import com.splwg.base.api.batch.ThreadAbortedException;
 import com.splwg.base.api.batch.ThreadExecutionStrategy;
 import com.splwg.base.api.batch.ThreadWorkUnit;
+import com.splwg.base.api.datatypes.DateFormat;
+
+import java.util.Date;
 import com.splwg.base.api.sql.PreparedStatement;
 import com.splwg.base.api.sql.SQLResultRow;
 import com.splwg.shared.logging.Logger;
@@ -76,11 +84,8 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 			PreparedStatement psPreparedStatement = null;
 			Map<String,List<CmStageUploadDTO>> hmStageUploadMap = new HashMap<String,List<CmStageUploadDTO>>();
 	        Set<Integer> setBold = new HashSet<Integer> ();
-	        setBold.add(0);
 	        setBold.add(1);
-	        setBold.add(3);
 	        setBold.add(4);
-	        setBold.add(6);
 	        setBold.add(7);
 	        Set<Integer> setUnderline = new HashSet<Integer> ();
 	        setUnderline.add(0);
@@ -90,12 +95,12 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 			if(!isBlankOrNull(filePath)){
 		        CmStageUploadDTO cmStageUploadDTO = null;
 		        List<CmStageUploadDTO> cmExcelDTOList = null;
+		        QueryIterator<SQLResultRow> result = null;
 		        startChanges();
 				psPreparedStatement = createPreparedStatement(CmDNSConstant.STAGING_FILE_GEN_QUERY);
 				try {
-					QueryIterator<SQLResultRow> result = psPreparedStatement.iterate();
+					result = psPreparedStatement.iterate();
 					while (result.hasNext()){
-						
 						SQLResultRow resultValues = result.next();
 						cmStageUploadDTO = new CmStageUploadDTO();
 						String immatriculationIdPeriod = null;
@@ -104,25 +109,34 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 						cmStageUploadDTO.setAdresse(resultValues.getString("ADRESSE"));
 						cmStageUploadDTO.setImmatriculationId(resultValues.getString("ID_IMMATRICULATION"));
 						cmStageUploadDTO.setNineaId(resultValues.getString("NINEA"));
-						cmStageUploadDTO.setActivatePrincipale(resultValues.getString("ACTIVITE_PRINCIPALE"));
-						cmStageUploadDTO.setDateDebutPeriod(resultValues.getString("DATE_DEBUT_PERIODE_COTISATION"));
-						cmStageUploadDTO.setDateFinPeriod(resultValues.getString("DATE_FIN_PERIODE_COTISATION"));
+						//cmStageUploadDTO.setActivatePrincipale(resultValues.getString("ACTIVITE_PRINCIPALE"));
+						cmStageUploadDTO.setDateDebutPeriod(resultValues.getDate("DATE_DEBUT_PERIODE_COTISATION"));
+						cmStageUploadDTO.setDateFinPeriod(resultValues.getDate("DATE_FIN_PERIODE_COTISATION"));
+						cmStageUploadDTO.setTotalNauxSalaries(resultValues.getString("TOTAL_NOUVEAUX_SALARIES"));
 						cmStageUploadDTO.setTotalSalaries(resultValues.getString("TOTAL_SALARIES"));
-						cmStageUploadDTO.setSynTotalSalIpres(resultValues.getString("SYN_TOTAL_SAL_PLAF_IPRES"));
-						cmStageUploadDTO.setSynTotalSalCss(resultValues.getString("SYN_TOTAL_SAL_PLAF_CSS"));
+						cmStageUploadDTO.setSynTotalSalIpresRg(resultValues.getString("SYN_TOTAL_SAL_PLAF_IPRES_RG"));
+						cmStageUploadDTO.setSynTotalSalIpresRcc(resultValues.getString("SYN_TOTAL_SAL_PLAF_IPRES_RCC"));
+						cmStageUploadDTO.setSynTotalSalCssPf(resultValues.getString("SYN_TOTAL_SAL_PLAF_CSS_PF"));
+						cmStageUploadDTO.setSynTotalSalCssAtmp(resultValues.getString("SYN_TOTAL_SAL_PLAF_CSS_ATMP"));
 						cmStageUploadDTO.setSynTalSalVerses(resultValues.getString("SYN_TAL_SAL_VERSES"));
+						cmStageUploadDTO.setNumeroAssureSocial(resultValues.getString("NUMERO_ASSURE_SOCIAL"));
 						cmStageUploadDTO.setTypePiece(resultValues.getString("TYPE_PIECE"));
 						cmStageUploadDTO.setNumeroPiece(resultValues.getString("NUMERO_PIECE"));
 						cmStageUploadDTO.setNom(resultValues.getString("NOM"));
 						cmStageUploadDTO.setPrenom(resultValues.getString("PRENOM"));
+						cmStageUploadDTO.setDateDeNaissance(resultValues.getDate("DATE_NAISSANCE"));
 						cmStageUploadDTO.setRegime(resultValues.getString("REGIME"));
-						cmStageUploadDTO.setDateEffectRegime(resultValues.getString("DATE_EFFET_REGIME"));
-						cmStageUploadDTO.setTotalSalIpres(resultValues.getString("TOTAL_SAL_IPRES"));
-						cmStageUploadDTO.setTotalSalCss(resultValues.getString("TOTAL_SAL_CSS"));
+						cmStageUploadDTO.setDateEffectRegime(resultValues.getDate("DATE_EFFET_REGIME"));
+						cmStageUploadDTO.setRcc(resultValues.getString("RCC"));
+						cmStageUploadDTO.setRg(resultValues.getString("RG"));
+						cmStageUploadDTO.setTotalSalIpresRg(resultValues.getString("TOTAL_SAL_IPRES_RG"));
+						cmStageUploadDTO.setTotalSalIpresRcc(resultValues.getString("TOTAL_SAL_IPRES_RCC"));
+						cmStageUploadDTO.setTotalSalCssAtmp(resultValues.getString("TOTAL_SAL_CSS_ATMP"));
+						cmStageUploadDTO.setTotalSalCssPf(resultValues.getString("TOTAL_SAL_CSS_PF"));
 						cmStageUploadDTO.setSalarieReel(resultValues.getString("SALAIRE_REEL_BRUT_PERCU"));
 						cmStageUploadDTO.setContractType(resultValues.getString("TYPE_CONTRAT"));
-						cmStageUploadDTO.setEntreeDate(resultValues.getString("DATE_ENTREE"));
-						cmStageUploadDTO.setSortieDate(resultValues.getString("DATE_SORTIE"));
+						cmStageUploadDTO.setEntreeDate(resultValues.getDate("DATE_ENTREE"));
+						cmStageUploadDTO.setSortieDate(resultValues.getDate("DATE_SORTIE"));
 						cmStageUploadDTO.setTempsPresenceJour(resultValues.getString("TEMPS_PRESENCE_JOUR"));
 						cmStageUploadDTO.setTempsPresenceHeures(resultValues.getString("TEMPS_PRESENCE_HEURES"));
 						cmStageUploadDTO.setMotifSortie(resultValues.getString("MOTIF_SORTIE"));
@@ -149,6 +163,7 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 					log.error("Exception in Batch Excel write: "+exception);
 				} finally {
 					psPreparedStatement.close();
+					result.close();
 					psPreparedStatement = null;
 				}
 				
@@ -158,18 +173,26 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 			        XSSFSheet sheet = workbook.createSheet("DNS");
 			        XSSFCellStyle style = workbook.createCellStyle();
 			        XSSFFont font= workbook.createFont();
-			        XSSFCellStyle style1 = workbook.createCellStyle();
-			        XSSFFont font1= workbook.createFont();
-			        Object[][] excelObject = null;
 			        font.setBoldweight(XSSFFont.BOLDWEIGHT_BOLD);
 			        style.setFont(font);
+			        style.setBorderBottom(XSSFCellStyle.BORDER_THIN);
+			        style.setBorderTop(XSSFCellStyle.BORDER_THIN);
+			        style.setBorderRight(XSSFCellStyle.BORDER_THIN);
+			        style.setBorderLeft(XSSFCellStyle.BORDER_THIN);
+			        XSSFCellStyle style1 = workbook.createCellStyle();
+			        XSSFFont font1= workbook.createFont();
 			        font1.setBoldweight(XSSFFont.BOLDWEIGHT_BOLD);
 			        font1.setFontHeight(19.0);
 			        font1.setUnderline(XSSFFont.U_SINGLE);
 			        style1.setFont(font1);
-					
+			        XSSFCellStyle style2 = workbook.createCellStyle();
+			        style2.setBorderBottom(XSSFCellStyle.BORDER_THIN);
+			        style2.setBorderTop(XSSFCellStyle.BORDER_THIN);
+			        style2.setBorderRight(XSSFCellStyle.BORDER_THIN);
+			        style2.setBorderLeft(XSSFCellStyle.BORDER_THIN);
+			        Object[][] excelObject = null;
 					int listSize = stgUploadMap.getValue().size()+10;
-					excelObject = new Object [listSize][20];
+					excelObject = new Object [listSize][25];
 					int rowNum = 0,rowNumber = 0,colNum = 0,count =0;
 					
 					for(CmStageUploadDTO cmStageDTO : stgUploadMap.getValue()){
@@ -182,7 +205,7 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 							excelObject[rowNum][colNum] = CmDNSConstant.ADDRESS;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.DATE_DEBUT_PERIOD;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.DATE_FIN_PERIOD;colNum++;
-							excelObject[rowNum][colNum] = CmDNSConstant.ACTIVITE_PRINCIPALE;colNum++;
+							//excelObject[rowNum][colNum] = CmDNSConstant.ACTIVITE_PRINCIPALE;colNum++;
 
 							rowNum++;colNum=0; //Employer Values
 							excelObject[rowNum][colNum] = CmDNSConstant.SCI;colNum++;// cmStageDTO.getTypePiece()!=null?cmStageDTO.getTypePiece():"";colNum++;
@@ -195,7 +218,7 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 							excelObject[rowNum][colNum] = cmStageDTO.getAdresse()!=null?cmStageDTO.getAdresse():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getDateDebutPeriod()!=null?cmStageDTO.getDateDebutPeriod():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getDateFinPeriod()!=null?cmStageDTO.getDateFinPeriod():"";colNum++;
-							excelObject[rowNum][colNum] = cmStageDTO.getActivatePrincipale()!=null?cmStageDTO.getActivatePrincipale():"";colNum++;
+							//excelObject[rowNum][colNum] = cmStageDTO.getActivatePrincipale()!=null?cmStageDTO.getActivatePrincipale():"";colNum++;
 							//excelObject[rowNum][colNum] = cmStageDTO.getImmatriculationId();colNum++;
 							//immatriculationId = cmStageDTO.getImmatriculationId();
 							//excelObject[rowNum][colNum] = cmStageDTO.getNineaId()!=null?cmStageDTO.getNineaId():"";colNum++;
@@ -204,26 +227,37 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 							rowNum++;colNum=0; //Synthese
 							excelObject[rowNum][colNum] = CmDNSConstant.SYNTHESE;
 							rowNum++; //Synthese Headers
+							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_NOUVEUX_SALARIES;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIES;colNum++;
-							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIES_IPRES;colNum++;
-							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIES_CSS;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIE_IPRES_RG;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIE_IPRES_RCC;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIE_CSS_PF;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIE_CSS_ATMP;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIES_VERSES;colNum++;
 							rowNum++;colNum=0; //Synthese Values
+							excelObject[rowNum][colNum] = cmStageDTO.getTotalNauxSalaries()!=null?cmStageDTO.getTotalNauxSalaries():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalaries()!=null?cmStageDTO.getTotalSalaries():"";colNum++;
-							excelObject[rowNum][colNum] = cmStageDTO.getSynTotalSalIpres()!=null?cmStageDTO.getSynTotalSalIpres():"";colNum++;
-							excelObject[rowNum][colNum] = cmStageDTO.getSynTotalSalCss()!=null?cmStageDTO.getSynTotalSalCss():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getSynTotalSalIpresRg()!=null?cmStageDTO.getSynTotalSalIpresRg():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getSynTotalSalIpresRcc()!=null?cmStageDTO.getSynTotalSalIpresRcc():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getSynTotalSalCssPf()!=null?cmStageDTO.getSynTotalSalCssPf():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getSynTotalSalCssAtmp()!=null?cmStageDTO.getSynTotalSalCssAtmp():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getSynTalSalVerses()!=null?cmStageDTO.getSynTalSalVerses():"";colNum++;
 							rowNum++;colNum=0; // Informations des salariés
 							excelObject[rowNum][colNum] = CmDNSConstant.INFORMATION_SALARIES;
 							rowNum++; //Informations des salariés Headers
+							excelObject[rowNum][colNum] = CmDNSConstant.NUMERO_ASSURE_SOCIAL;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.NOM;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.PRENOM;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.DATE_DE_NASISSANCE;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.TYPE_PIECE;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.NUMERO_PIECE;colNum++;
-							excelObject[rowNum][colNum] = CmDNSConstant.REGIME;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.RCC;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.DATE_REGIME;colNum++;
-							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIES_IPRES;colNum++;
-							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIES_CSS;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.RG;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIE_IPRES_RG;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIE_IPRES_RCC;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIE_CSS_ATMP;colNum++;
+							excelObject[rowNum][colNum] = CmDNSConstant.TOTAL_SALARIE_CSS_PF;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.SALARIE_REEL;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.TYPE_DE_CONTRACT;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.DATE_ENTREE;colNum++;
@@ -234,14 +268,20 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 							excelObject[rowNum][colNum] = CmDNSConstant.TEMPS_TRAVAIL;colNum++;
 							excelObject[rowNum][colNum] = CmDNSConstant.TRANCHE_TRAVAIL;colNum++;
 							rowNum++;colNum=0; // Informations des salariés values
+							excelObject[rowNum][colNum] = cmStageDTO.getNumeroAssureSocial()!=null?cmStageDTO.getNumeroAssureSocial():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getNom()!=null?cmStageDTO.getNom():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getPrenom()!=null?cmStageDTO.getPrenom():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getDateDeNaissance()!=null?cmStageDTO.getDateDeNaissance():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getTypePiece()!=null?cmStageDTO.getTypePiece():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getNumeroPiece()!=null?cmStageDTO.getNumeroPiece():"";colNum++;
-							excelObject[rowNum][colNum] = cmStageDTO.getRegime()!=null?cmStageDTO.getRegime():"";colNum++;
+							//excelObject[rowNum][colNum] = cmStageDTO.getRegime()!=null?cmStageDTO.getRegime():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getRcc()!=null?cmStageDTO.getRcc():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getDateEffectRegime()!=null?cmStageDTO.getDateEffectRegime():"";colNum++;
-							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalIpres()!=null?cmStageDTO.getTotalSalIpres():"";colNum++;
-							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalCss()!=null?cmStageDTO.getTotalSalCss():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getRg()!=null?cmStageDTO.getRg():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalIpresRg()!=null?cmStageDTO.getTotalSalIpresRg():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalIpresRcc()!=null?cmStageDTO.getTotalSalIpresRcc():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalCssAtmp()!=null?cmStageDTO.getTotalSalCssAtmp():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalCssPf()!=null?cmStageDTO.getTotalSalCssPf():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getSalarieReel()!=null?cmStageDTO.getSalarieReel():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getContractType()!=null?cmStageDTO.getContractType():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getEntreeDate()!=null?cmStageDTO.getEntreeDate():"";colNum++;
@@ -254,14 +294,20 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 							
 						}else{
 							rowNum++;colNum=0; // Informations des salariés values
+							excelObject[rowNum][colNum] = cmStageDTO.getNumeroAssureSocial()!=null?cmStageDTO.getNumeroAssureSocial():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getNom()!=null?cmStageDTO.getNom():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getPrenom()!=null?cmStageDTO.getPrenom():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getDateDeNaissance()!=null?cmStageDTO.getDateDeNaissance():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getTypePiece()!=null?cmStageDTO.getTypePiece():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getNumeroPiece()!=null?cmStageDTO.getNumeroPiece():"";colNum++;
-							excelObject[rowNum][colNum] = cmStageDTO.getRegime()!=null?cmStageDTO.getRegime():"";colNum++;
+							//excelObject[rowNum][colNum] = cmStageDTO.getRegime()!=null?cmStageDTO.getRegime():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getRcc()!=null?cmStageDTO.getRcc():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getDateEffectRegime()!=null?cmStageDTO.getDateEffectRegime():"";colNum++;
-							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalIpres()!=null?cmStageDTO.getTotalSalIpres():"";colNum++;
-							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalCss()!=null?cmStageDTO.getTotalSalCss():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getRg()!=null?cmStageDTO.getRg():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalIpresRg()!=null?cmStageDTO.getTotalSalIpresRg():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalIpresRcc()!=null?cmStageDTO.getTotalSalIpresRcc():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalCssAtmp()!=null?cmStageDTO.getTotalSalCssAtmp():"";colNum++;
+							excelObject[rowNum][colNum] = cmStageDTO.getTotalSalCssPf()!=null?cmStageDTO.getTotalSalCssPf():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getSalarieReel()!=null?cmStageDTO.getSalarieReel():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getContractType()!=null?cmStageDTO.getContractType():"";colNum++;
 							excelObject[rowNum][colNum] = cmStageDTO.getEntreeDate()!=null?cmStageDTO.getEntreeDate():"";colNum++;
@@ -274,10 +320,9 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 						}
 						count++;
 					}
-					
 					  for (Object[] excelType : excelObject) {
 				            Row row = sheet.createRow(rowNumber++);
-				             int columnNumber = 0;
+				            int columnNumber = 0;
 				            for (Object field : excelType) {
 				                Cell cell = row.createCell(columnNumber++);
 				                if (field instanceof String) {
@@ -288,18 +333,37 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 				                    if(setUnderline.contains(row.getRowNum())){
 				                    	cell.setCellStyle(style1);
 				                    }
+				                    if(!setUnderline.contains(row.getRowNum()) && !setBold.contains(row.getRowNum())){
+				                    	 cell.setCellStyle(style2);
+				                    }
+				                    
 				                } else if (field instanceof Integer) {
 				                    cell.setCellValue((Integer) field);
-				                    if(setBold.contains(row.getRowNum())){
-				                    	cell.setCellStyle(style);
+				                    if(!setUnderline.contains(row.getRowNum()) && !setBold.contains(row.getRowNum())){
+				                    	 cell.setCellStyle(style2);
 				                    }
-				                    if(setUnderline.contains(row.getRowNum())){
-				                    	cell.setCellStyle(style1);
-				                    }
+				                   
+				                } else if (field instanceof com.splwg.base.api.datatypes.Date) {
+				                	java.text.DateFormat sf = new SimpleDateFormat("dd/MM/yyyy",Locale.ENGLISH);
+				                	DateFormat sf1 = new DateFormat("dd/MM/yyyy");
+				                	Date dat = null;
+				                	try {
+										String date = sf1.format((com.splwg.base.api.datatypes.Date)field);
+										dat = sf.parse(date);
+									} catch (ParseException e) {
+										e.printStackTrace();
+									}
+				                	XSSFCellStyle cellStyle = workbook.createCellStyle();
+							        XSSFCreationHelper createHelper = workbook.getCreationHelper();
+							        cellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy"));
+							        XSSFCellStyle combined = workbook.createCellStyle();
+							        combined.cloneStyleFrom(style2);
+							        combined.setDataFormat(cellStyle.getDataFormat());
+				                	cell.setCellValue(dat);
+				                	cell.setCellStyle(combined);
 				                }
 				            }
 				        }
-					  
 				        try {
 				        	FILE_NAME = null;
 				        	//String dateTime = getDateTimeDDMMYYYY();
@@ -315,19 +379,10 @@ public class CmBatchExcelWrite extends CmBatchExcelWrite_Gen {
 				        } catch (IOException e) {
 				            e.printStackTrace();
 				        }
-					
 				}
-		        System.out.println("Done");
+				log.info("#####FILE CREATION DONE#####");
 		    }
 			return true;
 		}
-
-		private String getDateTimeDDMMYYYY() {
-			Date date = new Date();
-			SimpleDateFormat sf = new SimpleDateFormat("dd-MM-yyyy hh_mm_ss");
-			return sf.format(date);
-		}
-
 	}
-
 }

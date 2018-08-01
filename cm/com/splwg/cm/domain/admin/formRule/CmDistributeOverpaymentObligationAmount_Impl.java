@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.splwg.base.api.QueryIterator;
+import com.splwg.base.api.businessObject.BusinessObjectDispatcher;
 import com.splwg.base.api.businessObject.BusinessObjectInstance;
 import com.splwg.base.api.businessObject.BusinessObjectInstanceKey;
-import com.splwg.base.api.businessObject.COTSFieldDataAndMD;
 import com.splwg.base.api.businessObject.COTSInstanceNode;
 import com.splwg.base.api.businessService.BusinessServiceDispatcher;
 import com.splwg.base.api.businessService.BusinessServiceInstance;
@@ -60,9 +60,10 @@ import com.splwg.tax.domain.payment.paymentEvent.PaymentEvent_Id;
 public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOverpaymentObligationAmount_Gen
 		implements ValidateBusinessObjectAlgorithmSpot {
 
-	//private String taxFormId = "739448654599";
-	private ApplyFormRuleAlgorithmInputData inputData;
-	private ApplyFormRuleAlgorithmInputOutputData inputOutputData;
+	
+	private BusinessObjectInstanceKey boKey;
+	private BusinessObjectInstance boInstance;
+	
 	private static final Logger logger = LoggerFactory
 			.getLogger(CmDistributeOverpaymentObligationAmount_Impl.class);
 	private Money overPaymentTotalAmount = Money.ZERO;
@@ -72,22 +73,22 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	@Override
 	public void invoke() {
 
-		//String taxFormID="739448654599";
+		this.boInstance = BusinessObjectDispatcher.read(this.boKey, false);
+		//BusinessObjectInstance formBusinessObjectInstance = (BusinessObjectInstance) this.inputOutputData.getFormBusinessObject();
+		String taxFormId = this.boInstance.getFieldAndMDForPath("taxFormId").getXMLValue();
+		//String taxFormId = formBusinessObjectInstance.getFieldAndMDForPath("taxFormId").getXMLValue();
+		logger.info("Tax form ID: " + taxFormId);
 		startChanges();
 		PreparedStatement psPreparedStatement = null;
 		String accountId = null;
-		BusinessObjectInstance formBoInstance = (BusinessObjectInstance) inputOutputData.getFormBusinessObject();
-		COTSFieldDataAndMD tax = formBoInstance.getFieldAndMDForPath(("taxFormId"));
-		String taxFormId = tax.getXMLValue();
-		//psPreparedStatement = createPreparedStatement("select per_id from ci_tax_form where tax_form_id=:tax_form_id");
+
 		psPreparedStatement = createPreparedStatement("select acc.ACCT_ID from ci_acct_per acc,ci_tax_form "
-				+ "tax where acc.per_id=tax.per_id and tax.tax_form_id=\'"+tax+"\'");
+				+ "tax where acc.per_id=tax.per_id and tax.tax_form_id=\'"+taxFormId+"\'");
 		QueryIterator<SQLResultRow> result = null;
-		//List<String> accList = new ArrayList<String>();
 		HashMap<String,String> oblTotalAmountMap =  new HashMap<String,String>();
 		
 		try{
-			//psPreparedStatement.bindString("tax_form_id", taxFormId, null);
+			
 			result = psPreparedStatement.iterate();
 			
 			while(result.hasNext())
@@ -96,8 +97,7 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 				accountId = lookUpValue.getString("ACCT_ID");
 				//accountId = "5811295034";
 				System.out.println(lookUpValue.getString("ACCT_ID"));
-				//accList.add(lookUpValue.getString("ACCT_ID"));
-	    //for(String acctId : accList){
+				
 			HashMap<String,List<String>> hashMapPayDetails = getOverPaymentOblDetails(accountId);
 		if(!hashMapPayDetails.isEmpty())
 		{
@@ -112,10 +112,10 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 					
 					try{
 						//psPreparedStatement.bindString("SA_ID", ObliId, null);
-						result = psPreparedStatement.iterate();
+						resultTotal = psPreparedStatement.iterate();
 						
-						while(result.hasNext()){
-							SQLResultRow lookUpVal = result.next();
+						while(resultTotal.hasNext()){
+							SQLResultRow lookUpVal = resultTotal.next();
 							totalAmount = lookUpVal.getString("TOTAL_AMOUNT");
 							Money money = new Money(totalAmount);
 							overPaymentTotalAmount = overPaymentTotalAmount.add(money);
@@ -123,6 +123,8 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 						}
 					} catch(Exception exception){
 						logger.error("Exception in getting overpayment obligation amount from FT "+ exception);
+					}finally{
+						resultTotal.close();
 					}
 					
 				}
@@ -338,6 +340,7 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 		} finally {
 			psPreparedStatement.close();
 			psPreparedStatement = null;
+			result.close();
 			saveChanges();
 		}
 		
@@ -386,6 +389,7 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	                
 	     
 	     psPreparedStatement.setAutoclose(false);
+	     QueryIterator<SQLResultRow> result = psPreparedStatement.iterate();
 	   try {
 	    //psPreparedStatement.bindString("accId", accId, null);
 	    //psPreparedStatement.bindString("acc1", acc1, null);
@@ -402,7 +406,7 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	    //psPreparedStatement.bindString("adjType6", adjType6, null);
 	    //psPreparedStatement.bindString("adjType7", adjType7, null);
 	    
-	    QueryIterator<SQLResultRow> result = psPreparedStatement.iterate();
+	    
 	    List<Money> moneyList = new ArrayList<Money>();
 	    List<String> oblgList = new ArrayList<String>();
 	    List<String> saIdList = new  ArrayList<String>();
@@ -413,10 +417,10 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	     System.out.println(lookUpValue.getString("SA_ID"));
 	     if(!saIdList.contains(lookUpValue.getString("SA_ID"))){
 	      saIdList.add(lookUpValue.getString("SA_ID"));
+	      QueryIterator<SQLResultRow> oblResultIterator = psPreparedStatement.iterate();
 	     try {
 	      psPreparedStatement = createPreparedStatement("SELECT SUM(CUR_AMT) AS \"Total\" from CI_FT where SA_ID = "+ lookUpValue.getString("SA_ID"), "select");
 	      psPreparedStatement.setAutoclose(false);
-	      QueryIterator<SQLResultRow> oblResultIterator = psPreparedStatement.iterate();
 	      while (oblResultIterator.hasNext()) {
 	       System.out.println("I am In");
 	       SQLResultRow oblResult = oblResultIterator.next();
@@ -445,6 +449,8 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	      } 
 	     } catch (Exception exception) {
 	      exception.printStackTrace();
+	     }finally {
+	    	 oblResultIterator.close();
 	     }
 	    }
 	     
@@ -455,6 +461,7 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	   } finally {
 	    psPreparedStatement.close();
 	    psPreparedStatement = null;
+	    result.close();
 	   }
 	  //}
 	  return debtPriorityMap;
@@ -705,8 +712,9 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	}
 
 	@Override
-	public void setBusinessObjectKey(BusinessObjectInstanceKey arg0) {
+	public void setBusinessObjectKey(BusinessObjectInstanceKey boKey) {
 		// TODO Auto-generated method stub
+	 this.boKey=boKey;
 
 	}
 
@@ -732,6 +740,28 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	public void setOriginalBusinessObject(BusinessObjectInstance arg0) {
 		// TODO Auto-generated method stub
 
+	}
+
+
+	@Override
+	public void setApplyFormRuleAlgorithmInputData(ApplyFormRuleAlgorithmInputData applyFormRuleAlgorithmInputData) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void setApplyFormRuleAlgorithmInputOutputData(
+			ApplyFormRuleAlgorithmInputOutputData applyFormRuleAlgorithmInputOutputData) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public ApplyFormRuleAlgorithmInputOutputData getApplyFormRuleAlgorithmInputOutputData() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

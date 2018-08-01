@@ -9,7 +9,6 @@ import com.splwg.base.api.datatypes.Money;
 @SuppressWarnings("serial")
 public class CmCheqRejetST implements Id {
 	
-	private String rejetPaiementId;
 	private String exttransId;
 	private String fileId;
 	private String fileName;
@@ -45,14 +44,13 @@ public class CmCheqRejetST implements Id {
 		// TODO Auto-generated constructor stub
 	}
 
-	public CmCheqRejetST(String rejetPaiementId, String exttransId, String fileId, String fileName, Date fileDate,
+	public CmCheqRejetST(String exttransId, String fileId, String fileName, Date fileDate,
 			Date transDate, Date processDate, String extSourceId, BigInteger cheqRjtDtlSeq, String cheqRjtStFlg,
 			String cancelReason, String tenderTypeCD, String checkNbr, String currentCD, Money tenderAmt,
 			String fraisRjtSW, String fraisRsn, Money fraisRjtMT, Date accountingDate, String microId, String custId,
 			String name1, String extReferenceId, String tenderCtrlId, String acctId, String payEventId,
 			String payTenderId, BigInteger msgCatNumber, BigInteger msgNumber, String mesText) {
 		super();
-		this.rejetPaiementId = rejetPaiementId;
 		this.exttransId = exttransId;
 		this.fileId = fileId;
 		this.fileName = fileName;
@@ -82,14 +80,6 @@ public class CmCheqRejetST implements Id {
 		this.msgCatNumber = msgCatNumber;
 		this.msgNumber = msgNumber;
 		this.mesText = mesText;
-	}
-
-	public String getRejetPaiementId() {
-		return rejetPaiementId;
-	}
-
-	public void setRejetPaiementId(String rejetPaiementId) {
-		this.rejetPaiementId = rejetPaiementId;
 	}
 
 	public String getExttransId() {

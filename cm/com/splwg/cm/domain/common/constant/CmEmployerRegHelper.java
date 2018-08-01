@@ -94,8 +94,17 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 	 * @return
 	 */
 	public boolean validateEmail(String emailAddress) {
+	
+		try {
+			return EmailValidator.getInstance().isValid(emailAddress);
+		} catch(Exception exception) {
+			exception.printStackTrace();
+			log.info(exception.getMessage());
+			return false;
+		}
+		
 
-		return EmailValidator.getInstance().isValid(emailAddress);
+		//return EmailValidator.getInstance().isValid(emailAddress);
 		/*
 		 * // TODO Auto-generated method stub Pattern pattern; Matcher matcher;
 		 * String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@" +
@@ -116,6 +125,8 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 		boolean dateFlag = false;
 		Date date;
 		DateFormat inputFormat;
+		log.info("checkDateSunOrSat dateStr: " + dateStr);
+		System.out.println("checkDateSunOrSat dateStr: " + dateStr);
 		try {
 			if (dateStr.contains("GMT")) {
 				inputFormat = new SimpleDateFormat("E MMM dd HH:mm:ss 'GMT' yyyy");
@@ -154,6 +165,12 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 
 		boolean flag = false;
 		DateFormat inputFormat;
+		log.info("date1: " + date1);
+		log.info("date2: " + date2);
+		log.info("compareStr: " + compareStr);
+		System.out.println("date1: " + date1);
+		System.out.println("date2: " + date2);
+		System.out.println("compareStr: " + compareStr);
 		try {
 			if (date1.contains("UTC") && date2.contains("UTC")) {
 				inputFormat = new SimpleDateFormat("E MMM dd HH:mm:ss 'UTC' yyyy", Locale.ENGLISH);
@@ -185,6 +202,7 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 		} catch (Exception ex) {
 			log.error("Parsing Date Exception:" + ex);
 			flag = false;
+			ex.printStackTrace();
 		}
 
 		return flag;
@@ -200,6 +218,10 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 	public boolean compareDateWithSysDate(String date, String compareStr) {
 		boolean flag = false;
 		DateFormat inputFormat;
+		log.info(" compareDateWithSysDate date1: " + date);
+		log.info("compareDateWithSysDate compareStr: " + compareStr);
+		System.out.println("compareDateWithSysDate date1: " + date);
+		System.out.println("compareDateWithSysDate compareStr: " + compareStr);
 		try {
 			if (date.contains("GMT")) {
 				inputFormat = new SimpleDateFormat("E MMM dd HH:mm:ss 'GMT' yyyy");
@@ -229,8 +251,9 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 				flag = true;
 			}
 
-		} catch (Exception e) {
-			System.out.println(e);
+		} catch (Exception exception) {
+			System.out.println(exception);
+			log.info("compareDateWithSysDate::"+exception);
 			flag = false;
 		}
 		return flag;
@@ -244,7 +267,8 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 	 */
 	public String convertDateFormat(String dateObject) {
 		String parsedDate = "";
-
+		System.out.println("Date Before Formatting:: " + dateObject);
+		log.info("Date Before Formatting:: " + dateObject);
 		try {
 			if (dateObject.contains("GMT")) {
 				DateFormat inputFormat = new SimpleDateFormat("E MMM dd HH:mm:ss 'GMT' yyyy");
@@ -277,6 +301,7 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 		} catch (Exception exception) {
 			parsedDate = "invalidate";
 			log.error("Error while parsing the date format" + exception);
+			exception.printStackTrace();
 		}
 		return parsedDate;
 	}

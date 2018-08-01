@@ -39,8 +39,8 @@ public void testInvoke() {
 		System.out.println("***test start***");
 		//Account_Id id = new Account_Id("2456607326");
 		//Account tenderObligation =  id.getEntity();
-		cc.setCharacteristicValueFk1(new Account_Id("0718403322").getEntity().getId().getIdValue());
-		cc.setAmount(new Money("30000"));
+		cc.setCharacteristicValueFk1(new Account_Id("2516419454").getEntity().getId().getIdValue());
+		cc.setAmount(new Money("500000"));
 		cc.setPaymentEvent(new PaymentEvent_Id("245660788074").getEntity());
 		cc.setSequence(new java.math.BigInteger("1"));
 		//cc.setCharacteristicValueFk1("2456607326");

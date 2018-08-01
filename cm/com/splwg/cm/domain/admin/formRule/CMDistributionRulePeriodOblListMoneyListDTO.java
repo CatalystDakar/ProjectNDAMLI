@@ -8,7 +8,7 @@ import com.splwg.base.api.datatypes.Money;
 
 public class CMDistributionRulePeriodOblListMoneyListDTO {
 
-	
+	  
 	private Map<String, HashMap<List<String>, List<Money>>> periodOblMoney ; //period,list of obligation,list of money
 
 	public Map<String, HashMap<List<String>, List<Money>>> getPeriodOblMoney() {

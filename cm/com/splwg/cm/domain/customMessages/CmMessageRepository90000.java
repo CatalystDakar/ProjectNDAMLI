@@ -881,19 +881,48 @@ public class CmMessageRepository90000 extends AbstractMessageRepository {
         return getCommonInstance().getMessage(Messages.MSG_917, params);
     }
     
-    public static ServerMessage MSG_6000(String paramValue) {
+    
+    /**
+     * Le total des salariés renseigné dans la section synthése (1%) est différent du nombre de salariés déclarés (2%)
+     * @param totalSalOnSyntheseSection
+     * @param totalSalOnEmployeeSection
+     * @return ServerMessage
+     */
+    public static ServerMessage MSG_10004(String totalSalOnSyntheseSection, String totalSalOnEmployeeSection) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(totalSalOnSyntheseSection);
+        params.addRawString(totalSalOnEmployeeSection);
+        return getCommonInstance().getMessage(Messages.MSG_10004, params);
+    }
+    /**
+     * La date de sortie du salarié %1 %2  doit etre supérieur a la date de début de la période de cotisation : %3
+     * @param prenom
+     * @param nom
+     * @param dateDebutPeriode
+     * @return ServerMessage
+     */
+    public static ServerMessage MSG_10005(String prenom, String nom, String dateDebutPeriode) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(prenom);
+        params.addRawString(nom);
+        params.addRawString(dateDebutPeriode);
+        return getCommonInstance().getMessage(Messages.MSG_10005, params);
+    }
+	
+	public static ServerMessage MSG_6000(String paramValue) {
         MessageParameters params = new MessageParameters();
         params.addRawString(paramValue);
         return getCommonInstance().getMessage(Messages.MSG_6000, params);
     }
-
-    public static ServerMessage MSG_6001(String paramValue) {
+    
+	
+	public static ServerMessage MSG_6001(String paramValue) {
         MessageParameters params = new MessageParameters();
         params.addRawString(paramValue);
         return getCommonInstance().getMessage(Messages.MSG_6001, params);
     }
     
-    public static ServerMessage MSG_6002(String paramValue) {
+ 	public static ServerMessage MSG_6002(String paramValue) {
         MessageParameters params = new MessageParameters();
         params.addRawString(paramValue);
         return getCommonInstance().getMessage(Messages.MSG_6002, params);
@@ -904,16 +933,14 @@ public class CmMessageRepository90000 extends AbstractMessageRepository {
         params.addRawString(paramValue);
         return getCommonInstance().getMessage(Messages.MSG_6003, params);
     }
-
     
+
     public static class Messages {
-    	
-    	public static final int MSG_6000 = 6000;
+		public static final int MSG_6000 = 6000;
     	public static final int MSG_6001 = 6001;
         public static final int MSG_6002 = 6002;
         public static final int MSG_6003 = 6003;
-
-		/**
+        /**
         * Message Text: "%1 %2 %3 %4 %5 %6 %7 %8 %9"
         */
         public static final int MSG_1 = 1;
@@ -1269,6 +1296,17 @@ public class CmMessageRepository90000 extends AbstractMessageRepository {
         * Message Text: "Owner Flag (%1) is invalid."
         */
         public static final int MSG_917 = 917;
+        
+        /**
+         * Message Text: "Le total des salariés renseigné dans la section synthése (1%) est différent du nombre de salariés déclarés (2%)"
+         */
+         public static final int MSG_10004 = 10004;
+         
+         /**
+          * Message Text: "La date de sortie du salarié %1 %2  doit etre supérieur a la date de début de la période de cotisation : %3"
+          */
+         public static final int MSG_10005 = 10005;
+
 
     }
 

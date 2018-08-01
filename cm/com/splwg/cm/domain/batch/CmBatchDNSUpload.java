@@ -200,8 +200,9 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 							case Cell.CELL_TYPE_STRING:
 								if (row.getRowNum() == 2)
 								{	
-									if(!isBlankOrNull(headerName) && headerName.equalsIgnoreCase(
-											URLEncoder.encode(CmDNSConstant.MAISON_MERE, CmConstant.UTF))){
+									if (!isBlankOrNull(headerName)
+											&& headerName.equalsIgnoreCase(
+													URLEncoder.encode(CmDNSConstant.MAISON_MERE, CmConstant.UTF))) {
 										if(cell.getStringCellValue().equalsIgnoreCase("Oui")){
 											employerObject.add(true);
 										}else{
@@ -217,6 +218,18 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 								} else if (row.getRowNum() == 5) {
 									syntheseObject.add(cell.getStringCellValue());
 								} else if (row.getRowNum() > 7){
+									if (!isBlankOrNull(headerName)
+											&& headerName.equalsIgnoreCase(
+													URLEncoder.encode(CmDNSConstant.RG, CmConstant.UTF))
+											|| headerName.equalsIgnoreCase(
+													URLEncoder.encode(CmDNSConstant.RCC, CmConstant.UTF))) {
+										if(cell.getStringCellValue().equalsIgnoreCase("Oui")){
+											employeeObject.add(true);
+										}else{
+											employeeObject.add(false);
+										}
+										break;
+									}
 									employeeObject.add(cell.getStringCellValue());
 								}	
 								System.out.println(cell.getStringCellValue());
@@ -283,7 +296,7 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 								 } else if(row.getRowNum()>7){
 									 employeeObject.add("");
 								 } 
-								System.out.println("Blank:");
+								System.out.println("Blank:"+actualHeader);
 								break;
 							case Cell.CELL_TYPE_BOOLEAN:
 								System.out.println("BOOLEAN");
@@ -291,7 +304,7 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 								break;
 							default:
 								employeeObject.add("");
-								System.out.println("Blank:");
+								System.out.println("Blank:"+actualHeader);
 								break;
 							}
 							cellId++;
@@ -311,17 +324,17 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 								uploadXML.append("<" + employerXmlList.get(i) + ">" + employerObject.get(i) + "</" + employerXmlList.get(i) + ">");
 							}
 							for (int i = 0; i < syntheseXmlList.size(); i++) {
-								uploadXML.append("<" + syntheseXmlList.get(i) + ">" + syntheseObject.get(i) + "</" + syntheseXmlList.get(i) + ">");
+								uploadXML.append("<" + syntheseXmlList.get(i) + ">" + (i<=10?syntheseObject.get(i):"") + "</" + syntheseXmlList.get(i) + ">");
 							}
 							uploadXML.append("<informationsDesSalaries> <informationsDesSalariesList>");
 							for (int i = 0; i < employeeXmlList.size(); i++) {
-								uploadXML.append("<" + employeeXmlList.get(i) + ">" + employeeObject.get(i) + "</" + employeeXmlList.get(i) + ">");
+								uploadXML.append("<" + employeeXmlList.get(i) + ">" + (i<=21?employeeObject.get(i):"") + "</" + employeeXmlList.get(i) + ">");
 							}
 							uploadXML.append("</informationsDesSalariesList>");
 						} else{
 							uploadXML.append("<informationsDesSalariesList>");
 							for (int i = 0; i < employeeXmlList.size(); i++) {
-								uploadXML.append("<" + employeeXmlList.get(i) + ">" + employeeObject.get(i) + "</" + employeeXmlList.get(i) + ">");
+								uploadXML.append("<" + employeeXmlList.get(i) + ">" + (i<=21?employeeObject.get(i):"") + "</" + employeeXmlList.get(i) + ">");
 							}
 							uploadXML.append("</informationsDesSalariesList>");
 						}
@@ -329,13 +342,6 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 				}
 				foundNinea = false;
 			}
-			/*
-			 * if (processed && processStgFlag) {
-			 * customHelper.moveFileToProcessedFolder(fileName,
-			 * this.getParameters().getPathToMove()); } else {
-			 * customHelper.moveFileToFailuireFolder(fileName,
-			 * this.getParameters().getErrorFilePathToMove()); }
-			 */
 			try {
 				processed = saveFormBatchHeaderXML(formHeaderId,nineaNumber);
 				processStgFlag = saveFormUploadStageXML(employerObject,syntheseObject,nineaNumber,formHeaderId);
@@ -413,15 +419,35 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 			}
 			return saveFlag;
 		}
-
-		private List<String> createSyntheseTagList() {
+		
+		private List<String> createEmployerTagList() {
 			
+			List<String> employerNameList = new ArrayList<String>();
+			
+			employerNameList.add("typeIdentifiant");
+			employerNameList.add("idNumber");
+			employerNameList.add("raisonSociale");
+			employerNameList.add("adresse");
+			employerNameList.add("dateDebutCotisation");
+			employerNameList.add("dateFinCotisation");
+			
+			return employerNameList;
+		}
+		private List<String> createSyntheseTagList() {
+					
 			List<String> syntheseList = new ArrayList<String>();
 
+			syntheseList.add("totalNouvSalaries");
 			syntheseList.add("totalSalaries");
-			syntheseList.add("totalSalIpres");
-			syntheseList.add("totalSalCSS");
+			syntheseList.add("totSalAssIpresRgemp");
+			syntheseList.add("totSalAssIpresRccempl");
+			syntheseList.add("totSalAssCssPf");
+			syntheseList.add("totSalAssCssAtmp");
 			syntheseList.add("totalSalVerses");
+			syntheseList.add("mntCotPfEmp");
+			syntheseList.add("mntCotAtMpEmp");
+			syntheseList.add("mntCotRgEmp");
+			syntheseList.add("mntCotRccEmp");
 			syntheseList.add("tauxCotisationPF");
 			syntheseList.add("tauxCotisationAtMp");
 			syntheseList.add("tauxCotisationRetraite");
@@ -432,38 +458,29 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 			syntheseList.add("cotisationRGCC");
 			syntheseList.add("montantPF");
 			syntheseList.add("montantATMP");
-			syntheseList.add("montantRRG");
 			syntheseList.add("montantRCC");
-			
+			syntheseList.add("montantRRG");
+					
 			return syntheseList;
 		}
 
-		private List<String> createEmployerTagList() {
-			
-			List<String> employerNameList = new ArrayList<String>();
-
-			employerNameList.add("typeIdentifiant");
-			employerNameList.add("idNumber");
-			employerNameList.add("raisonSociale");
-			employerNameList.add("adresse");
-			employerNameList.add("dateDebutCotisation");
-			employerNameList.add("dateFinCotisation");
-			employerNameList.add("activitePrincipale");
-			
-			return employerNameList;
-		}
-
 		private List<String> createEmployeeTagList() {
+			
 			List<String> employeeNameList = new ArrayList<String>();
 
+			employeeNameList.add("numeroAssureSocial");
 			employeeNameList.add("nom");
 			employeeNameList.add("prenom");
+			employeeNameList.add("dateDeNaisssance");
 			employeeNameList.add("typePieceIdentite");
 			employeeNameList.add("numeroPieceIdentite");
-			employeeNameList.add("regime");
+			employeeNameList.add("regimeGeneral");
+			employeeNameList.add("regimCompCadre");
 			employeeNameList.add("dateEffetRegime");
-			employeeNameList.add("totalPlafondIpres");
-			employeeNameList.add("totalPlafondCSS");
+			employeeNameList.add("totSalAssIpresRge");
+			employeeNameList.add("totSalAssIpresRcce");
+			employeeNameList.add("totSalAssCssAtmpe");
+			employeeNameList.add("totSalAssCssPfe");
 			employeeNameList.add("salaireBrut");
 			employeeNameList.add("typeContrat");
 			employeeNameList.add("dateEntree");
@@ -582,10 +599,13 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 								URLEncoder.encode(CmDNSConstant.NUMERO_IDENTIFANT, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.IDENTIFIANT_IMMATRICULATION,CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.ACTIVITE_PRINCIPALE, CmDNSConstant.UTF),
-								URLEncoder.encode(CmDNSConstant.MAISON_MERE, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.DATE_DEBUT_PERIOD, CmDNSConstant.UTF),
-								URLEncoder.encode(CmDNSConstant.DATE_DEBUT_PERIOD, CmDNSConstant.UTF),
+								URLEncoder.encode(CmDNSConstant.TOTAL_SALARIES, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.DATE_FIN_PERIOD, CmDNSConstant.UTF),
+								URLEncoder.encode(CmDNSConstant.TYPE_PIECE, CmDNSConstant.UTF),
+								URLEncoder.encode(CmDNSConstant.NUMERO_PIECE, CmDNSConstant.UTF),
+								URLEncoder.encode(CmDNSConstant.TOTAL_SALARIE_IPRES_RG, CmDNSConstant.UTF),
+								URLEncoder.encode(CmDNSConstant.TOTAL_SALARIE_IPRES_RCC, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.NOM, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.PRENOM, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.REGIME, CmDNSConstant.UTF),
@@ -613,19 +633,19 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 			// BusinessService_Id businessServiceId=new
 			// BusinessService_Id("F1-AddToDoEntry");
 			BusinessServiceInstance businessServiceInstance = BusinessServiceInstance.create("F1-AddToDoEntry");
-			Role_Id toDoRoleId = new Role_Id("CM-REGTODO");
+			Role_Id toDoRoleId = new Role_Id("CM-DNSTODO");
 			Role toDoRole = toDoRoleId.getEntity();
 			businessServiceInstance.getFieldAndMDForPath("sendTo").setXMLValue("SNDR");
 			businessServiceInstance.getFieldAndMDForPath("subject").setXMLValue("Batch Update from PSRM");
-			businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-REGTO");
+			businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-DNSTO");
 			businessServiceInstance.getFieldAndMDForPath("toDoRole").setXMLValue(toDoRole.getId().getTrimmedValue());
-			businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue("CM-REGFORMSTGULPD");
+			businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue("CM_DNSFORMSTGULPD");
 			businessServiceInstance.getFieldAndMDForPath("messageCategory").setXMLValue("90007");
 			businessServiceInstance.getFieldAndMDForPath("messageNumber").setXMLValue(messageNumber);
 			businessServiceInstance.getFieldAndMDForPath("messageParm1").setXMLValue(messageParam);
 			businessServiceInstance.getFieldAndMDForPath("messageParm2").setXMLValue(nineaNumber);
 			businessServiceInstance.getFieldAndMDForPath("messageParm3").setXMLValue(fileName);
-			businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue("CM-REGFORMSTGULPD");
+			businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue("CM_DNSFORMSTGULPD");
 
 			BusinessServiceDispatcher.execute(businessServiceInstance);
 			saveChanges();

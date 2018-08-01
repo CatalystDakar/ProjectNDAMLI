@@ -34,13 +34,13 @@ public final class CmEmployerRegConstant {
 	public static final String NINEA_PREFIX ="00";
 	public static final String UTF ="UTF-8";
 	public static final String INVALID_DATE_STRING  = "invalidate";
-	public static final String IMMATRICULATION_DATE = "Date d’immatriculation au registre de commerce";
+	public static final String IMMATRICULATION_DATE = "Date d'immatriculation au registre de commerce";
 	public static final String ESTABLISHMENT_DATE = "Date Ouverture Établissement";
 	public static final String PHONE = "Téléphone fixe";
 	public static final String TAX_IDENTIFY_NUM = "Code d'identification fiscale";
 	public static final String EMAIL_EMPLOYER = "Email de l'employeur";
 	public static final String TRADE_REG_NUM = "Numéro de registre du commerce";
-	public static final String PREMIER_EMP_DATE = "Date d’embauche du premier salarié";
+	public static final String PREMIER_EMP_DATE = "Date d'embauche du premier salarié";
 	public static final String TAX_ID_DATE = "Date d'immatriculation fiscale";
 	//String empty check
 	public static final String TYPE_D_EMPLOYEUR = "Type d'employeur";
@@ -55,10 +55,10 @@ public final class CmEmployerRegConstant {
 	public static final String DATE_DE_CREATION = "Date de création";
 	public static final String DATE_IDENTIFICATION_FISCALE = "Date d'identification fiscale";
 	public static final String NUMERO_REGISTER_DE_COMMERCE = "Numéro du registre de commerce";
-	public static final String DATE_IMM_REGISTER_DE_COMMERCE = "Date d’immatriculation au registre de commerce";
+	public static final String DATE_IMM_REGISTER_DE_COMMERCE = "Date d'immatriculation au registre de commerce";
 	public static final String DATE_OUVERTURE_EST = "Date Ouverture Etablissement";
-	public static final String DATE_EMBAUCHE_PREMIER_SALARY = "Date d’embauche du premier salarié";
-	public static final String SECTEUR_ACTIVITIES = "Secteur d’Activités";
+	public static final String DATE_EMBAUCHE_PREMIER_SALARY = "Date d'embauche du premier salarié";
+	public static final String SECTEUR_ACTIVITIES = "Secteur d'Activités";
 	public static final String ACTIVATE_PRINCIPAL = "Activité principale";
 	public static final String TAUX_AT = "Taux AT";
 	public static final String NOMBRE_TRAVAIL_REGIME_GENERAL  = "Nombre de travailleurs en régime général";
@@ -101,11 +101,11 @@ public final class CmEmployerRegConstant {
     public static final String ARONDISSEMENT_NAIS = "Arondissement de naissance";
     public static final String COMMUNE_NAIS = "Commune de naissance";
     public static final String QUARTIER_NAIS  = "Quartier de naissance";
-	public static final String TYPE_PIECE_IDENTITE = "Type de pièce d’identité";
+	public static final String TYPE_PIECE_IDENTITE = "Type de pièce d'identité";
 	public static final String NUMERO_PIECE_IDENTITE = "Numéro pièce d'identité";
 	public static final String DATE_DE_DELIVRANCE = "Date de délivrance";
   public static final String LIEU_DE_DELIVRANCE = "Lieu de délivrance";
-	public static final String DATE_DE_EXPIRATION = "Date d’expiration"; 	
+	public static final String DATE_DE_EXPIRATION = "Date d'expiration"; 	
     public static final String PAYS_RES  = "Pays";
     public static final String REGION_RES  = "Région";
     public static final String DEPARTMENT_RES  = "Département";

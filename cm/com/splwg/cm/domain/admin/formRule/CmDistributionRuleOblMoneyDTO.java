@@ -7,7 +7,7 @@ import com.splwg.base.api.datatypes.Money;
 public class CmDistributionRuleOblMoneyDTO {
 
 	
-	private Map<String, Money> mapOblMoney; //obligation,Money
+	private Map<String, Money> mapOblMoney; //obligation,Money 
 
 	public Map<String, Money> getMapOblMoney() {
 		return mapOblMoney;

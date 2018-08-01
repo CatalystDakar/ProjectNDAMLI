@@ -1,7 +1,7 @@
 package com.splwg.cm.domain.batch;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,8 +12,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-//import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.commons.validator.routines.EmailValidator;
 
 import com.splwg.base.api.businessObject.COTSInstanceList;
 import com.splwg.base.api.businessObject.COTSInstanceListNode;
@@ -23,7 +25,6 @@ import com.splwg.shared.logging.Logger;
 import com.splwg.shared.logging.LoggerFactory;
 
 public class CmHelper {
-
 	private final static Logger log = LoggerFactory.getLogger(CmHelper.class);
 
 	/**
@@ -518,6 +519,53 @@ public class CmHelper {
 			exception.printStackTrace();
 			log.error(exception.getCause());
 		}
+	}
+	
+	/**
+	 * Method to check whether date does not prevails on saturday or sunday.
+	 * 
+	 * @param dateStr
+	 * @return
+	 */
+	public boolean checkDateSunOrSatOnline(String dateStr) {
+		boolean dateFlag = false;
+		Date date;
+		DateFormat inputFormat;
+		try {
+			if (dateStr.contains("GMT")) {
+				inputFormat = new SimpleDateFormat("E MMM dd HH:mm:ss 'GMT' yyyy");
+			} else if (dateStr.contains("UTC")) {
+				inputFormat = new SimpleDateFormat("E MMM dd HH:mm:ss 'UTC' yyyy", Locale.ENGLISH);
+			} else {
+				inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+			}
+			date = inputFormat.parse(dateStr);
+			if (date.getDay() == 6 || date.getDay() == 0) {
+				dateFlag = true;
+			}
+		} catch (ParseException e) {
+			log.error("Error in parsing date" + e);
+			dateFlag = false;
+		}
+		return dateFlag;
+	}
+	
+	/**
+	 * Method to Validate Email Address
+	 * 
+	 * @param stringCellValue
+	 * @return
+	 */
+	public boolean validateEmailOnline(String emailAddress) {
+
+		//return EmailValidator.getInstance().isValid(emailAddress);
+		
+		  String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$"; 
+		  Pattern pattern = Pattern.compile(EMAIL_PATTERN); 
+		  Matcher matcher = pattern.matcher(emailAddress); 
+		  return matcher.matches();
+		 
+
 	}
 
 }
