@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.ibm.icu.math.BigDecimal;
 import com.splwg.base.api.QueryIterator;
 import com.splwg.base.api.businessObject.COTSInstanceNode;
 import com.splwg.base.api.businessService.BusinessServiceDispatcher;
@@ -43,7 +42,6 @@ import com.splwg.tax.domain.payment.paymentEvent.PaymentEvent;
 import com.splwg.tax.domain.payment.paymentEvent.PaymentEventDistributionDetail;
 import com.splwg.tax.domain.payment.paymentEvent.PaymentTender;
 
-import oracle.xml.xquery.runtime.strings.StringValue;
 
 /**
  * @author Deepak P

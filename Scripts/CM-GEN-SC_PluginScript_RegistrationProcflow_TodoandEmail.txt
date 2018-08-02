@@ -1,0 +1,54 @@
+move "parm/soft[2]/value" to "F1-DetermineBo/input/pkValue1";
+move 'C1-PRCFLWTYP' to "F1-DetermineBo/input/mo";
+invokeBS 'F1-DetermineBo' using "F1-DetermineBo";
+declareBO "F1-DetermineBo/output/bo" as 'processFlowTypeBo';
+move "parm/soft[2]/value" to "processFlowTypeBo/processFlowType";
+invokeBO "F1-DetermineBo/output/bo" using "processFlowTypeBo" for read;declareBO "processFlowTypeBo/transBusObjCd" as 'processFlowBo';
+     
+move "parm/hard/businessObjectKey/processFlowId" to "processFlowBo/processFlowId";
+invokeBO "processFlowTypeBo/transBusObjCd" using "processFlowBo" for read;
+
+move "processFlowBo/informationDecoupageGeographique/quartier" to "CM_GETROLEBS/quartierRole";
+
+move "parm/soft[1]/value" to $todoType;
+if("$todoType='CMAGEMP'")
+invokeBS 'CM_GETROLEBS' using "CM_GETROLEBS";
+move "CM_GETROLEBS/results[typeRole='CMAGEMP']/toDoRole" to $role; 
+end-if;
+
+if("$todoType='CMAGEMPE'")
+invokeBS 'CM_GETROLEBS' using "CM_GETROLEBS";
+move "CM_GETROLEBS/results[typeRole='CMAGEMPE']/toDoRole" to $role;
+end-if;
+
+if("$todoType='CM-CONTR'")
+invokeBS 'CM_GETROLEBS' using "CM_GETROLEBS";
+move "CM_GETROLEBS/results[typeRole='CM-CON']/toDoRole" to $role;
+end-if;
+
+if("$todoType='CM-CSS'")
+invokeBS 'CM_GETROLEBS' using "CM_GETROLEBS";
+move "CM_GETROLEBS/results[typeRole='CM-CSS']/toDoRole" to $role;
+end-if;
+
+if("$todoType='CM-IPRES'")
+invokeBS 'CM_GETROLEBS' using "CM_GETROLEBS";
+move "CM_GETROLEBS/results[typeRole='CM-IPRES']/toDoRole" to $role;
+end-if;
+
+
+move "parm/soft[1]/value" to "F1-AddToDoEntry/toDoType";
+move $role to "F1-AddToDoEntry/toDoRole";
+move "parm/hard/businessObjectKey/processFlowId" to "F1-AddToDoEntry/drillKey1" ;
+move "parm/hard/businessObjectKey/processFlowId" to "F1-AddToDoEntry/sortKey1" ;
+move "processFlowBo/employerDetails/employerName" to "F1-AddToDoEntry/messageParm1";
+
+invokeBS 'F1-AddToDoEntry' using "F1-AddToDoEntry";
+
+move "parm/soft[3]/value" to $mail_send;
+if("$mail_send='Y'")
+move "F1-AddToDoEntry/*" to "CM-EMAIL-SC/scriptData/*";
+move "CM-EMAIL-SC/scriptData"  to "F1-SavePointDispatcher/scriptData";
+move 'CM-EMAIL-SC'  to "F1-SavePointDispatcher/scriptName";
+invokeBS 'F1-SavePointDispatcher'  using "F1-SavePointDispatcher";
+end-if;

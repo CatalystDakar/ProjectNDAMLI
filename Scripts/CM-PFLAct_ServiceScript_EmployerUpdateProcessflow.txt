@@ -1,0 +1,46 @@
+
+     if("parm/processFlowId = $BLANK")
+         terminate;
+     end-if;
+
+
+     move 'C1-PROCFLOW' to "F1-DetermineBo/input/mo";
+     move "parm/processFlowId" to "F1-DetermineBo/input/pkValue1";
+     invokeBS 'F1-DetermineBo' using "F1-DetermineBo";
+
+
+     //Invoke BO for Read to retrieve the current status
+     
+     move "parm/processFlowId" to "parm/boGroup/processFlowId";
+     move "F1-DetermineBo/output/bo" to "parm/boGroup/bo";
+     invokeBO "F1-DetermineBo/output/bo" using "parm/boGroup" for read;
+
+
+     move "parm/processFlowId" to "parm/nextStates/input/pkValue1";
+     move "F1-DetermineBo/output/bo" to "parm/nextStates/input/bo";
+     move "F1-DetermineBo/output/boStatus" to "parm/nextStates/input/boStatus";
+     invokeBS 'F1-RetrieveNextStates' using "parm/nextStates";
+
+
+     move "F1-DetermineBo/output/bo" to "F1-RetBOOpt/input/bo";
+     move 'F1UU' to "F1-RetBOOpt/input/boOptionType";
+     move 'false' to "F1-RetBOOpt/input/isMultiple";
+     move 'false' to "F1-RetBOOpt/isRequired";
+     invokeSS 'F1-RetBOOpt' using "F1-RetBOOpt";
+     move "F1-RetBOOpt/output/values[1]/boOptionValue" to "parm/boGroup/maintenanceMap";
+
+
+     move 'C1-PFL' to "F1-GetForeignKeyReference/input/fkReference";
+     move "parm/processFlowId" to "F1-GetForeignKeyReference/input/fkValue1";
+     invokeBS 'F1-GetForeignKeyReference' using "F1-GetForeignKeyReference";
+     move "F1-GetForeignKeyReference/output/infoDescription" to "parm/processFlowInfo";
+
+
+     move "F1-DetermineBo/output/bo" to "F1-RetrieveBOStatusOption/input/bo";
+     move "parm/boGroup/boStatus" to "F1-RetrieveBOStatusOption/input/boStatus";
+     move 'F1SC' to "F1-RetrieveBOStatusOption/input/boStatusOptionType";
+     move 'false' to "F1-RetrieveBOStatusOption/input/isMultiple";
+     invokeBS 'F1-RetrieveBOStatusOption' using "F1-RetrieveBOStatusOption";
+     
+     move 'Y' to "parm/flags/shouldDisplayEditButton";
+     move 'Y' to "parm/flags/shouldDisplayDeleteButton";

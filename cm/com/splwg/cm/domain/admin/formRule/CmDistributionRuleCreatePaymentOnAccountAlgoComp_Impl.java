@@ -340,8 +340,14 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 				}
 			}
 	}
-}
+ }
 
+	/**
+	 * Method to get All Account Details From AccountId
+	 * 
+	 * @param accountId
+	 * @return
+	 */
 	private Map<String, String> getAllAccountDetailsFromAccountId(String accountId) {
 		
 		PreparedStatement accntPreparedStatement = null;
@@ -373,6 +379,8 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 	}
 
 	/**
+	 * Method to create and Frozen the Payment
+	 * 
 	 * @param obligation
 	 * @param money
 	 */
@@ -436,6 +444,8 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 		 }
 	
 	/**
+	 * Method to execute Business Service And Create Obligation
+	 * 
 	 * @param bsInstance
 	 * @return
 	 */
@@ -541,38 +551,33 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 		HashMap<String, Money> debtOblMap = new HashMap<String, Money>();
 		HashMap<String, HashMap<List<String>,List<Money>>> periodMap = new HashMap<String, HashMap<List<String>,List<Money>>>();
 	    LinkedHashMap<CmDistributionRuleOblMoneyDTO, CMDistributionRulePeriodOblListMoneyListDTO> debtPriorityMap = new LinkedHashMap<CmDistributionRuleOblMoneyDTO, CMDistributionRulePeriodOblListMoneyListDTO>();
-/*			psPreparedStatement = createPreparedStatement("SELECT CAP.ACCT_ID, CS.SA_ID, CS.SA_TYPE_CD, CS.SA_STATUS_FLG ,"
-					+ "CADJ.ADJ_TYPE_CD, CADJ.ADJ_ID, CADJ.ADJ_AMT, CS.START_DT , CADJ.CRE_DT FROM CI_ACCT_PER CAP,"
-					+ " CI_ACCT CA ,CI_SA CS,CI_ADJ CADJ WHERE CAP.PER_ID IN (SELECT PER_ID from CI_ACCT_PER where ACCT_ID = :accId)"
-							+ " AND CAP.ACCT_ID=CA.ACCT_ID AND CA.CUST_CL_CD IN(:acc1,:acc2,:acc3) AND CAP.ACCT_ID = CS.ACCT_ID "
-							+ " AND CS.SA_TYPE_CD in(:oblType1,:oblType2,:oblType3) AND CS.SA_ID = CADJ.SA_ID AND CADJ.ADJ_TYPE_CD IN "
-							+ " (:adjType1,:adjType2,:adjType3,:adjType4,:adjType5,:adjType6,:adjType7) AND CS.SA_STATUS_FLG=40 ORDER BY CS.START_DT");
-							*/
-		
-	    psPreparedStatement = createPreparedStatement(" SELECT CAP.ACCT_ID, CS.SA_ID, CS.SA_TYPE_CD, CS.SA_STATUS_FLG , "
+							
+		  /* psPreparedStatement = createPreparedStatement(" SELECT CAP.ACCT_ID, CS.SA_ID, CS.SA_TYPE_CD, CS.SA_STATUS_FLG , "
+	    				+" CADJ.ADJ_TYPE_CD, CADJ.ADJ_ID, CADJ.ADJ_AMT, CS.START_DT , CADJ.CRE_DT FROM CI_ACCT_PER CAP, "
+	    				+" CI_ACCT CA ,CI_SA CS,CI_ADJ CADJ WHERE CAP.PER_ID IN (SELECT PER_ID from CI_ACCT_PER where ACCT_ID = :accId)"
+	    				+" AND CAP.ACCT_ID=CA.ACCT_ID AND CA.CUST_CL_CD IN(:accountType) AND CAP.ACCT_ID = CS.ACCT_ID  "
+	    				+" AND CS.SA_TYPE_CD in(:obligationContribution, :obligationOverPayment) AND CS.SA_ID = CADJ.SA_ID AND CADJ.ADJ_TYPE_CD IN  "
+	    				+" (:adjustmentTypeContribution, :adjustmentTypePenality, :adjustmentTypeMajoration, :adjustmentTyepeOverpayment) AND CS.SA_STATUS_FLG=40 ORDER BY CS.START_DT", "SELECT");*/	
+			
+			
+	       psPreparedStatement = createPreparedStatement(" SELECT CAP.ACCT_ID, CS.SA_ID, CS.SA_TYPE_CD, CS.SA_STATUS_FLG , "
 	    				+" CADJ.ADJ_TYPE_CD, CADJ.ADJ_ID, CADJ.ADJ_AMT, CS.START_DT , CADJ.CRE_DT FROM CI_ACCT_PER CAP, "
 	    				+" CI_ACCT CA ,CI_SA CS,CI_ADJ CADJ WHERE CAP.PER_ID IN (SELECT PER_ID from CI_ACCT_PER where ACCT_ID = \'"+accId+"\') "
 	    				+" AND CAP.ACCT_ID=CA.ACCT_ID AND CA.CUST_CL_CD IN("+accountType+") AND CAP.ACCT_ID = CS.ACCT_ID  "
 	    				+" AND CS.SA_TYPE_CD in("+obligationContribution+","+obligationOverPayment+") AND CS.SA_ID = CADJ.SA_ID AND CADJ.ADJ_TYPE_CD IN  "
-	    				+" ("+adjustmentTypeContribution+","+adjustmentTypePenality+","+adjustmentTypeMajoration+","+adjustmentTyepeOverpayment+") AND CS.SA_STATUS_FLG=40 ORDER BY CS.START_DT");
+	    				+" ("+adjustmentTypeContribution+","+adjustmentTypePenality+","+adjustmentTypeMajoration+","+adjustmentTyepeOverpayment+") AND CS.SA_STATUS_FLG=40 ORDER BY CS.START_DT", "SELECT");
 	    
 			psPreparedStatement.setAutoclose(false);
 			QueryIterator<SQLResultRow> resultIterator = null;
 			try {
-		/*		psPreparedStatement.bindString("accId", accId, null);
-				psPreparedStatement.bindString("acc1", acc1, null);
-				psPreparedStatement.bindString("acc2", acc2, null);
-				psPreparedStatement.bindString("acc3", acc3, null);
-				psPreparedStatement.bindString("oblType1", oblType1, null);
-				psPreparedStatement.bindString("oblType2", oblType2, null);
-				psPreparedStatement.bindString("oblType3", oblType3, null);
-				psPreparedStatement.bindString("adjType1", adjType1, null);
-				psPreparedStatement.bindString("adjType2", adjType2, null);
-				psPreparedStatement.bindString("adjType3", adjType3, null);
-				psPreparedStatement.bindString("adjType4", adjType4, null);
-				psPreparedStatement.bindString("adjType5", adjType5, null);
-				psPreparedStatement.bindString("adjType6", adjType6, null);
-				psPreparedStatement.bindString("adjType7", adjType7, null);*/
+				/*psPreparedStatement.bindString("accId", accId, null);
+				psPreparedStatement.bindString("accountType", accountType, null);
+				psPreparedStatement.bindString("obligationContribution", obligationContribution, null);
+				psPreparedStatement.bindString("obligationOverPayment", obligationOverPayment, null);
+				psPreparedStatement.bindString("adjustmentTypeContribution", adjustmentTypeContribution, null);
+				psPreparedStatement.bindString("adjustmentTypePenality", adjustmentTypePenality, null);
+				psPreparedStatement.bindString("adjustmentTypeMajoration", adjustmentTypeMajoration, null);
+				psPreparedStatement.bindString("adjustmentTyepeOverpayment", adjustmentTyepeOverpayment, null);*/
 				
 				resultIterator = psPreparedStatement.iterate();
 				QueryIterator<SQLResultRow> oblResultIterator = null;			

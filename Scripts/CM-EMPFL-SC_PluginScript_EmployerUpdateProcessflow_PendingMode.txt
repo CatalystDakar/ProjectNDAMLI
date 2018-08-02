@@ -1,0 +1,28 @@
+ // Invoke CM-EmployerUpdateTransBO for reading
+     declareBO "parm/hard/businessObject/id" as 'CM-EmployerUpdateTransBO';
+     move "parm/hard/businessObjectKey/processFlowId" to "CM-EmployerUpdateTransBO/processFlowId";
+     invokeBO "parm/hard/businessObject/id" using "CM-EmployerUpdateTransBO" for read;
+     
+     move "CM-EmployerUpdateTransBO/PerId" to $PerId;
+     
+     if("string($PerId)!=$BLANK")
+     if("string(string-length(string($PerId))) != '10'")
+     terminate with error(90008,327);
+     end-if;
+     end-if;
+     
+     
+     move null to "CM-EMPUPDATE";
+     move "CM-EmployerUpdateTransBO/PerId" to "CM-EMPUPDATE/PerId";
+     invokeBS 'CM-EMPUPDATE' using "CM-EMPUPDATE";
+     
+     move '0' to $count;
+     for ($count in "CM-EMPUPDATE/results")
+     move "$count/phoneTypeCd" to "CM-EmployerUpdateTransBO/EmployerInfo/+typeOfPhone/PhoneType" ;
+     move "$count/phone" to "CM-EmployerUpdateTransBO/EmployerInfo/typeOfPhone[last()]/PhoneNo";
+     move "$count/emailId" to "CM-EmployerUpdateTransBO/EmployerInfo/EmailId";
+     
+     end-for;
+     
+      invokeBO 'CM-EmployerUpdateTransBO' using "CM-EmployerUpdateTransBO" for replace;
+end-edit;

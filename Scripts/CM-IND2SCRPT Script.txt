@@ -1,0 +1,301 @@
+ Script Name : CM-IND2SCRPT
+
+Registartion Form Type: IND2
+
+Purpose: To Create Person and Accounts. 
+
+ 
+ 
+ 
+ move "parm/hard/applyFormRuleAlgorithmInputOutputData/formBusinessObject/schemaName" to $regFormBO;
+     declareBO $regFormBO as 'REG-FORM';
+     move "parm/hard/applyFormRuleAlgorithmInputOutputData/formBusinessObject/data" to "REG-FORM";
+     
+     
+      
+     //Employer
+     //add Employer Address, Person and Account
+     //Employer Address
+     move null to "C1-Address";
+     move 'C1AC' to "C1-Address/status";
+     move 'C1-Address' to "C1-Address/bo";
+     //move 'SEN' to "C1-Address/country";
+	 
+     //move "REG-FORM/employerProfessionalDetails/address/asCurrent" to "C1-Address/address1";
+     //move "REG-FORM/employerProfessionalDetails/qartier/asCurrent" to "C1-Address/city";
+     //move "REG-FORM/mainRegistrationForm/postbox/asCurrent" to "C1-Address/postal";
+	 
+			   move "REG-FORM/workerInformation/nationality/asCurrent" to "C1-Address/country";
+               //move 'SEN' to "C1-Address/country";
+               move "REG-FORM/workerInformation/arrondissement/asCurrent" to "C1-Address/address1";
+			   move "REG-FORM/workerInformation/commune/asCurrent" to "C1-Address/address2";
+			   move "REG-FORM/workerInformation/quartier/asCurrent" to "C1-Address/address3";
+			   move "REG-FORM/workerInformation/adrdress/asCurrent" to "C1-Address/address4";
+			   move "REG-FORM/workerInformation/region/asCurrent" to "C1-Address/county";
+               move "REG-FORM/workerInformation/department/asCurrent" to "C1-Address/city";
+			   
+     invokeBO 'C1-Address' using "C1-Address" for add;
+     move "C1-Address/addressId" to $empAddressId;
+     
+	 move null to "CM-PersonIndividualChar";
+               move 'PERSON_PHYS' to "CM-PersonIndividualChar/personType";
+               move 'ENG' to "CM-PersonIndividualChar/language";
+               move 'PRIM' to "CM-PersonIndividualChar/+personName/nameType";
+               move "REG-FORM/workerInformation/firstName/asCurrent" to "CM-PersonIndividualChar/personName/firstName";
+               move "REG-FORM/workerInformation/lastName/asCurrent" to "CM-PersonIndividualChar/personName/lastName";
+               move 'true' to "CM-PersonIndividualChar/personName/isPrimaryName";
+			   
+			   move "REG-FORM/workerInformation/idType/asCurrent" to $identityType;
+	           
+			   if("$identityType='NIN'")
+	           move 'NIN' to "CM-PersonIndividualChar/+personIds/idType";
+               move "string(REG-FORM/workerInformation/nin/asCurrent)" to "CM-PersonIndividualChar/personIds[last()]/personIdNumber";
+			   move 'true' to "CM-PersonIndividualChar/personIds[last()]/isPrimaryId";
+			   end-if;
+			   if("$identityType='CDAO'")
+	           move 'CDAO' to "CM-PersonIndividualChar/+personIds/idType";
+               move "string(REG-FORM/workerInformation/ninCedeao/asCurrent)" to "CM-PersonIndividualChar/personIds[last()]/personIdNumber";
+			   move 'true' to "CM-PersonIndividualChar/personIds[last()]/isPrimaryId";
+			   end-if;
+			   if("$identityType='CONC'")
+	           move 'CONC' to "CM-PersonIndividualChar/+personIds/idType";
+               move "string(REG-FORM/workerInformation/idNumber/asCurrent)" to "CM-PersonIndividualChar/personIds[last()]/personIdNumber";
+			   move 'true' to "CM-PersonIndividualChar/personIds[last()]/isPrimaryId";
+			   end-if;
+			   if("$identityType='PASS'")
+	           move 'PASS' to "CM-PersonIndividualChar/+personIds/idType";
+               move "string(REG-FORM/workerInformation/idNumber/asCurrent)" to "CM-PersonIndividualChar/personIds[last()]/personIdNumber";
+			   move 'true' to "CM-PersonIndividualChar/personIds[last()]/isPrimaryId";
+			   end-if;
+	 
+     //move 'NIN' to "C1-PersonIndividual/+personIds/idType";
+     //move "string(REG-FORM/employerPersonalInformation/nin/asCurrent)" to "C1-PersonIndividual/personIds/personIdNumber";
+     //move 'true' to "C1-PersonLegalEntity/personIds[last()]/isPrimaryId";
+     
+	 
+			   
+     		 
+     //move 'TRN' to "CM-PersonIndividualChar/+personIds/idType";
+     //move "string(REG-FORM/workerInformation/tradeRegestrationNumber/asCurrent)" to "CM-PersonIndividualChar/personIds[last()]/personIdNumber";
+	 
+     move 'MOBIL' to "CM-PersonIndividualChar/+personPhone/phoneType";
+     move "REG-FORM/workerInformation/phoneNumber/asCurrent" to "CM-PersonIndividualChar/personPhone/phone";
+     move "$empAddressId" to "CM-PersonIndividualChar/+personAddress/addressId";
+     move 'HOME' to "CM-PersonIndividualChar/personAddress/addressType";
+     move '1950-01-01' to "CM-PersonIndividualChar/personAddress/startDate";
+     move "REG-FORM/workerInformation/email/asCurrent" to "CM-PersonIndividualChar/emailAddress";
+	 
+	           if ("string(REG-FORM/workerInformation/issuedDate/asCurrent) != $BLANK")
+           
+                move  'CM-ISSDT' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/issuedDate/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM//workerInformation/expiryDate/asCurrent) != $BLANK")
+              
+                move  'CM-EXPDT' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM//workerInformation/expiryDate/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				 if ("string(REG-FORM/workerInformation/dateOfBirth/asCurrent) != $BLANK")
+              
+                move  'CM-DOB' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/dateOfBirth/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";     
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/countryOfBirth/asCurrent) != $BLANK")
+              
+                move  'CM-POB' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/countryOfBirth/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/cityOfBirth/asCurrent) != $BLANK")
+              
+                move  'CM-COB' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/cityOfBirth/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/businessSector/asCurrent) != $BLANK")
+              
+                move  'CM-SECAC' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/businessSector/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/mainLineOfBusiness/asCurrent) != $BLANK")
+              
+                move  'CM-ACTPR' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/mainLineOfBusiness/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/atRate/asCurrent) != $BLANK")
+              
+                move  'CM-ATRAT' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/atRate/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/agencyCss/asCurrent) != $BLANK")
+              
+                move  'CM-CSAG' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/agencyCss/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/agencyIpres/asCurrent) != $BLANK")
+              
+                move  'CM-IPAG' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/agencyIpres/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/zoneCss/asCurrent) != $BLANK")
+              
+                move  'CM-CSZO' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/zoneCss/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/zoneIpres/asCurrent) != $BLANK")
+              
+                move  'CM-IPZO' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/zoneIpres/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/sectorCss/asCurrent) != $BLANK")
+              
+                move  'CM-CSSEC' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/sectorCss/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/workerInformation/sectorIpres/asCurrent) != $BLANK")
+              
+                move  'CM-IPSEC' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/workerInformation/sectorIpres/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+
+
+
+     
+     invokeBO 'CM-PersonIndividualChar' using "CM-PersonIndividualChar" for add;
+     move "CM-PersonIndividualChar/personId" to $empPersonId;
+     
+    if("REG-FORM/workerInformation/typeOfRegistration/asCurrent='INDV'")
+     //Employer ATMBUS Account
+     move null to "C1-Account";
+     move "$CURRENT-DATE" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'ATMBUS' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplSelfAtmpAcctId1;
+     
+     //Employer VIEBUS Account
+     move null to "C1-Account";
+     move "$CURRENT-DATE" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'VIEBUS' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplSelfOldAgeAcctId2;
+
+//Employer ATMPPH Account
+     move null to "C1-Account";
+     move "$CURRENT-DATE" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'ATMPPH' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplSelfOldAgeAcctId3;
+	
+
+//Employer 'PFPH'  Account
+     move null to "C1-Account";
+     move "$CURRENT-DATE" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'PFPH' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplSelfOldAgeAcctId4;
+
+//Employer 'VIEPH' Account
+     move null to "C1-Account";
+     move "$CURRENT-DATE" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'VIEPH' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplSelfOldAgeAcctId5;
+ end-if;
+
+	 if("REG-FORM/workerInformation/typeOfRegistration/asCurrent='MAIN'")
+    
+     //Employer VIEBUS Account
+     move null to "C1-Account";
+     move "$CURRENT-DATE" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'VIEBUS' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplMainOldAgeAcctId6;
+
+
+//Employer 'VIEPH' Account
+     move null to "C1-Account";
+     move "$CURRENT-DATE" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'VIEPH' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplSelfOldAgeAcctId7;
+
+	 end-if;
+	 
+      
+	 
+	 
+     //Generate CSS/IPRES number
+     //invokeBS 'CM-GenCssNumber' using "CM-GenCssNumber";
+     //if ("CM-GenCssNumber/rowCount > 0")
+       //   move "substring(string(CM-GenCssNumber/results[1]/cssIpresNum), 1, 10)" to "REG-FORM/employerQuery/cssIpresIdentifier/asCurrent";
+     //end-if;
+     
+     //update the Employer status
+     //move 'Active Employer' to "REG-FORM/employerStatus/status/asCurrent";
+     
+     //if ("C1-Person/personId != null or string(C1-Person/personId) != $BLANK and C1-Account/accountId != null or string(C1-Account/accountId) != $BLANK")
+     //     terminate with error (90000, 5007 %1="C1-Person/personId" %2="C1-Account/accountId");
+     //end-if;
+     
+     move "REG-FORM" to "parm/hard/applyFormRuleAlgorithmInputOutputData/formBusinessObject/data";

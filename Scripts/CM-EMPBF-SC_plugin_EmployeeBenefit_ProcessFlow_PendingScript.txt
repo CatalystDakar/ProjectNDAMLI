@@ -1,0 +1,75 @@
+// Invoke CM-EmployeBenTransBO for reading
+     declareBO "parm/hard/businessObject/id" as 'CM-EmployeBenTransBO';
+     move "parm/hard/businessObjectKey/processFlowId" to "CM-EmployeBenTransBO/processFlowId";
+     invokeBO "parm/hard/businessObject/id" using "CM-EmployeBenTransBO" for read;
+     
+     move "CM-EmployeBenTransBO/nin/NIN" to $nin;
+     
+     
+     //NIN Validation.
+     //if("string($nin)!=$BLANK")
+     //if("(string(string-length(string($nin))) != '13') and (string(string-length(string($nin))) != '14')")
+     //terminate with error(90001,1035);
+     //end-if;
+     //end-if;
+     
+     
+     
+     move "$nin" to "CM-EMPBNIN/NIN";
+     invokeBS 'CM-EMPBNIN' using "CM-EMPBNIN";
+     
+     //Savin the NIN,Per ID,Document Type and Bill Tag in Database.
+     move "CM-EMPBNIN/results/perId" to "CM-EmpBenefitsBO/personId";
+     move "$nin" to  "CM-EmpBenefitsBO/cmNin";
+     move 'CM-EmpBenefitsBO' to "CM-EmpBenefitsBO/businessObject";
+     move '1' to "CM-EmpBenefitsBO/version";
+     
+     if("string(CM-EmployeBenTransBO/docDetails/document1)='true'")
+     move 'Volet 1 du carnet de grossesse'  to "CM-EmpBenefitsBO/cmDocumentName";
+     move 'N' to "CM-EmpBenefitsBO/cmBillTag";
+     invokeBO 'CM-EmpBenefitsBO' using "CM-EmpBenefitsBO" for add;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document2)='true'")
+     move 'Volet 2 du carnet de grossesse'  to "CM-EmpBenefitsBO/cmDocumentName";
+     move 'N' to "CM-EmpBenefitsBO/cmBillTag";
+     invokeBO 'CM-EmpBenefitsBO' using "CM-EmpBenefitsBO" for add;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document3)='true'")
+     move 'Volet 3 du carnet de grossesse'  to "CM-EmpBenefitsBO/cmDocumentName";
+     move 'N' to "CM-EmpBenefitsBO/cmBillTag";
+     invokeBO 'CM-EmpBenefitsBO' using "CM-EmpBenefitsBO" for add;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document4)='true'")
+     move 'Volet 4 du carnet de grossesse'  to "CM-EmpBenefitsBO/cmDocumentName";
+     move 'N' to "CM-EmpBenefitsBO/cmBillTag";
+     invokeBO 'CM-EmpBenefitsBO' using "CM-EmpBenefitsBO" for add;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document5)='true'")
+     move 'Volet 5 du carnet de grossesse'  to "CM-EmpBenefitsBO/cmDocumentName";
+     move 'N' to "CM-EmpBenefitsBO/cmBillTag";
+     invokeBO 'CM-EmpBenefitsBO' using "CM-EmpBenefitsBO" for add;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document6)='true'")
+     move 'Volet 6 du carnet de grossesse'  to "CM-EmpBenefitsBO/cmDocumentName";
+     move 'N' to "CM-EmpBenefitsBO/cmBillTag";
+     invokeBO 'CM-EmpBenefitsBO' using "CM-EmpBenefitsBO" for add;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document7)='true'")
+     move 'Volet 7 du carnet de grossesse'  to "CM-EmpBenefitsBO/cmDocumentName";
+     move 'N' to "CM-EmpBenefitsBO/cmBillTag";
+     invokeBO 'CM-EmpBenefitsBO' using "CM-EmpBenefitsBO" for add;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document8)='true'")
+     move 'Volet 8 du carnet de grossesse'  to "CM-EmpBenefitsBO/cmDocumentName";
+     move 'N' to "CM-EmpBenefitsBO/cmBillTag";
+     invokeBO 'CM-EmpBenefitsBO' using "CM-EmpBenefitsBO" for add;
+     end-if;
+     
+     
+     move "CM-EMPBNIN/results/firstName" to "CM-EmployeBenTransBO/nin/FirstName";
+     move "CM-EMPBNIN/results/lastName" to "CM-EmployeBenTransBO/nin/LastName";
+     move "CM-EMPBNIN/results/fullName" to "CM-EmployeBenTransBO/nin/FullName";
+     move "$USER" to "CM-EmployeBenTransBO/AgentUser";
+     move 'Technicien PF' to "CM-EmployeBenTransBO/AssignedTo";
+     
+     invokeBO 'CM-EmployeBenTransBO' using "CM-EmployeBenTransBO" for update;

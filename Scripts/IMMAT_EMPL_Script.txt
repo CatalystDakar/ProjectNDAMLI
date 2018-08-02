@@ -1,0 +1,611 @@
+Script Name : CM-CRF9SCPT 
+
+Registartion Form Type: IMMAT_EMPL
+
+Purpose: To Create Person , Accounts and Tax Roles.  
+
+Script Code: 
+(10) Edit data -
+move "parm/hard/applyFormRuleAlgorithmInputOutputData/formBusinessObject/schemaName" to $regFormBO;
+     declareBO $regFormBO as 'REG-FORM';
+     move "parm/hard/applyFormRuleAlgorithmInputOutputData/formBusinessObject/data" to "REG-FORM";
+     move "$CURRENT-DATE" to $currDate;
+
+     
+     //Legal representative
+          if ("string(REG-FORM/legalRepresentativeForm/legalRepPerson/asCurrent) = $BLANK")
+          //add Legal Representative Address, Person and Account if it's not available in the system
+               //Legal Representative Address
+               move null to "C1-Address";
+               move 'C1AC' to "C1-Address/status";
+               move 'C1-Address' to "C1-Address/bo";
+              // move "REG-FORM/legalRepresentativeForm/nationality/asCurrent" to "C1-Address/country";
+               move 'SEN' to "C1-Address/country";
+               move "REG-FORM/legalRepresentativeForm/arondissement/asCurrent" to "C1-Address/address1";
+			   move "REG-FORM/legalRepresentativeForm/commune/asCurrent" to "C1-Address/address2";
+			   move "REG-FORM/legalRepresentativeForm/qartier/asCurrent" to "C1-Address/address3";
+			   move "REG-FORM/legalRepresentativeForm/address/asCurrent" to "C1-Address/address4";
+			 //  move "REG-FORM/legalRepresentativeForm/region/asCurrent" to "C1-Address/state";
+			   move "REG-FORM/legalRepresentativeForm/region/asCurrent" to "C1-Address/county";
+               move "REG-FORM/legalRepresentativeForm/department/asCurrent" to "C1-Address/city";
+               //move "REG-FORM/legalRepresentativeForm/postboxNumber/asCurrent" to "C1-Address/postal";
+               invokeBO 'C1-Address' using "C1-Address" for add;
+               move "C1-Address/addressId" to $legRepAddressId;
+     
+               //Legal Representative Person
+               move null to "CM-PersonIndividualChar";
+               move 'INDIVIDUAL' to "CM-PersonIndividualChar/personType";
+               move 'ENG' to "CM-PersonIndividualChar/language";
+               move 'PRIM' to "CM-PersonIndividualChar/+personName/nameType";
+               move "REG-FORM/legalRepresentativeForm/firstName/asCurrent" to "CM-PersonIndividualChar/personName/firstName";
+               move "REG-FORM/legalRepresentativeForm/lastName/asCurrent" to "CM-PersonIndividualChar/personName/lastName";
+               move 'true' to "CM-PersonIndividualChar/personName/isPrimaryName";
+               move "REG-FORM/legalRepresentativeForm/typeOfIdentity/asCurrent" to $identityType;
+
+
+          	           
+			   
+			   if("$identityType='NIN'")
+	           move 'NIN' to "CM-PersonIndividualChar/+personIds/idType";
+                   move "string(REG-FORM/legalRepresentativeForm/nin/asCurrent)" to "CM-PersonIndividualChar/personIds/personIdNumber";
+			   end-if;
+			   if("$identityType='CEDEAO'")
+	           move 'CDAO' to "CM-PersonIndividualChar/+personIds/idType";
+               move "string(REG-FORM/legalRepresentativeForm/ninCedeo/asCurrent)" to "CM-PersonIndividualChar/personIds/personIdNumber";
+			   end-if;
+			   if("$identityType='CONC'")
+	           move 'CONC' to "CM-PersonIndividualChar/+personIds/idType";
+               move "string(REG-FORM/legalRepresentativeForm/identityIdNumber/asCurrent)" to "CM-PersonIndividualChar/personIds/personIdNumber";
+			   end-if;
+			   if("$identityType='PASS'")
+	           move 'PASS' to "CM-PersonIndividualChar/+personIds/idType";
+               move "string(REG-FORM/legalRepresentativeForm/identityIdNumber/asCurrent)" to "CM-PersonIndividualChar/personIds/personIdNumber";
+			   end-if;
+
+               move 'MOBIL' to "CM-PersonIndividualChar/+personPhone/phoneType";
+               move "REG-FORM/legalRepresentativeForm/mobileNumber/asCurrent" to "CM-PersonIndividualChar/personPhone/phone";
+               move "$legRepAddressId" to "CM-PersonIndividualChar/+personAddress/addressId";
+               move 'HOME' to "CM-PersonIndividualChar/personAddress/addressType";
+               move "$currDate" to "CM-PersonIndividualChar/personAddress/startDate";
+               move "REG-FORM/legalRepresentativeForm/email/asCurrent" to "CM-PersonIndividualChar/emailAddress";
+                 
+               if ("string(REG-FORM/legalRepresentativeForm/birthDate/asCurrent) != $BLANK")
+              
+                move  'CM-DOB' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/legalRepresentativeForm/birthDate/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";     
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/legalRepresentativeForm/placeOfBirth/asCurrent) != $BLANK")
+              
+                move  'CM-POB' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/legalRepresentativeForm/placeOfBirth/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/legalRepresentativeForm/cityOfBirth/asCurrent) != $BLANK")
+              
+                move  'CM-COB' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/legalRepresentativeForm/cityOfBirth/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/legalRepresentativeForm/typeOfIdentity/asCurrent) != $BLANK")
+              
+                move  'CM-IDTYP' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/legalRepresentativeForm/typeOfIdentity/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/legalRepresentativeForm/issuedDate/asCurrent) != $BLANK")
+              
+                move  'CM-ISSDT' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/legalRepresentativeForm/issuedDate/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/legalRepresentativeForm/expiryDate/asCurrent) != $BLANK")
+              
+                move  'CM-EXPDT' to "CM-PersonIndividualChar/+personChar/charTypeCD";
+                move "REG-FORM/legalRepresentativeForm/expiryDate/asCurrent" to "CM-PersonIndividualChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonIndividualChar/personChar[last()]/effectiveDate";
+                end-if;
+
+
+               invokeBO 'CM-PersonIndividualChar' using "CM-PersonIndividualChar" for add;
+          
+               move "CM-PersonIndividualChar/personId" to $legRepPersonId;
+     
+               //Legal Representative Account
+               move null to "C1-Account";
+               move "REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent" to "C1-Account/setupDate";
+               move 'XOF' to "C1-Account/currency";
+               move 'INDIV' to "C1-Account/accountType";
+               move "$legRepPersonId" to "C1-Account/+accountPersonList/person";
+               move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+               move 'true' to "C1-Account/accountPersonList/mainCustomer";
+               move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+               invokeBO 'C1-Account' using "C1-Account" for add;
+          else
+               //if Legal Representative Person available in the system
+               move "REG-FORM/legalRepresentativeForm/legalRepPerson/asCurrent" to $legRepPersonId;
+          end-if;
+          
+		  
+     //Employer
+     //add Employer Address, Person and Account
+     //Employer Address
+     move null to "C1-Address";
+     move 'C1AC' to "C1-Address/status";
+     move 'C1-Address' to "C1-Address/bo";
+	
+			   
+     move 'SEN' to "C1-Address/country";
+     move "REG-FORM/mainRegistrationForm/address/asCurrent" to "C1-Address/address1";
+	 move "REG-FORM/mainRegistrationForm/qartier/asCurrent" to "C1-Address/address2";
+     move "REG-FORM/mainRegistrationForm/commune/asCurrent" to "C1-Address/address3";
+	// move "REG-FORM/mainRegistrationForm/region/asCurrent" to "C1-Address/state";
+	 move "REG-FORM/mainRegistrationForm/department/asCurrent" to "C1-Address/county";
+     move "REG-FORM/mainRegistrationForm/arondissement/asCurrent" to "C1-Address/city";
+     //move "REG-FORM/mainRegistrationForm/postbox/asCurrent" to "C1-Address/postal";
+     invokeBO 'C1-Address' using "C1-Address" for add;
+     move "C1-Address/addressId" to $empAddressId;
+     
+	 move "REG-FORM/employerQuery/estType/asCurrent" to $estType;
+     //Employer Person Creation
+	 
+	           move "REG-FORM/employerQuery/hqId/asCurrent" to $hqEntityName;
+			   move null to "CM-HQPERIDBS";
+               move  "$hqEntityName" to "CM-HQPERIDBS/hqEntityName";
+               invokeBS 'CM-HQPERIDBS' using "CM-HQPERIDBS";
+               move "CM-HQPERIDBS/results/perId" to $hqPerId;
+			   
+     move null to "CM-PersonLegalEntityChar";
+     move 'B' to "CM-PersonLegalEntityChar/personType";
+     move 'ENG' to "CM-PersonLegalEntityChar/language";
+     move 'PRIM' to "CM-PersonLegalEntityChar/+personName/nameType";
+     move "REG-FORM/employerQuery/employerName/asCurrent" to "CM-PersonLegalEntityChar/personName/entityName";
+     move 'true' to "CM-PersonLegalEntityChar/personName/isPrimaryName";
+	 if("$estType='BRNC' or $estType='HDQT'")
+	 move 'SCI' to "CM-PersonLegalEntityChar/+personIds/idType";
+     move "string(REG-FORM/employerQuery/nineaNumber/asCurrent)" to "CM-PersonLegalEntityChar/personIds[last()]/personIdNumber";
+     move 'true' to "CM-PersonLegalEntityChar/personIds[last()]/isPrimaryId";
+     //move 'TAXID' to "CM-PersonLegalEntityChar/+personIds/idType";
+     //move "string(REG-FORM/employerQuery/taxId/asCurrent)" to "CM-PersonLegalEntityChar/personIds[last()]/personIdNumber";
+     //move 'TRN' to "CM-PersonLegalEntityChar/+personIds/idType";
+     //move "string(REG-FORM/employerQuery/tradeRegisterNumber/asCurrent)" to "CM-PersonLegalEntityChar/personIds[last()]/personIdNumber";
+	           if ("string(REG-FORM/employerQuery/regType/asCurrent) != $BLANK")
+              
+                move  'CM-REGTY' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/employerQuery/regType/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonLegalEntityChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/employerQuery/employerType/asCurrent) != $BLANK")
+              
+                move  'CM-EMPTY' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/employerQuery/employerType/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonLegalEntityChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/employerQuery/estType/asCurrent) != $BLANK")
+              
+                move  'CM-ESTTY' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/employerQuery/estType/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonLegalEntityChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/employerQuery/legalStatus/asCurrent) != $BLANK")
+              
+                move  'CM-LEGST' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/employerQuery/legalStatus/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonLegalEntityChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/employerQuery/taxIdDate/asCurrent) != $BLANK")
+              
+                move  'CM-TINDT' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/employerQuery/taxIdDate/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonLegalEntityChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/employerQuery/tradeRegisterDate/asCurrent) != $BLANK")
+              
+                move  'CM-TRNDT' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/employerQuery/tradeRegisterDate/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonLegalEntityChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/dateOfInspection/asCurrent) != $BLANK")
+              
+                move  'CM-INSDT' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/dateOfInspection/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonLegalEntityChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent) != $BLANK")
+              
+                move  'CM-FHDT' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonLegalEntityChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/businessSector/asCurrent) != $BLANK")
+              
+                move  'CM-SECAC' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/businessSector/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/mainLineOfBusiness/asCurrent) != $BLANK")
+              
+                move  'CM-ACTPR' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/mainLineOfBusiness/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/atRate/asCurrent) != $BLANK")
+              
+                move  'CM-ATRAT' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/atRate/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/noOfWorkersInGenScheme/asCurrent) != $BLANK")
+              
+                move  'CM-GENNO' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/noOfWorkersInGenScheme/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/noOfWorkersInBasicScheme/asCurrent) != $BLANK")
+              
+                move  'CM-CADNO' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/noOfWorkersInBasicScheme/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/website/asCurrent) != $BLANK")
+              
+                move  'CM-WEB' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/website/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/agencyIpres/asCurrent) != $BLANK")
+              
+                move  'CM-IPAG' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/agencyIpres/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/agencyCss/asCurrent) != $BLANK")
+              
+                move  'CM-CSAG' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/agencyCss/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/zoneCss/asCurrent) != $BLANK")
+              
+                move  'CM-CSZO' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/zoneCss/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/zoneIpres/asCurrent) != $BLANK")
+              
+                move  'CM-IPZO' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/zoneIpres/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/sectorCss/asCurrent) != $BLANK")
+              
+                move  'CM-CSSEC' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/sectorCss/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/sectorIpres/asCurrent) != $BLANK")
+              
+                move  'CM-IPSEC' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/sectorIpres/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+	 move 'MOBIL' to "C1-PersonLegalEntity/+personPhone/phoneType";
+     move "REG-FORM/mainRegistrationForm/telephone/asCurrent" to "CM-PersonLegalEntityChar/personPhone/phone";
+     move "$empAddressId" to "CM-PersonLegalEntityChar/+personAddress/addressId";
+     move 'OFFICE' to "CM-PersonLegalEntityChar/personAddress/addressType";
+     move "$currDate" to "CM-PersonLegalEntityChar/personAddress/startDate";
+     move "REG-FORM/mainRegistrationForm/email/asCurrent" to "CM-PersonLegalEntityChar/emailAddress";
+     move "$legRepPersonId" to "CM-PersonLegalEntityChar/+personPerson/personId2";
+     move 'LEGREP' to "CM-PersonLegalEntityChar/personPerson[last()]/personRelationshipType";
+     move "$currDate" to "CM-PersonLegalEntityChar/personPerson[last()]/startDate";
+	 end-if;
+	 if("$estType='CNST'")
+	 if ("string(REG-FORM/employerQuery/regType/asCurrent) != $BLANK")
+              
+                move  'CM-REGTY' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/employerQuery/regType/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/employerQuery/employerType/asCurrent) != $BLANK")
+              
+                move  'CM-EMPTY' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/employerQuery/employerType/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/employerQuery/estType/asCurrent) != $BLANK")
+              
+                move  'CM-ESTTY' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/employerQuery/estType/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/dateOfInspection/asCurrent) != $BLANK")
+              
+                move  'CM-INSDT' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/dateOfInspection/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent) != $BLANK")
+              
+                move  'CM-FHDT' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/businessSector/asCurrent) != $BLANK")
+              
+                move  'CM-SECAC' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/businessSector/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				
+				
+				if ("string(REG-FORM/mainRegistrationForm/mainLineOfBusiness/asCurrent) != $BLANK")
+              
+                move  'CM-ACTPR' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/mainLineOfBusiness/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				
+		
+				
+				
+				if ("string(REG-FORM/mainRegistrationForm/atRate/asCurrent) != $BLANK")
+              
+                move  'CM-ATRAT' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/atRate/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/noOfWorkersInGenScheme/asCurrent) != $BLANK")
+              
+                move  'CM-GENNO' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/noOfWorkersInGenScheme/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/noOfWorkersInBasicScheme/asCurrent) != $BLANK")
+              
+                move  'CM-CADNO' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/noOfWorkersInBasicScheme/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/website/asCurrent) != $BLANK")
+              
+                move  'CM-WEB' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/website/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/agencyIpres/asCurrent) != $BLANK")
+              
+                move  'CM-IPAG' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/agencyIpres/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/agencyCss/asCurrent) != $BLANK")
+              
+                move  'CM-CSAG' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/agencyCss/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/zoneCss/asCurrent) != $BLANK")
+              
+                move  'CM-CSZO' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/zoneCss/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/zoneIpres/asCurrent) != $BLANK")
+              
+                move  'CM-IPZO' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/zoneIpres/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/sectorCss/asCurrent) != $BLANK")
+              
+                move  'CM-CSSEC' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/sectorCss/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+				if ("string(REG-FORM/mainRegistrationForm/sectorIpres/asCurrent) != $BLANK")
+              
+                move  'CM-IPSEC' to "CM-PersonLegalEntityChar/+personChar/charTypeCD";
+                move "REG-FORM/mainRegistrationForm/sectorIpres/asCurrent" to "CM-PersonLegalEntityChar/personChar[last()]/adhocCharVal";
+                //move '10' to "CM-PersonIndividualChar/personChar[last()]/sequence";
+				move "$CURRENT-DATE" to "CM-PersonLegalEntityChar/personChar[last()]/effectiveDate";
+                end-if;
+     move 'PIN' to "CM-PersonLegalEntityChar/+personIds/idType";
+     move "string(REG-FORM/employerQuery/ninetNumber/asCurrent)" to "CM-PersonLegalEntityChar/personIds[last()]/personIdNumber";
+     move 'true' to "CM-PersonLegalEntityChar/personIds[last()]/isPrimaryId";
+	 move 'MOBIL' to "CM-PersonLegalEntityChar/+personPhone/phoneType";
+     move "REG-FORM/mainRegistrationForm/telephone/asCurrent" to "CM-PersonLegalEntityChar/personPhone/phone";
+     move "$empAddressId" to "CM-PersonLegalEntityChar/+personAddress/addressId";
+     move 'OFFICE' to "CM-PersonLegalEntityChar/personAddress/addressType";
+     move "$currDate" to "CM-PersonLegalEntityChar/personAddress/startDate";
+     move "REG-FORM/mainRegistrationForm/email/asCurrent" to "CM-PersonLegalEntityChar/emailAddress";
+     move "$legRepPersonId" to "CM-PersonLegalEntityChar/+personPerson/personId2";
+     move 'LEGREP' to "CM-PersonLegalEntityChar/personPerson[last()]/personRelationshipType";
+     move "$currDate" to "CM-PersonLegalEntityChar/personPerson[last()]/startDate";
+	 //move "$hqPerId" to "CM-PersonLegalEntityChar/+personPerson/personId2";
+     //move 'BRCH' to "CM-PersonLegalEntityChar/personPerson[last()]/personRelationshipType";
+     //move "$currDate" to "CM-PersonLegalEntityChar/personPerson[last()]/startDate";
+     end-if;
+	 
+     invokeBO 'CM-PersonLegalEntityChar' using "CM-PersonLegalEntityChar" for add;
+     move "CM-PersonLegalEntityChar/personId" to $empPersonId;     
+     //Employer PF Account
+     move null to "C1-Account";
+     move "REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'PF' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplPfAcctId;
+     
+     //Employer ATMP Account
+     move null to "C1-Account";
+     move "REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'ATMP ' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplAtmpAcctId;
+     
+     //Employer OldAge Account
+     move null to "C1-Account";
+     move "REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent" to "C1-Account/setupDate";
+     move 'XOF' to "C1-Account/currency";
+     move 'OLDAGE ' to "C1-Account/accountType";
+     move "$empPersonId" to "C1-Account/+accountPersonList/person";
+     move 'MAIN' to "C1-Account/accountPersonList/accountRelationship";
+     move 'true' to "C1-Account/accountPersonList/mainCustomer";
+     move 'true' to "C1-Account/accountPersonList/isFinanciallyResponsible";
+     invokeBO 'C1-Account' using "C1-Account" for add;
+	 move "C1-Account/accountId" to $emplOldAgeAcctId;
+	 
+      
+	 
+	 
+     //Generate CSS/IPRES number
+     //invokeBS 'CM-GenCssNumber' using "CM-GenCssNumber";
+     //if ("CM-GenCssNumber/rowCount > 0")
+       //   move "substring(string(CM-GenCssNumber/results[1]/cssIpresNum), 1, 10)" to "REG-FORM/employerQuery/cssIpresIdentifier/asCurrent";
+     //end-if;
+     
+     //update the Employer status
+     //move 'Active Employer' to "REG-FORM/employerStatus/status/asCurrent";
+     
+     //if ("C1-Person/personId != null or string(C1-Person/personId) != $BLANK and C1-Account/accountId != null or string(C1-Account/accountId) != $BLANK")
+     //     terminate with error (90000, 5007 %1="C1-Person/personId" %2="C1-Account/accountId");
+     //end-if;
+     
+     move "REG-FORM" to "parm/hard/applyFormRuleAlgorithmInputOutputData/formBusinessObject/data";
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	move "REG-FORM/registrationFormId" to $regFormID;
+	  
+	  move "REG-FORM/taxType/taxTypeEffectiveDate/asCurrent" to $effDate;
+		 if ("$effDate = $BLANK")
+		 move "REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent" to $effDate;
+		 end-if;
+	move "REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent" to $startDate;
+	  //Create Tax Role
+	 
+	  move "$emplPfAcctId" to "C1-CrteTaxRl/input/accountId";
+		 move 'COTISATION-M' to "C1-CrteTaxRl/input/taxType";
+		 move "$startDate" to "C1-CrteTaxRl/input/startDate";
+		 move "$industryCode" to "C1-CrteTaxRl/input/industryCode";
+	  move 'REGFORM' to "C1-CrteTaxRl/input/formType";
+		 invokeSS 'C1-CrteTaxRl' using "C1-CrteTaxRl";
+		 move "C1-CrteTaxRl/output/taxRoleId" to $taxRoleID1;
+	  
+	  //Add TaxRole log entry
+	  move "$regFormID" to "F1-AddMOLog/pkValue1";
+	  move 'C1-REG-FRM' to "F1-AddMOLog/mo";
+	  move 'F1SY' to "F1-AddMOLog/logEntryType";
+	  move '11113' to "F1-AddMOLog/messageCategory";
+	  move '16054' to "F1-AddMOLog/messageNumber";
+	  move "$taxRoleID1" to "F1-AddMOLog/messageParm1";
+	  move 'C1-TAXRL' to "F1-AddMOLog/characteristicType";
+	  move "$taxRoleID1" to "F1-AddMOLog/fkValue1";
+	  invokeBS 'F1-AddMOLog' using "F1-AddMOLog";
+	  
+	   //move "REG-FORM/taxType/taxTypeEffectiveDate/asCurrent" to $effDate;
+		// if ("$effDate = $BLANK")
+		// move "REG-FORM/mainRegistrationForm/dateOfFirstHire/asCurrent" to $startDate;
+		// end-if;
+	  move '8100' to $industryCode;
+	  //Create Tax Role
+	 
+	  move "$emplAtmpAcctId" to "C1-CrteTaxRl/input/accountId";
+		 move 'COTISATION-M' to "C1-CrteTaxRl/input/taxType";
+		 move "$startDate" to "C1-CrteTaxRl/input/startDate";
+		 move "$industryCode" to "C1-CrteTaxRl/input/industryCode";
+	  move 'REGFORM' to "C1-CrteTaxRl/input/formType";
+		 invokeSS 'C1-CrteTaxRl' using "C1-CrteTaxRl";
+		 move "C1-CrteTaxRl/output/taxRoleId" to $taxRoleID2;
+	  
+	  //Add TaxRole log entry
+	  move "$regFormID" to "F1-AddMOLog/pkValue1";
+	  move 'C1-REG-FRM' to "F1-AddMOLog/mo";
+	  move 'F1SY' to "F1-AddMOLog/logEntryType";
+	  move '11113' to "F1-AddMOLog/messageCategory";
+	  move '16054' to "F1-AddMOLog/messageNumber";
+	  move "$taxRoleID2" to "F1-AddMOLog/messageParm1";
+	  move 'C1-TAXRL' to "F1-AddMOLog/characteristicType";
+	  move "$taxRoleID2" to "F1-AddMOLog/fkValue1";
+	  invokeBS 'F1-AddMOLog' using "F1-AddMOLog";
+	  
+	   //move "REG-FORM/taxType/taxTypeEffectiveDate/asCurrent" to $effDate;
+		// if ("$effDate = $BLANK")
+		 //move "REG-FORM/receiveDate" to $effDate;
+		// end-if;
+	  move '8100' to $industryCode;
+	  //Create Tax Role
+	 
+	  move "$emplOldAgeAcctId" to "C1-CrteTaxRl/input/accountId";
+		 move 'COTISATION-M' to "C1-CrteTaxRl/input/taxType";
+		 move "$startDate" to "C1-CrteTaxRl/input/startDate";
+		 move "$industryCode" to "C1-CrteTaxRl/input/industryCode";
+	  move 'REGFORM' to "C1-CrteTaxRl/input/formType";
+		 invokeSS 'C1-CrteTaxRl' using "C1-CrteTaxRl";
+		 move "C1-CrteTaxRl/output/taxRoleId" to $taxRoleID3;
+	  
+	  //Add TaxRole log entry
+	  move "$regFormID" to "F1-AddMOLog/pkValue1";
+	  move 'C1-REG-FRM' to "F1-AddMOLog/mo";
+	  move 'F1SY' to "F1-AddMOLog/logEntryType";
+	  move '11113' to "F1-AddMOLog/messageCategory";
+	  move '16054' to "F1-AddMOLog/messageNumber";
+	  move "$taxRoleID3" to "F1-AddMOLog/messageParm1";
+	  move 'C1-TAXRL' to "F1-AddMOLog/characteristicType";
+	  move "$taxRoleID3" to "F1-AddMOLog/fkValue1";
+	  invokeBS 'F1-AddMOLog' using "F1-AddMOLog";

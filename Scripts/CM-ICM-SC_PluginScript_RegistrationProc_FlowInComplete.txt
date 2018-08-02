@@ -1,0 +1,18 @@
+ move "parm/soft[2]/value" to "F1-DetermineBo/input/pkValue1";
+          move 'C1-PRCFLWTYP' to "F1-DetermineBo/input/mo";
+          invokeBS 'F1-DetermineBo' using "F1-DetermineBo";
+          declareBO "F1-DetermineBo/output/bo" as 'processFlowTypeBo';
+          move "parm/soft[2]/value" to "processFlowTypeBo/processFlowType";
+          invokeBO "F1-DetermineBo/output/bo" using "processFlowTypeBo" for read;declareBO "processFlowTypeBo/transBusObjCd" as 'processFlowBo';
+     
+          move "parm/hard/businessObjectKey/processFlowId" to "processFlowBo/processFlowId";
+          invokeBO "processFlowTypeBo/transBusObjCd" using "processFlowBo" for read;
+     
+          move "parm/soft[1]/value" to "F1-AddToDoEntry/toDoType";
+          move 'CM-ICM' to "F1-AddToDoEntry/toDoRole";
+          move "parm/hard/businessObjectKey/processFlowId" to "F1-AddToDoEntry/drillKey1" ;
+          move "parm/hard/businessObjectKey/processFlowId" to "F1-AddToDoEntry/sortKey1" ;
+          move "processFlowBo/employerDetails/employerName" to "F1-AddToDoEntry/messageParm1";
+          move "F1-AddToDoEntry/*" to "CM-ICM-MAIL/scriptData/*";
+          invokeSS 'CM-ICM-MAIL' using "CM-ICM-MAIL";
+		  

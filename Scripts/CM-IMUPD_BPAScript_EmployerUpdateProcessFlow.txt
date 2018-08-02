@@ -1,0 +1,18 @@
+Step20: Getting Process flow actions
+
+default $action;
+default $processFlowId;
+default $bo;
+default $boStatus;
+
+Step30: Moving the process flow ID to Maintenance Map
+
+Step40: Reading the BO and updating the, move to Maintenance map.
+
+Step50: Invoking the Maintenance Map for save and cancel.
+
+Step60: Updating the Employer information.
+
+Step70: Transfer control to process flow main.
+
+step80:Terminate.

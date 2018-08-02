@@ -1,0 +1,80 @@
+ move "parm/hard/businessObjectKey/processFlowId" to "CM-EmployerUpdateTransBO/processFlowId";
+     invokeBO 'CM-EmployerUpdateTransBO' using "CM-EmployerUpdateTransBO" for read;
+     
+     move "CM-EmployerUpdateTransBO/PerId" to $PerId;
+     
+     move null to "CM-EMPUPDATE";
+     move "CM-EmployerUpdateTransBO/PerId" to "CM-EMPUPDATE/PerId";
+     
+     
+     invokeBS 'CM-EMPUPDATE' using "CM-EMPUPDATE";
+     
+     move "CM-EMPUPDATE/results[1]/perId" to "C1-Person/personId";
+     
+     invokeBO 'C1-Person' using "C1-Person" for read;
+     
+     move null to "C1-Person/personPhone";
+     
+     
+     move '0' to $index;
+     
+     for($phone in "CM-EmployerUpdateTransBO/EmployerInfo/typeOfPhone")
+     move "1 + xs:integer($index)" to $index;
+     move "$index" to "C1-Person/+personPhone/sequence";
+     
+     move "$phone/PhoneType" to "C1-Person/personPhone[last()]/phoneType";
+     move "$phone/PhoneNo" to "C1-Person/personPhone[last()]/phone";
+     end-for;
+     move "CM-EmployerUpdateTransBO/EmployerInfo/EmailId" to "C1-Person/emailAddress";
+     invokeBO 'C1-Person' using "C1-Person" for update with warn suppress;
+
+ move "CM-EmployerUpdateTransBO/PerId" to "C1-CustomerContact/personId";
+     move "$USER" to "C1-CustomerContact/userId";
+     move 'IMEU' to "C1-CustomerContact/customerContactClass";
+     move 'ONLY AUDIT'   to "C1-CustomerContact/customerContactType";
+     move "$CURRENT-DTTM"  to "C1-CustomerContact/customerContactDateTime";
+     
+     invokeBO 'C1-CustomerContact' using "C1-CustomerContact" for add;
+     
+     move "C1-CustomerContact/customerContactId" to "CM-EmployerUpdateTransBO/EmployerInfo/CCID";
+     
+     invokeBO 'CM-EmployerUpdateTransBO' using "CM-EmployerUpdateTransBO" for replace;
+move 'CM_EMAIL'  to "F1-GetFeatureConfiguration/featureName";
+               move 'CMEM' to "F1-GetFeatureConfiguration/featureType";
+               move 'CM01' to "F1-GetFeatureConfiguration/optionType";
+               invokeBS 'F1-GetFeatureConfiguration' using "F1-GetFeatureConfiguration";
+               move "F1-GetFeatureConfiguration/options[1]/optionValue" to $defaultEmailSndID;
+
+ move "$defaultEmailSndID"  to "F1-EmailService/emailDocument/from/internetAddress/address";
+     move "CM-EmployerUpdateTransBO/EmployerInfo/EmailId" to "F1-EmailService/emailDocument/+to/internetAddress/address";
+     
+     move null to "F1-ReturnMessage";
+     move '90001' to "F1-ReturnMessage/input/messageCategory";
+     move '1028' to "F1-ReturnMessage/input/messageNumber";
+     invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+     move "F1-ReturnMessage/output/expandedMessage" to "F1-EmailService/emailDocument/subject/text";
+     
+     move null to "F1-ReturnMessage";
+     move '90001' to "F1-ReturnMessage/input/messageCategory";
+     move '1029' to "F1-ReturnMessage/input/messageNumber";
+     invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+     move "F1-ReturnMessage/output/expandedMessage" to $mail_start;
+     
+     move null to "F1-ReturnMessage";
+     move '90001' to "F1-ReturnMessage/input/messageCategory";
+     move '1030' to "F1-ReturnMessage/input/messageNumber";
+     invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+     move "F1-ReturnMessage/output/expandedMessage" to $mail_body;
+     
+     move null to "F1-ReturnMessage";
+     move '90001' to "F1-ReturnMessage/input/messageCategory";
+     move '1018' to "F1-ReturnMessage/input/messageNumber";
+     invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+     move "F1-ReturnMessage/output/expandedMessage" to $static_data;
+     
+     move "concat($mail_start,'<br/><br/>', $mail_body, '<br/><br/>', $static_data)" to "F1-EmailService/emailDocument/messageText/text";
+     move "concat('<font face=\"arial\">', F1-EmailService/emailDocument/messageText/text,'</font>')" to "F1-EmailService/emailDocument/messageText/text";
+     move 'UTF-8' to "F1-EmailService/emailDocument/subject/charset";
+     move 'UTF-8' to "F1-EmailService/emailDocument/messageText/charset";
+     invokeBS 'F1-EmailService'  using "F1-EmailService";
+

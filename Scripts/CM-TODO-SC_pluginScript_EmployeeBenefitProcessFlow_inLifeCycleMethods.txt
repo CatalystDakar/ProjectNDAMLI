@@ -1,0 +1,44 @@
+move "parm/soft[1]/value" to "F1-DetermineBo/input/pkValue1";
+     move 'C1-PRCFLWTYP' to "F1-DetermineBo/input/mo";
+     invokeBS 'F1-DetermineBo' using "F1-DetermineBo";
+     declareBO "F1-DetermineBo/output/bo" as 'processFlowTypeBo';
+     move "parm/soft[1]/value" to "processFlowTypeBo/processFlowType";
+     invokeBO "F1-DetermineBo/output/bo" using "processFlowTypeBo" for read;
+     declareBO "processFlowTypeBo/transBusObjCd" as 'processFlowBo';
+     
+     move "parm/hard/businessObjectKey/processFlowId" to "processFlowBo/processFlowId";
+     invokeBO "processFlowTypeBo/transBusObjCd" using "processFlowBo" for read;
+     
+     move "parm/soft[2]/value" to $todoType;
+     
+     
+     if("$todoType='CM-PFAGE'")
+     move 'CM-PFAGENT' to $role;
+     end-if;
+     
+     if("$todoType='CM-GLEAD'")
+     move 'CM-GLEAD' to $role;
+     move 'chef de groupe' to "processFlowBo/AssignedTo";
+     invokeBO "processFlowTypeBo/transBusObjCd" using "processFlowBo" for update;
+     end-if;
+     
+     if("$todoType='CM-ACNTA'")
+     move 'CM-ACNTANT' to $role;
+     move 'le comptable' to "processFlowBo/AssignedTo";
+     invokeBO "processFlowTypeBo/transBusObjCd" using "processFlowBo" for update;
+     end-if;
+     
+     if("$todoType='CM-MANAG'")
+     move 'CM-MANAGER' to $role;
+     move 'chef d agence' to "processFlowBo/AssignedTo";
+     invokeBO "processFlowTypeBo/transBusObjCd" using "processFlowBo" for update;
+     end-if;
+     
+     //move null to "F1-AddToDoEntry";
+     
+     move "$todoType" to "F1-AddToDoEntry/toDoType";
+     move "$role" to "F1-AddToDoEntry/toDoRole";
+     move "parm/hard/businessObjectKey/processFlowId" to "F1-AddToDoEntry/drillKey1" ;
+     move "parm/hard/businessObjectKey/processFlowId" to "F1-AddToDoEntry/sortKey1" ;
+     
+     invokeBS 'F1-AddToDoEntry' using "F1-AddToDoEntry";

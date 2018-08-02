@@ -1,0 +1,178 @@
+﻿move 'CM_EMAIL'  to "F1-GetFeatureConfiguration/featureName";
+     move 'CMEM' to "F1-GetFeatureConfiguration/featureType";
+     move 'CM01' to "F1-GetFeatureConfiguration/optionType";
+     invokeBS 'F1-GetFeatureConfiguration' using "F1-GetFeatureConfiguration";
+     move "F1-GetFeatureConfiguration/options[1]/optionValue" to $defaultEmailSndID;
+	 
+	 move "parm/scriptData/toDoRole" to "F1-RetrieveEmailAddress/toDoRole";
+                invokeBS 'F1-RetrieveEmailAddress' using "F1-RetrieveEmailAddress";
+     
+              move '0' to $recipientCount;
+              for ($emailRecipient in "F1-RetrieveEmailAddress/results/toDoRoleUser")
+     
+                         move "1 + $recipientCount" to $recipientCount;
+                         move "$emailRecipient/email" to "F1-EmailService/emailDocument/+to/internetAddress/address";
+
+                         move "$emailRecipient/firstName" to $first_name;
+                         move "$emailRecipient/lastName" to $last_name;
+
+                     move null to "F1-ReturnMessage";
+                     move '90001' to "F1-ReturnMessage/input/messageCategory";
+                     move  '1003' to "F1-ReturnMessage/input/messageNumber";
+                     invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+                     move "concat(F1-ReturnMessage/output/expandedMessage,' ',$first_name,' ',$last_name,',','<br/><br/>')" to $mailStart;
+
+                     move "concat($emailRecipient/lastName, ', ', $emailRecipient/firstName)" to "F1-EmailService/emailDocument/to[$recipientCount]/internetAddress/personal";
+
+              
+     
+               // if there are no recipients of the email, raise an error
+               if ("$recipientCount = '0'")
+                      terminate with error (11110, 80201 %1="parm/scriptData/toDoEntryId");
+               end-if;
+     
+               move "$defaultEmailSndID" to "F1-EmailService/emailDocument/from/internetAddress/address";
+     
+                    move null to "F1-ReturnMessage";
+                    move '90001' to "F1-ReturnMessage/input/messageCategory";
+                    move '1026'  to "F1-ReturnMessage/input/messageNumber";
+     
+               move '0' to $paramCount;
+               if ("parm/messageparm1 != $BLANK")
+                    move "parm/messageparm1" to "F1-ReturnMessage/input/messageparms/messageparm1";
+                    move "1 + $paramCount" to $paramCount;
+               end-if;
+               if ("parm/messageparm2 != $BLANK")
+                    move "parm/messageparm2" to "F1-ReturnMessage/input/messageparms/messageparm2";
+                    move "1 + $paramCount" to $paramCount;
+               end-if;
+               if ("parm/messageparm3 != $BLANK")
+                    move "parm/messageparm3" to "F1-ReturnMessage/input/messageparms/messageparm3";
+                    move "1 + $paramCount" to $paramCount;
+               end-if;
+               if ("parm/messageparm4 != $BLANK")
+                    move "parm/messageparm4" to "F1-ReturnMessage/input/messageparms/messageparm4";
+                    move "1 + $paramCount" to $paramCount;
+               end-if;
+               if ("parm/messageparm5 != $BLANK")
+                    move "parm/messageparm5" to "F1-ReturnMessage/input/messageparms/messageparm5";
+                    move "1 + $paramCount" to $paramCount;
+               end-if;
+               if ("parm/messageparm6 != $BLANK")
+                    move "parm/messageparm6" to "F1-ReturnMessage/input/messageparms/messageparm6";
+                    move "1 + $paramCount" to $paramCount;
+               end-if;
+               if ("parm/messageparm7 != $BLANK")
+                    move "parm/messageparm7" to "F1-ReturnMessage/input/messageparms/messageparm7";
+                    move "1 + $paramCount" to $paramCount;
+               end-if;
+               if ("parm/messageparm8 != $BLANK")
+                    move "parm/messageparm8" to "F1-ReturnMessage/input/messageparms/messageparm8";
+                    move "1 + $paramCount" to $paramCount;
+               end-if;
+               if ("parm/messageparm9 != $BLANK")
+                    move "parm/messageparm9" to "F1-ReturnMessage/input/messageparms/messageparm9";
+                    move "1 + $paramCount" to $paramCount;
+               end-if;
+     
+               move "$paramCount" to "F1-ReturnMessage/input/messageParmCollCount";
+               invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+     
+               move "F1-ReturnMessage/output/expandedMessage" to $mail_subject;
+               move " $mail_subject" to "F1-EmailService/emailDocument/subject/text";
+               
+     
+              
+               move null to "F1-ReturnMessage";
+               move '90001' to "F1-ReturnMessage/input/messageCategory";
+               move  '1027' to "F1-ReturnMessage/input/messageNumber";
+               invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+     
+              move "F1-ReturnMessage/output/expandedMessage" to $instructionsLabel;
+
+              
+              move 'Code Dossier' to $Code_Dossier;
+              move 'Demandeur' to $Demandeur;
+              move 'Date/Heure de dépôt' to $reg_date;
+              move "parm/scriptData/drillKey1" to $procFlowId;
+              move "parm/scriptData/messageParm1" to $employer_name;
+              move "$CURRENT-DTTM" to $date;
+
+             move '<table style=\"border:2px solid black; width: 50%;border-collapse: collapse\"><tr style=\"background-color: #D35400\">' to  $custom_obj1;
+             move "concat($custom_obj1,'<td style=\"border: 2px solid black;border-collapse: collapse;padding-left: 8%;color: white;\" width=\"30%\" height=\"40\">',$Code_Dossier,'</td>')"  to $custom_obj2;
+             move "concat($custom_obj2,'<td style=\"border: 2px solid black;border-collapse: collapse;padding-left: 8%;color: white;\" width=\"30%\" height=\"40\">',$Demandeur,'</td>')" to $custom_obj3;
+             move "concat($custom_obj3,'<td style=\"border: 2px solid black;border-collapse: collapse;padding-left: 8%;color: white;\" width=\"30%\" height=\"40\">',$reg_date,'</td></tr>')" to $custom_obj4;
+             move "concat($custom_obj4,'<tr style=\"background-color: #F1948A;\"><td width=\"30%\" height=\"40\" style=\"border: 2px solid black;border-collapse: collapse;padding-left: 8%;\">',$procFlowId,'</td>')" to $custom_obj5;
+             move "concat($custom_obj5,'<td width=\"30%\" height=\"40\" style=\"border: 2px solid black;border-collapse: collapse;padding-left: 8%;\">',$employer_name,'</td>')" to $custom_obj6;
+             move "concat($custom_obj6,'<td width=\"30%\" height=\"40\" style=\"padding-left: 8%;\">',$date,'</td></tr></table></br></br>')" to $customtable;
+
+            
+                move null to "F1-ReturnMessage";
+               move '90001' to "F1-ReturnMessage/input/messageCategory";
+               move  '1016' to "F1-ReturnMessage/input/messageNumber";
+               invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+               move "F1-ReturnMessage/output/expandedMessage" to $static_text;          
+        
+               move null to "F1-ReturnMessage";
+               move '90001' to "F1-ReturnMessage/input/messageCategory";
+               move  '1017' to "F1-ReturnMessage/input/messageNumber";
+               invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+               move "F1-ReturnMessage/output/expandedMessage" to $regards_text;        
+     
+               move null to "F1-ReturnMessage";
+               move '90001' to "F1-ReturnMessage/input/messageCategory";
+               move  '1018' to "F1-ReturnMessage/input/messageNumber";
+               invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+               move "F1-ReturnMessage/output/expandedMessage" to $nr_text;   
+            
+             
+              move "concat($regards_text,'</br></br>',$nr_text)" to $no_reply_text;
+            
+                 
+              invokeSS 'F1-EnviURL' using "F1-EnviURL";
+              move "F1-EnviURL/environmentURL" to $environmentURL;
+     
+               move "parm/scriptData/toDoType" to "F1-ToDoTypePhysicalBO/toDoType";
+               invokeBO 'F1-ToDoTypePhysicalBO' using "F1-ToDoTypePhysicalBO" for read;
+               move "F1-ToDoTypePhysicalBO/navigationOption" to $navigationOption;
+               move "F1-ToDoTypePhysicalBO/toDoDrillKeyType[1]/field" to $pkField;
+     
+               move null to "F1-ReturnMessage";
+               move  '90001' to "F1-ReturnMessage/input/messageCategory";
+               move  '1012' to "F1-ReturnMessage/input/messageNumber";
+               invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+               move "F1-ReturnMessage/output/expandedMessage" to $viewRecord;
+     
+               move "concat($environmentURL, '/cis.jsp?&script=C1-GenEmailP&pkId=', parm/drillKey1, '&navigationOption=', $navigationOption, '&pkField=', $pkField)" to $hyperlink;
+               move "concat('<a href=', $hyperlink, '><span>', $viewRecord, '</span></a><br/><br/>')" to $hyperlinkMessage;
+     
+               move '' to $additionalInfo;
+               move '1' to $sortIndex;
+     
+                for ($sortKey in "F1-ToDoTypePhysicalBO/toDoSortKeyType")
+     
+                    move "$sortKey/description" to $sortKeyField;
+                    move "concat ('parm/sortKey', $sortIndex)" to $toDoSortKeyName;
+                    move evaluate($toDoSortKeyName) to $sortKeyValue;
+                    if ("$sortKeyValue != $BLANK")
+                      // move "concat($additionalInfo, $sortKeyField, ' : ', $sortKeyValue, '<br/>')" to $additionalInfo;
+                    end-if;
+                    move "1+$sortIndex" to $sortIndex;
+                end-for;
+     
+                   //move null to "F1-ReturnMessage";
+                   //move  '90001' to "F1-ReturnMessage/input/messageCategory";
+                   //move  '1005' to "F1-ReturnMessage/input/messageNumber";
+                   //invokeBS 'F1-ReturnMessage' using "F1-ReturnMessage";
+                   //move "concat('<h3><b>', F1-ReturnMessage/output/expandedMessage,'</b></h3>', $additionalInfo )" to $additionalInfo;
+     
+               move "concat($mailStart, $instructionsLabel, '<br/><br/>',$customtable,  $static_text,$hyperlinkMessage,$no_reply_text)" to "F1-EmailService/emailDocument/messageText/text";
+               move "concat('<font face=\"arial\">', F1-EmailService/emailDocument/messageText/text,'</font>')" to "F1-EmailService/emailDocument/messageText/text";
+               move 'text/html' to "F1-EmailService/emailDocument/messageText/contentType";
+               move 'UTF-8' to "F1-EmailService/emailDocument/subject/charset";
+               move 'UTF-8' to "F1-EmailService/emailDocument/messageText/charset";
+
+     
+     
+               invokeBS 'F1-EmailService' using "F1-EmailService" ;
+end-for;

@@ -1,0 +1,52 @@
+// Invoke CM-EmployeBenTransBO for reading
+     declareBO "parm/hard/businessObject/id" as 'CM-EmployeBenTransBO';
+     move "parm/hard/businessObjectKey/processFlowId" to "CM-EmployeBenTransBO/processFlowId";
+     invokeBO "parm/hard/businessObject/id" using "CM-EmployeBenTransBO" for read;
+     
+     move "2500" to $amount;
+     move "0" to $Volet1ducarnetdegrossesse;
+     if("string(CM-EmployeBenTransBO/benefitDetails/benefitType)='PRE'")
+     
+     if("string(CM-EmployeBenTransBO/docDetails/document1)='true'")
+     move "2 * xs:integer($amount)" to $Volet1ducarnetdegrossesse;
+     end-if;
+     
+     if("string(CM-EmployeBenTransBO/docDetails/document2)='true'")
+     move "4 * xs:integer($amount)" to $Volet2ducarnetdegrossesse;
+     end-if;
+     
+     if("string(CM-EmployeBenTransBO/docDetails/document3)='true'")
+     move "3 * xs:integer($amount)" to $Volet3ducarnetdegrossesse;
+     end-if;
+     
+     end-if;
+     
+     if("string(CM-EmployeBenTransBO/benefitDetails/benefitType)='POST'")
+     if("string(CM-EmployeBenTransBO/docDetails/document4)='true'")
+     move "6 * xs:integer($amount)" to $Volet4ducarnetdegrossesse;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document5)='true'")
+     move "6 * xs:integer($amount)" to $Volet5ducarnetdegrossesse;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document6)='true'")
+     move "6 * xs:integer($amount)" to $Volet6ducarnetdegrossesse;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document7)='true'")
+     move "3 * xs:integer($amount)" to $Volet7ducarnetdegrossesse;
+     end-if;
+     if("string(CM-EmployeBenTransBO/docDetails/document8)='true'")
+     move "3 * xs:integer($amount)" to $Volet8ducarnetdegrossesse;
+     end-if;
+     end-if;
+     
+     
+     move "$Volet1ducarnetdegrossesse" to "CM-EmployeBenTransBO/Money/Volet1Amount";
+     move "$Volet2ducarnetdegrossesse" to "CM-EmployeBenTransBO/Money/Volet2Amount";
+     move "$Volet3ducarnetdegrossesse" to "CM-EmployeBenTransBO/Money/Volet3Amount";
+     move "$Volet4ducarnetdegrossesse" to "CM-EmployeBenTransBO/Money/Volet4Amount";
+     move "$Volet5ducarnetdegrossesse" to "CM-EmployeBenTransBO/Money/Volet5Amount";
+     move "$Volet6ducarnetdegrossesse" to "CM-EmployeBenTransBO/Money/Volet6Amount";
+     move "$Volet7ducarnetdegrossesse" to "CM-EmployeBenTransBO/Money/Volet7Amount";
+     move "$Volet8ducarnetdegrossesse" to "CM-EmployeBenTransBO/Money/Volet8Amount";
+     
+     invokeBO 'CM-EmployeBenTransBO' using "CM-EmployeBenTransBO" for update;
