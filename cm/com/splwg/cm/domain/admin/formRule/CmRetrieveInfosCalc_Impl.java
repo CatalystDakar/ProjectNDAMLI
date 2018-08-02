@@ -66,11 +66,9 @@ public class CmRetrieveInfosCalc_Impl extends CmRetrieveInfosCalc_Gen implements
 		return sqlResultRow.getString("FACTOR_VAL");
 	}
 	
-	private void initIdPerson(String idType, String idNumber){
-		
-		
-	}
-	
+	/**
+	 * @param listSalaries
+	 */
 	private void initInfosSalaries(Iterator<COTSInstanceListNode> listSalaries){
 		SchemaInstance formInstance = this.inputOutputData.getFormBusinessObject();
 		String dateDebutCotisation=formInstance.getFieldAndMDForPath("informationEmployeur/dateDebutCotisation/asCurrent").getXMLValue();
