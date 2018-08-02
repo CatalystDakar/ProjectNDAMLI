@@ -340,7 +340,7 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 						}
 					}
 				}
-				foundNinea = false;
+				foundNinea = false; 
 			}
 			try {
 				processed = saveFormBatchHeaderXML(formHeaderId,nineaNumber);
