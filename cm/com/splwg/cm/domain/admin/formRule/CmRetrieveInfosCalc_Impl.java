@@ -2,16 +2,13 @@ package com.splwg.cm.domain.admin.formRule;
 
 import java.util.Iterator;
 
-import com.ibm.icu.math.BigDecimal;
 import com.splwg.base.api.businessObject.BusinessObjectDispatcher;
 import com.splwg.base.api.businessObject.BusinessObjectInstance;
-import com.splwg.base.api.businessObject.COTSFieldDataAndMD;
 import com.splwg.base.api.businessObject.COTSInstanceListNode;
 import com.splwg.base.api.businessObject.COTSInstanceNode;
 import com.splwg.base.api.businessObject.SchemaInstance;
 import com.splwg.base.api.businessService.BusinessServiceDispatcher;
 import com.splwg.base.api.businessService.BusinessServiceInstance;
-import com.splwg.base.api.datatypes.Money;
 import com.splwg.base.api.sql.PreparedStatement;
 import com.splwg.base.api.sql.SQLResultRow;
 import com.splwg.base.support.schema.BusinessObjectInfo;
@@ -59,7 +56,8 @@ public class CmRetrieveInfosCalc_Impl extends CmRetrieveInfosCalc_Gen implements
 	}
 	
 	private String getFactorVal(String factor, String dateDebutCotisation, String dateFinCotisation ){
-		PreparedStatement preparedStatement = createPreparedStatement("SELECT FACTOR_VAL FROM C1_FACTOR_VALUE where FACTOR_CD=:factor and TO_CHAR(EFFDT,'DD/MM/YYYY') <=:effectiveDate order by EFFDT DESC");
+		PreparedStatement preparedStatement = createPreparedStatement("SELECT FACTOR_VAL FROM C1_FACTOR_VALUE where FACTOR_CD=:factor and"
+				+ " TO_CHAR(EFFDT,'DD/MM/YYYY') <=:effectiveDate order by EFFDT DESC", "SELECT");
 		preparedStatement.bindString("factor",factor, null);
 		preparedStatement.bindString("effectiveDate", dateFinCotisation,null);
 		SQLResultRow sqlResultRow = preparedStatement.firstRow();
@@ -83,15 +81,15 @@ public class CmRetrieveInfosCalc_Impl extends CmRetrieveInfosCalc_Gen implements
 		String plfCssCpf = this.getFactorVal(this.ruleInstance.getString("plfCssCpf"), dateDebutCotisation, dateFinCotisation);
 		String plfCssCatmp = this.getFactorVal(this.ruleInstance.getString("plfCssCatmp"), dateDebutCotisation, dateFinCotisation);
 		String plfIpresCrrg = this.getFactorVal(this.ruleInstance.getString("plfIpresCrrg"), dateDebutCotisation, dateFinCotisation);
-		String plfIpresCrrg01 = this.getFactorVal(this.ruleInstance.getString("plfIpresCrrg01"), dateDebutCotisation, dateFinCotisation);
+		//String plfIpresCrrg01 = this.getFactorVal(this.ruleInstance.getString("plfIpresCrrg01"), dateDebutCotisation, dateFinCotisation);
 		String plfIpresCrcc = this.getFactorVal(this.ruleInstance.getString("plfIpresCrcc"), dateDebutCotisation, dateFinCotisation);
-		String plfIpresCrcc01 = this.getFactorVal(this.ruleInstance.getString("plfIpresCrcc01"), dateDebutCotisation, dateFinCotisation);
+		//String plfIpresCrcc01 = this.getFactorVal(this.ruleInstance.getString("plfIpresCrcc01"), dateDebutCotisation, dateFinCotisation);
 		String txeCssCpf = this.getFactorVal(this.ruleInstance.getString("txeCssCpf"), dateDebutCotisation, dateFinCotisation);
 		String txeIpresCrrg = this.getFactorVal(this.ruleInstance.getString("txeIpresCrrg"), dateDebutCotisation, dateFinCotisation);
 		String txeIpresCrcc = this.getFactorVal(this.ruleInstance.getString("txeIpresCrcc"), dateDebutCotisation, dateFinCotisation);
 		String txeCssCatmp = this.getAtRateEmployer(idType, idNumber);
-		String txsIpresCrrg = this.getFactorVal(this.ruleInstance.getString("txsIpresCrrg"), dateDebutCotisation, dateFinCotisation);
-		String txsIpresCrcc = this.getFactorVal(this.ruleInstance.getString("txsIpresCrcc"), dateDebutCotisation, dateFinCotisation);
+		//String txsIpresCrrg = this.getFactorVal(this.ruleInstance.getString("txsIpresCrrg"), dateDebutCotisation, dateFinCotisation);
+		//String txsIpresCrcc = this.getFactorVal(this.ruleInstance.getString("txsIpresCrcc"), dateDebutCotisation, dateFinCotisation);
 
 		 while (listSalaries.hasNext()) {
 			   COTSInstanceListNode nextSalarie = listSalaries.next();

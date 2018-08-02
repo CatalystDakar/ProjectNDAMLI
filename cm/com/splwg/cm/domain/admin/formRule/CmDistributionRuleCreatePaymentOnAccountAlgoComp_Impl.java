@@ -59,13 +59,11 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 			.getLogger(CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl.class);
 
 	private PaymentEvent paymentEvent;
-	private DistributionRule distributionRule;
 	private Money amount;
 	private String characteristicValueFk1;
 	private BigInteger sequence;
 	private Payment_Id paymentId;
 	PreparedStatement psPreparedStatement = null;
-	private String accId = null;
 	private CmDistributionRuleOblMoneyDTO cmObligationMoneyDTO = new CmDistributionRuleOblMoneyDTO();
 	private CMDistributionRulePeriodOblListMoneyListDTO cmPeriodObligationMoneyDTO = new CMDistributionRulePeriodOblListMoneyListDTO();
 	Money epfAmount = Money.ZERO;
@@ -670,7 +668,6 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 	@Override
 	public void setDistributionRule(DistributionRule arg0) {
 		// TODO Auto-generated method stub
-		distributionRule = arg0;
 
 	}
 
@@ -703,7 +700,6 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 	@Override
 	public void setCharacteristicValueFk1(String arg0) {
 		// TODO Auto-generated method stub
-		accId = arg0;
 		characteristicValueFk1 = arg0;
 
 	}
