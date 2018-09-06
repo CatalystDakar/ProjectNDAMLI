@@ -1,5 +1,6 @@
 package com.splwg.cm.domain.testcase;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -14,6 +15,14 @@ public class ApachePOIExcelWrite {
     private static final String FILE_NAME = "D:\\PSRM\\Bala\\MyFirstExcel.xlsx";
 
     public static void main(String[] args) {
+    	
+    	String obligationOverPayment = "E-AVPF,E-AVATMP,E-AVCR";
+    	String obligationOverPaymentArr[] = null;
+    	obligationOverPaymentArr = obligationOverPayment.split(","); 
+    	obligationOverPayment = "'" + StringUtils.join(obligationOverPaymentArr,"','") + "'";
+    	
+    	System.out.println(obligationOverPaymentArr.length-1);
+    	System.out.println(obligationOverPayment);
 
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Datatypes in Java");

@@ -48,7 +48,7 @@ public class CmSendMail_Test extends ContextTestCase{
             Message msg = new MimeMessage(session);
      
             msg.setFrom(new InternetAddress("psrmdev@secusociale.sn"));
-            InternetAddress[] toAddresses = { new InternetAddress("ramanjaneyulu.k@4iapps.com") };
+            InternetAddress[] toAddresses = { new InternetAddress("denashkumar.m@4iapps.com") };
             msg.setRecipients(Message.RecipientType.TO, toAddresses);
             msg.setSubject("TEST");
             msg.setSentDate(new Date());

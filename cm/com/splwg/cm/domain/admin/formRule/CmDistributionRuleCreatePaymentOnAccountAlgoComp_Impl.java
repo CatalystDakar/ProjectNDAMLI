@@ -14,11 +14,11 @@ import com.splwg.base.api.QueryIterator;
 import com.splwg.base.api.businessObject.COTSInstanceNode;
 import com.splwg.base.api.businessService.BusinessServiceDispatcher;
 import com.splwg.base.api.businessService.BusinessServiceInstance;
-import com.splwg.base.api.datatypes.Date;
 import com.splwg.base.api.datatypes.Money;
 import com.splwg.base.api.sql.PreparedStatement;
 import com.splwg.base.api.sql.SQLResultRow;
 import com.splwg.base.domain.common.characteristicType.CharacteristicType;
+import com.splwg.base.domain.common.currency.Currency;
 import com.splwg.base.domain.common.currency.Currency_Id;
 import com.splwg.cm.domain.customMessages.CmMessageRepository90002;
 import com.splwg.shared.logging.Logger;
@@ -27,13 +27,11 @@ import com.splwg.tax.api.lookup.PaymentStatusLookup;
 import com.splwg.tax.domain.adjustment.adjustment.Adjustment_Id;
 import com.splwg.tax.domain.admin.distributionRule.DistributionRule;
 import com.splwg.tax.domain.admin.distributionRule.DistributionRuleCreatePaymentAlgorithmSpot;
-import com.splwg.tax.domain.admin.generalLedgerDistributionCode.GeneralLedgerDistributionCode;
 import com.splwg.tax.domain.admin.matchType.MatchType;
 import com.splwg.tax.domain.customerinfo.account.Account;
+import com.splwg.tax.domain.customerinfo.account.Account_Id;
 import com.splwg.tax.domain.customerinfo.serviceAgreement.ServiceAgreement;
 import com.splwg.tax.domain.customerinfo.serviceAgreement.ServiceAgreement_Id;
-import com.splwg.tax.domain.payment.payment.CreateDistributeFreezePayment;
-import com.splwg.tax.domain.payment.payment.CreateDistributeFreezePayment.Factory;
 import com.splwg.tax.domain.payment.payment.Payment;
 import com.splwg.tax.domain.payment.payment.PaymentSegment;
 import com.splwg.tax.domain.payment.payment.PaymentSegment_DTO;
@@ -69,12 +67,22 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 	Money epfAmount = Money.ZERO;
 	Money erAmount = Money.ZERO;
 	Money atmpAmount = Money.ZERO;
+	Currency currency = null;
+	Map<ServiceAgreement, Money> obligationMoneyMap = new HashMap<>();
+	
+	String obligationContributionArr[] = null;
+	String obligationOverPaymentArr[] = null;
+	String adjustmentTypeContributionArr[] = null;
+	String adjustmentTypePenalityArr[] = null; 
+	String adjustmentTypeMajorationArr[] = null; 
+	String adjustmentTyepeOverpaymentArr[] = null; 
 	
 	@Override
 	public void invoke() {
 
 		logger.info("characteristicFK: " + this.characteristicValueFk1);
 		System.out.println("characteristicFK: " + this.characteristicValueFk1);
+		currency = new Account_Id(this.characteristicValueFk1).getEntity().getCurrency();
 
 		logger.info("Amount: " + this.amount);
 		System.out.println("Amount: " + this.amount);
@@ -111,11 +119,12 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 						}
 						logger.info("Sum of Obligation Amount:: " + totalDebtAmountToBePaid);
 						System.out.println("Sum of Obligation Amount:: " + totalDebtAmountToBePaid);
-
-						if (!totalDebtAmountToBePaid.isZero() && this.amount.isGreaterThan(totalDebtAmountToBePaid)) {
+							
+						if (!totalDebtAmountToBePaid.isZero() && !this.amount.isZero() && this.amount.isGreaterThanOrEqual(totalDebtAmountToBePaid)) {
 							logger.info("###Input Amount is greater than sum of obligation amount.Creating payment for equal distribution##");
 							System.out.println("###Input Amount is greater than sum of obligation amount.Creating payment for equal distribution##");
 							Map<String, Money> moneyMapValue = cmObligationMoneyDTO.getMapOblMoney();
+							Money overPayAmount = Money.ZERO;
 							for (Map.Entry<String, Money> moneyEntry : moneyMapValue.entrySet()) {
 								ServiceAgreement_Id sa_id = new ServiceAgreement_Id(moneyEntry.getKey());
 								logger.info("ServiceAgreement_Id: " + sa_id);
@@ -125,39 +134,83 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 								System.out.println("ServiceAgreement: " + debtObligation);
 								debtMoneyforSingleSA = moneyEntry.getValue();
 								int payAmount = Math.round(debtMoneyforSingleSA.getAmount().floatValue());
-								debtMoneyforSingleSA = new Money(String.valueOf(payAmount), new Currency_Id("XOF"));
+								debtMoneyforSingleSA = new Money(String.valueOf(payAmount), currency.getId());
 								logger.info("DebtMoney: " + debtMoneyforSingleSA);
 								logger.info("Amount before the payment creation:: " + this.amount);
 								System.out.println("Amount before the payment creation:: " + this.amount);
-								if (!this.amount.isZero() && this.amount.isPositive()) {
-									this.createFrozenPayment(debtObligation, debtMoneyforSingleSA);
+								obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+							}
+							overPayAmount = this.amount.subtract(totalDebtAmountToBePaid);
+							if (!overPayAmount.isZero() && overPayAmount.isPositive()) {
+								logger.info("********Creating OverPayment and the Amount :: " + overPayAmount);
+								for (Map.Entry<String, Money> moneyMapObj : moneyMapkey.entrySet()) {
+									String monthObligation = moneyMapObj.getKey();
+									ServiceAgreement_Id saId = new ServiceAgreement_Id(monthObligation);
+									String saType = saId.getEntity().getServiceAgreementType().getId().getSaType().trim();
+									if("O-EPF".equalsIgnoreCase(saType)) {
+										epfAmount = moneyMapObj.getValue().add(epfAmount);
+									} else if("O-EATMP".equalsIgnoreCase(saType)) {
+										atmpAmount = moneyMapObj.getValue().add(atmpAmount);
+									} else if("O-ER".equalsIgnoreCase(saType)) {
+										erAmount = moneyMapObj.getValue().add(erAmount);
+									}
+								}
+								int prorateMoney = 0;
+								Money additionMoney = Money.ZERO;
+								Money moneyToBePaid = Money.ZERO;//new Money(String.valueOf(prorateMoney), currency.getId());
+								Money finalOblgMoney = Money.ZERO;
+								for (int i = 0; i < obligationOverPaymentArr.length; i++) {
+									if("E-AVPF".equalsIgnoreCase(obligationOverPaymentArr[i])) {
+										prorateMoney = Math.round(epfAmount.getAmount().floatValue()
+												/ totalDebtAmountToBePaid.getAmount().floatValue()
+												* overPayAmount.getAmount().floatValue());
+									} else if("E-AVATMP".equalsIgnoreCase(obligationOverPaymentArr[i])) {
+										prorateMoney = Math.round(atmpAmount.getAmount().floatValue()
+												/ totalDebtAmountToBePaid.getAmount().floatValue()
+												* overPayAmount.getAmount().floatValue());
+									} else if("E-AVCR".equalsIgnoreCase(obligationOverPaymentArr[i])) {
+										prorateMoney = Math.round(erAmount.getAmount().floatValue()
+												/ totalDebtAmountToBePaid.getAmount().floatValue()
+												* overPayAmount.getAmount().floatValue());
+									}
+									//Proration and Round off Logic
+									if(i == obligationOverPaymentArr.length-1) {
+										moneyToBePaid = overPayAmount.subtract(additionMoney);
+									} else {
+										finalOblgMoney = new Money(String.valueOf(prorateMoney), currency.getId()).add(finalOblgMoney);
+										if(overPayAmount.subtract(finalOblgMoney).isEqualTo(new Money("1", currency.getId()))) {
+											moneyToBePaid = new Money(String.valueOf(prorateMoney - 1), currency.getId());
+										} else {
+											moneyToBePaid = new Money(String.valueOf(prorateMoney), currency.getId());
+										}
+									}
+									additionMoney = additionMoney.add(moneyToBePaid);								
+									
+									String division = getDivisionByObligationType(obligationOverPaymentArr[i]);					
+									String obligationId = createObligation(this.characteristicValueFk1, division , obligationOverPaymentArr[i]);
+									logger.info("OverPayment Created against the Obligation ID" + obligationId
+											+ "for account ID: " + this.characteristicValueFk1);
+									ServiceAgreement_Id sa_id = new ServiceAgreement_Id(obligationId);
+									logger.info("ServiceAgreement_Id: " + sa_id);
+									System.out.println("ServiceAgreement_Id, : " + sa_id);
+									debtObligation = (ServiceAgreement) sa_id.getEntity();
+									logger.info("ServiceAgreement: " + debtObligation);
+									System.out.println("ServiceAgreement: " + debtObligation);
+									logger.info("OverPayAmount Amount " + overPayAmount +"OverPayAmount Amount per SA: " + moneyToBePaid);
+									System.out.println("OverPayAmount Amount " + overPayAmount +"OverPayAmount Amount per SA: " + moneyToBePaid);
+									obligationMoneyMap.put(debtObligation, moneyToBePaid);
 								}
 							}
-							if (!this.amount.isZero() && this.amount.isPositive()) {
-								logger.info("********Creating OverPayment and the Amount is*******" + this.amount);
-								Money overPayAmount = this.amount;
-								String obligationId = createObligation(this.characteristicValueFk1, "DOR", getObligationOverPayment());
-								logger.info("OverPayment Created against the Obligation ID" + obligationId
-										+ "for account ID: " + this.characteristicValueFk1);
-								ServiceAgreement_Id sa_id = new ServiceAgreement_Id(obligationId);
-								logger.info("ServiceAgreement_Id: " + sa_id);
-								System.out.println("ServiceAgreement_Id, : " + sa_id);
-								debtObligation = (ServiceAgreement) sa_id.getEntity();
-								logger.info("ServiceAgreement: " + debtObligation);
-								System.out.println("ServiceAgreement: " + debtObligation);
-								logger.info("Amount before the payment creation:: " + overPayAmount);
-								System.out.println("Amount before the payment creation:: " + overPayAmount);
-								if (!overPayAmount.isZero() && overPayAmount.isPositive()) {
-									this.createFrozenPayment(debtObligation, overPayAmount);
-								}
-							}
+							this.createFrozenPayment(obligationMoneyMap);
 						} else {
-							if (getPartialPayment().trim().equalsIgnoreCase("O")) {
+							if (getPartialPayment().trim().equalsIgnoreCase("O") && !this.amount.isZero()) {
 								for (Entry<String, HashMap<List<String>, List<Money>>> moneyMapObj : moneyMap.entrySet()) {
 									periodValue = moneyMapObj.getKey();
 									actualMoneyValue = this.amount;
 									HashMap<List<String>, List<Money>> finalMoneyMap = moneyMapObj.getValue();
 									Money monthObligationMoney = Money.ZERO;
+									Money finalOblMoney = Money.ZERO;
+									Money additionMoney = Money.ZERO;
 									for (Map.Entry<List<String>, List<Money>> moneyEntry : finalMoneyMap.entrySet()) {
 										List<String> obligIdList = moneyEntry.getKey();
 										if (!isNull(moneyEntry) && moneyEntry.getValue().size() >= 1) {
@@ -175,11 +228,21 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 													logger.info("Month Obligation Money: " + monthObligationMoney);
 													logger.info("Actual Money Value: " + actualMoneyValue);
 													String oblStr = obligIdList.get(i);
-													int prorateMoney = Math.round(actualMoneyValue.getAmount().floatValue()
-															/ monthObligationMoney.getAmount().floatValue()
-															* obligationMoney.getAmount().floatValue());
-													debtMoneyforSingleSA = new Money(String.valueOf(prorateMoney),
-															new Currency_Id("XOF"));
+													int prorateMoney = 0;
+													if(i == moneyList.size()-1) {
+														debtMoneyforSingleSA = actualMoneyValue.subtract(additionMoney);
+													} else {
+														prorateMoney = Math.round(actualMoneyValue.getAmount().floatValue()
+																/ monthObligationMoney.getAmount().floatValue()
+																* obligationMoney.getAmount().floatValue());
+														finalOblMoney = new Money(String.valueOf(prorateMoney), currency.getId()).add(finalOblMoney);
+														if(actualMoneyValue.subtract(finalOblMoney).isEqualTo(new Money("1", currency.getId()))) {
+															debtMoneyforSingleSA = new Money(String.valueOf(prorateMoney - 1), currency.getId());
+														} else {
+															debtMoneyforSingleSA = new Money(String.valueOf(prorateMoney), currency.getId());
+														}
+													}
+													additionMoney = additionMoney.add(debtMoneyforSingleSA);
 													ServiceAgreement_Id sa_id = new ServiceAgreement_Id(oblStr);
 													logger.info("ServiceAgreement_Id: " + sa_id);
 													System.out.println("ServiceAgreement_Id: " + sa_id);
@@ -188,11 +251,11 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 													System.out.println("ServiceAgreement: " + debtObligation);
 													logger.info("prorateMoney: " + debtMoneyforSingleSA);
 													logger.info("Amount before the payment creation:: " + this.amount);
-													System.out
-															.println("Amount before the payment creation:: " + this.amount);
-													if (!this.amount.isZero() && this.amount.isPositive()) {
-														this.createFrozenPayment(debtObligation, debtMoneyforSingleSA);
-													}
+													System.out.println("Amount before the payment creation:: " + this.amount);
+													obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+												}
+												if (!this.amount.isZero() && this.amount.isPositive()) {
+													this.createFrozenPayment(obligationMoneyMap);
 												}
 											} else {
 												logger.info("###Creating payment for sequence month obligations####");
@@ -202,29 +265,27 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 													List<String> obligIdListt = moneyEntryy.getKey();
 													List<Money> moneyListt = moneyEntry.getValue();
 													for (int i = 0; i < obligIdListt.size(); i++) {
-														ServiceAgreement_Id sa_id = new ServiceAgreement_Id(
-																obligIdListt.get(i));
+														ServiceAgreement_Id sa_id = new ServiceAgreement_Id(obligIdListt.get(i));
 														logger.info("ServiceAgreement_Id: " + sa_id);
 														System.out.println("ServiceAgreement_Id: " + sa_id);
 														debtObligation = (ServiceAgreement) sa_id.getEntity();
 														logger.info("ServiceAgreement: " + debtObligation);
 														System.out.println("ServiceAgreement: " + debtObligation);
 														debtMoneyforSingleSA = moneyListt.get(i);
-														int payAmount = Math
-																.round(debtMoneyforSingleSA.getAmount().floatValue());
-														debtMoneyforSingleSA = new Money(String.valueOf(payAmount),
-																new Currency_Id("XOF"));
+														int payAmount = Math.round(debtMoneyforSingleSA.getAmount().floatValue());
+														debtMoneyforSingleSA = new Money(String.valueOf(payAmount), currency.getId());
 														System.out.println("DebtMoney: " + debtMoneyforSingleSA);
 														logger.info("DebtMoney:" + debtMoneyforSingleSA);
 														logger.info("Amount before the payment creation :: " + this.amount);
-														System.out.println(
-																"Amount before the payment creation:: " + this.amount);
-														if (!this.amount.isZero() && this.amount.isPositive()) {
-															this.createFrozenPayment(debtObligation, debtMoneyforSingleSA);
-														}
+														System.out.println("Amount before the payment creation:: " + this.amount);
+														obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+													}
+													if (!this.amount.isZero() && this.amount.isPositive()) {
+														this.createFrozenPayment(obligationMoneyMap);
 													}
 												}
 											}
+											
 										}
 									}
 								}
@@ -236,21 +297,60 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 						logger.info("Money Map is empty");
 					}
 				}
-			} else {
+			} else if(!this.amount.isZero() && this.amount.isPositive()) {//2000
 				logger.info("There is no obligation to pay: Creating OverPayment- the Amount is:: "	+ this.amount);
-				String obligationId = createObligation(this.characteristicValueFk1, "DOR", getObligationOverPayment());
-				logger.info("OverPayment Created against the Obligation ID" + obligationId + "for account ID: " + this.characteristicValueFk1);
-				ServiceAgreement_Id sa_id = new ServiceAgreement_Id(obligationId);
-				logger.info("ServiceAgreement_Id: " + sa_id);
-				System.out.println("ServiceAgreement_Id, : " + sa_id);
-				debtObligation = (ServiceAgreement) sa_id.getEntity();
-				logger.info("ServiceAgreement: " + debtObligation);
-				System.out.println("ServiceAgreement: " + debtObligation);
-				logger.info("Amount before the payment creation:: " + this.amount);
-				this.createFrozenPayment(debtObligation, this.amount);
+				Money debtMoneyforOverPaySA = Money.ZERO;
+				int prorateMoney = Math.round(this.amount.getAmount().floatValue() / obligationOverPaymentArr.length);
+					for (int i = 0; i < obligationOverPaymentArr.length; i++) {
+					String division = getDivisionByObligationType(obligationOverPaymentArr[i]);					
+					String obligationId = createObligation(this.characteristicValueFk1, division , obligationOverPaymentArr[i]);
+					logger.info("OverPayment Created against the Obligation ID" + obligationId + "for account ID: " + this.characteristicValueFk1);
+					ServiceAgreement_Id sa_id = new ServiceAgreement_Id(obligationId);
+					logger.info("ServiceAgreement_Id: " + sa_id);
+					System.out.println("ServiceAgreement_Id, : " + sa_id);
+					debtObligation = (ServiceAgreement) sa_id.getEntity();
+					logger.info("ServiceAgreement: " + debtObligation);
+					System.out.println("ServiceAgreement: " + debtObligation);
+					if(i == obligationOverPaymentArr.length-1) {
+						int length = obligationOverPaymentArr.length-1;
+						prorateMoney = prorateMoney * length;
+						Money finalMoney = new Money(String.valueOf(prorateMoney), currency.getId());
+						debtMoneyforOverPaySA = this.amount.subtract(finalMoney);
+					} else {
+						debtMoneyforOverPaySA = new Money(String.valueOf(prorateMoney), currency.getId());
+						
+					}
+					logger.info("Amount before the payment creation:: " + obligationMoneyMap);
+					obligationMoneyMap.put(debtObligation, debtMoneyforOverPaySA);
+				}
+				
+				this.createFrozenPayment(obligationMoneyMap);
 			}
 		
 		
+	}
+
+	/**
+	 * @param saType
+	 * @return
+	 */
+	private String getDivisionByObligationType(String saType) {
+		PreparedStatement preparedStatement = createPreparedStatement(
+				"SELECT CIS_DIVISION FROM CI_SA_TYPE where SA_TYPE_CD= \'" + saType + "\'",	"SELECT");
+		preparedStatement.setAutoclose(false);
+		String division = null;
+
+		try {
+			SQLResultRow sql = preparedStatement.firstRow();
+			division = sql.getString("CIS_DIVISION");
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		} finally {
+			preparedStatement.close();
+			preparedStatement = null;
+		}
+		return division;
+
 	}
 
 	/**
@@ -295,48 +395,43 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 	 * @param obligation
 	 * @param money
 	 */
-	private void createFrozenPayment(ServiceAgreement obligation, Money money) {
-
+	private void createFrozenPayment(Map<ServiceAgreement, Money> obligationMoneyMap) {
 		
-		logger.info("***createFrozenPayment***: ");
-		logger.info("Money: " + money);
-		System.out.println("Money: " + money);
-		
-		logger.info("Money String: " + String.valueOf(money));
-		System.out.println("Money String: " + String.valueOf(money));
-		
+		Money moneyToSubtract = Money.ZERO;
 		Payment_DTO paymentDTO = (Payment_DTO) this.createDTO(Payment.class);
-		paymentDTO.setAccountId(obligation.getAccount().getId());
-		PaymentSegment_DTO paymentSegmentDTO = (PaymentSegment_DTO) this.createDTO(PaymentSegment.class);
-		if(this.amount.isLessThanOrEqual(money)) { //money = 4000, amount-screen = 5000
-			paymentDTO.setPaymentAmount(this.amount);
-			paymentSegmentDTO.setPaySegmentAmount(this.amount);
-			this.amount = this.amount.subtract(money);
-		} else if(this.amount.isGreaterThan(money)){
-			this.amount = this.amount.subtract(money);
-			paymentDTO.setPaymentAmount(money);
-			paymentSegmentDTO.setPaySegmentAmount(money);
-		}
-		paymentDTO.setCurrencyId(obligation.getAccount().getCurrency().getId());
+		paymentDTO.setAccountId(new Account_Id(this.characteristicValueFk1));
+		paymentDTO.setPaymentAmount(this.amount);
+		paymentDTO.setCurrencyId(currency.getId());
 		paymentDTO.setSequence(this.sequence);
-		paymentDTO.setPaymentEventId(this.paymentEvent.getId()); //new PaymentEvent_Id("245660788074")
-		paymentDTO.setPaymentStatus(PaymentStatusLookup.constants.FREEZABLE);
-		paymentSegmentDTO.setServiceAgreementId(obligation.getId());
-		paymentSegmentDTO.setCurrencyId(obligation.getAccount().getCurrency().getId());	
-		//MatchEvent_Id match = paymentSegmentDTO.getAdjustmentId().getEntity().getRelatedFinancialTransaction().getMatchEventId();
-		//paymentSegmentDTO.setMatchEventId(match);
-		Adjustment_Id linkedAdjustmentId = paymentSegmentDTO.getAdjustmentId();
-		CreateDistributeFreezePayment createDistributeFreezePayment = Factory.newInstance();
-		Payment payment = createDistributeFreezePayment.process(paymentDTO, paymentSegmentDTO, (Date) null, (Date) null,
-				(GeneralLedgerDistributionCode) null, linkedAdjustmentId);
+		paymentDTO.setPaymentEventId(this.paymentEvent.getId()); 
+        paymentDTO.setPaymentStatus(PaymentStatusLookup.constants.FREEZABLE);
+		Payment payment = paymentDTO.newEntity();
+        
+		logger.info("paymentId: " +  payment.getId());
+		System.out.println("paymentId: " +  payment.getId());
+	
+		PaymentSegment_DTO paymentSegmentDTO = (PaymentSegment_DTO) this.createDTO(PaymentSegment.class);
+		for (Entry<ServiceAgreement, Money> obliMoneymap : obligationMoneyMap.entrySet()){
+			paymentSegmentDTO.setServiceAgreementId(obliMoneymap.getKey().getId());
+			paymentSegmentDTO.setCurrencyId(currency.getId());
+			paymentSegmentDTO.setPaySegmentAmount(obliMoneymap.getValue());
+			paymentSegmentDTO.setPaymentId(payment.getId());
+			paymentSegmentDTO.newEntity();
+			moneyToSubtract = moneyToSubtract.add(obliMoneymap.getValue());
+			System.out.println("PaySegment Id:: " + paymentSegmentDTO.getEntity().getId());
+			logger.info("PaySegment Id:: " + paymentSegmentDTO.getEntity().getId());
+		}
+		if (payment.getPaymentStatus().isFreezable()) {
+			payment.freeze();
+		}
+		this.amount = this.amount.subtract(moneyToSubtract);;
 		if (this.notNull(payment)) {
 			this.paymentId = payment.getId();
 		}
-		logger.info("paymentId: " +  payment.getId());
-		System.out.println("paymentId: " +  payment.getId());
-
+		
 	}
 	
+
 	public String createObligation(String accountId, String division, String obligationType) {
 
 		  // Business Service Instance
@@ -441,12 +536,12 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 				 ||  adjustmentTypeContribution.contains(",") ||
 				 adjustmentTypePenality.contains(",") || adjustmentTypeMajoration.contains(",") || adjustmentTyepeOverpayment.contains(",")){
 			 String accntIdArr[] = accountType.split(",");
-			 String obligationContributionArr[] = obligationContribution.split(","); 
-			 String obligationOverPaymentArr[] = obligationOverPayment.split(","); 
-			 String adjustmentTypeContributionArr[] = adjustmentTypeContribution.split(","); 
-			 String adjustmentTypePenalityArr[] = adjustmentTypePenality.split(","); 
-			 String adjustmentTypeMajorationArr[] = adjustmentTypeMajoration.split(","); 
-			 String adjustmentTyepeOverpaymentArr[] = adjustmentTyepeOverpayment.split(","); 
+			 obligationContributionArr = obligationContribution.split(","); 
+			 obligationOverPaymentArr = obligationOverPayment.split(","); 
+			 adjustmentTypeContributionArr = adjustmentTypeContribution.split(","); 
+			 adjustmentTypePenalityArr = adjustmentTypePenality.split(","); 
+			 adjustmentTypeMajorationArr = adjustmentTypeMajoration.split(","); 
+			 adjustmentTyepeOverpaymentArr = adjustmentTyepeOverpayment.split(","); 
 			 accountType = "'" + StringUtils.join(accntIdArr,"','") + "'";
 			 obligationContribution = "'" + StringUtils.join(obligationContributionArr,"','") + "'";
 			 obligationOverPayment = "'" + StringUtils.join(obligationOverPaymentArr,"','") + "'";
@@ -474,7 +569,7 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 	    				+" CADJ.ADJ_TYPE_CD, CADJ.ADJ_ID, CADJ.ADJ_AMT, CS.START_DT , CADJ.CRE_DT FROM CI_ACCT_PER CAP, "
 	    				+" CI_ACCT CA ,CI_SA CS,CI_ADJ CADJ WHERE CAP.PER_ID IN (SELECT PER_ID from CI_ACCT_PER where ACCT_ID = \'"+accId+"\') "
 	    				+" AND CAP.ACCT_ID=CA.ACCT_ID AND CA.CUST_CL_CD IN("+accountType+") AND CAP.ACCT_ID = CS.ACCT_ID  "
-	    				+" AND CS.SA_TYPE_CD in("+obligationContribution+","+obligationOverPayment+") AND CS.SA_ID = CADJ.SA_ID AND CADJ.ADJ_TYPE_CD IN  "
+	    				+" AND CS.SA_TYPE_CD in("+obligationContribution+") AND CS.SA_ID = CADJ.SA_ID AND CADJ.ADJ_TYPE_CD IN  "
 	    				+" ("+adjustmentTypeContribution+","+adjustmentTypePenality+","+adjustmentTypeMajoration+","+adjustmentTyepeOverpayment+") AND CS.SA_STATUS_FLG=40 ORDER BY CS.START_DT", "SELECT");
 	    
 			psPreparedStatement.setAutoclose(false);

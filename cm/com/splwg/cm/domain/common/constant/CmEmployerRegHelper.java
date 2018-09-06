@@ -25,6 +25,7 @@ import com.splwg.base.api.businessService.BusinessServiceDispatcher;
 import com.splwg.base.api.businessService.BusinessServiceInstance;
 import com.splwg.base.api.sql.PreparedStatement;
 import com.splwg.base.api.sql.SQLResultRow;
+import com.splwg.cm.domain.batch.CmEmployerRegConstant;
 import com.splwg.shared.logging.Logger;
 import com.splwg.shared.logging.LoggerFactory;
 
@@ -316,6 +317,23 @@ public class CmEmployerRegHelper extends GenericBusinessObject{
 
 		//DecimalFormat df = new DecimalFormat("#");
 		//String ninet = df.format(codeEst);
+		String pattern = CmEmployerRegConstant.VALIDATE_NINET_NUMBER;
+		//String pattern = "^[A-Za-z0-9]{4}$"; //Changed logic based on functional testing feedback from Kahwla-09April
+
+		return ninet.matches(pattern);
+
+	}
+	
+	/**
+	 * Method to validate code establishment
+	 * 
+	 * @param codeEst
+	 * @return
+	 */
+	public boolean validateNinetNumber(double codeEst) {
+
+		DecimalFormat df = new DecimalFormat("#");
+		String ninet = df.format(codeEst);
 		String pattern = CmEmployerRegConstant.VALIDATE_NINET_NUMBER;
 		//String pattern = "^[A-Za-z0-9]{4}$"; //Changed logic based on functional testing feedback from Kahwla-09April
 

@@ -163,23 +163,6 @@ public class CmAnnulationChequeBatch extends CmAnnulationChequeBatch_Gen {
 			if (!statutTender.equals("canceled") && typeTender.equals("CHEC") && checkNumberFromFrontEnd.equals(checkNumberFromBDD)) {
 				payTender.cancel(paymentCancelReason.getEntity());
 				ok = true;
-				Money montantFraisRjt=element.getFraisRjtMT();
-				String obligationId=null;
-				if (montantFraisRjt!=null && montantFraisRjt.getAmount().intValue()>0) {
-					int montantByObligation=montantFraisRjt.getAmount().intValue()/3;
-					Money montant=new Money(new BigDecimal(montantByObligation)); 
-					
-                    	obligationId = createObligation(element.getAcctId(),getDivisionByObligationType(getParameters().getObligationTypePF().trim()),getParameters().getObligationTypePF().trim());
-    					createAjustement(getParameters().getAdjustmentTypePF(), obligationId, montant);
-    					
-    					obligationId = createObligation(element.getAcctId(),getDivisionByObligationType(getParameters().getObligationTypeATMP().trim()),getParameters().getObligationTypeATMP().trim());
-    					createAjustement(getParameters().getAdjustmentTypeATMP(), obligationId, montant);
-    					
-    					obligationId = createObligation(element.getAcctId(),getDivisionByObligationType(getParameters().getObligationTypePV().trim()),getParameters().getObligationTypePV().trim());
-    					createAjustement(getParameters().getAdjustmentTypePV(), obligationId, montant);
-					
-				}
-
 				 log.info("TENDER TYPE: "
 				 +payTender.getTenderType().getId().getIdValue());
 				 log.info("ID TENDER: " +payTender.getId().getIdValue());
@@ -200,9 +183,87 @@ public class CmAnnulationChequeBatch extends CmAnnulationChequeBatch_Gen {
 						payTender.getId().getIdValue(), element.getFraisRjtMT(), element.getExttransId(),
 						element.getExtReferenceId(), element.getFraisRjtMT(), element.getAccountingDate());
 			}
+			
+			if(element.getFraisRjtSW().equals("OUI")){ 
+				updateStatut("ANNULATION_OK", payTnderId.getIdValue());
+				Money montantFraisRjt=element.getFraisRjtMT();
+				String obligationId=null;
+				if (montantFraisRjt!=null && montantFraisRjt.getAmount().intValue()>0) { 
+			
+					String lotDeSource=getLotDeSource(element.getTenderCtrlId());
+					if(lotDeSource!=null && lotDeSource.equals("02CC")){
+						obligationId = createObligation(element.getAcctId(),getDivisionByObligationType(getParameters().getObligationTypePF().trim()),getParameters().getObligationTypePF().trim());
+    					createAjustement(getParameters().getAdjustmentTypePF(), obligationId, montantFraisRjt);
+					}
+					else if(lotDeSource.equals("04CC")){
+						obligationId = createObligation(element.getAcctId(),getDivisionByObligationType(getParameters().getObligationTypeATMP().trim()),getParameters().getObligationTypeATMP().trim());
+    					createAjustement(getParameters().getAdjustmentTypeATMP(), obligationId, montantFraisRjt);
+					}
+					else{
+						obligationId = createObligation(element.getAcctId(),getDivisionByObligationType(getParameters().getObligationTypePV().trim()),getParameters().getObligationTypePV().trim());
+    					createAjustement(getParameters().getAdjustmentTypePV(), obligationId, montantFraisRjt);
+					}
+					
+				}
+			}
 			return true;
 		}
 
+		private List<BigDecimal> getSequences() {
+			List<BigDecimal> listeSequences = new ArrayList<BigDecimal>();
+			String query = "SELECT DISTINCT(SEQ_NUM) FROM CI_WFM_OPT WHERE WFM_NAME='CORRES_BANK'";
+			PreparedStatement preparedStatement = createPreparedStatement(query);
+			QueryIterator<SQLResultRow> iter1 = preparedStatement.iterate();
+			while (iter1.hasNext()) {
+				SQLResultRow result = (SQLResultRow) iter1.next();
+				BigDecimal sequence = result.getBigDecimal("SEQ_NUM");
+				System.out.println("SEQ " + sequence);
+				listeSequences.add(sequence);
+
+			}
+			return listeSequences;
+		}
+		
+		private List<String> getOptionValues(int seq) {
+			List<String> listeAccountType = new ArrayList<String>();
+			String query = "SELECT WFM_OPT_VAL FROM CI_WFM_OPT WHERE WFM_NAME='CMCO' AND SEQ_NUM=:sequence";
+			PreparedStatement preparedStatement = createPreparedStatement(query);
+			BigDecimal sequence = new BigDecimal(seq);
+			preparedStatement.bindBigDecimal("sequence", sequence);
+			QueryIterator<SQLResultRow> iter1 = preparedStatement.iterate();
+			while (iter1.hasNext()) {
+				SQLResultRow result = (SQLResultRow) iter1.next();
+				String accountType = result.getString("WFM_OPT_VAL");
+				listeAccountType.add(accountType);
+			}
+			return listeAccountType;
+		}
+		
+		private String getLotDeSource(String tndrCntrId){
+			String resultat=null;
+			String query = "SELECT * FROM CI_BANK_ACCOUNT_L"
+						+ " WHERE BANK_ACCT_KEY=(SELECT BANK_ACCT_KEY FROM  CI_TNDR_SRCE"
+						+ " WHERE TNDR_SOURCE_CD=(SELECT TNDR_SOURCE_CD FROM CI_TNDR_CTL"
+						+ " WHERE TNDR_CTL_ID=:tndrCntrIdSoft))";
+			
+			PreparedStatement preparedStatement = createPreparedStatement(query);
+			preparedStatement.bindString("tndrCntrIdSoft", tndrCntrId, null);
+			
+			QueryIterator<SQLResultRow> iter1 = preparedStatement.iterate();
+			// int count=0;
+			while (iter1.hasNext()) {
+				SQLResultRow result = (SQLResultRow) iter1.next();
+				if(result.getString("LANGUAGE_CD").equals("FRA")){
+					
+					resultat=result.getString("BANK_ACCT_KEY");
+					
+				}
+
+			}	
+			System.out.println("Resultat " +resultat); 
+			return resultat;	
+		}
+		
 		private void updateStatut(String statut, String payTenderId) {
 			String query = "UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG=:statut WHERE PAY_TENDER_ID=:payTenderId";
 			PreparedStatement preparedStatement = createPreparedStatement(query);
@@ -231,38 +292,11 @@ public class CmAnnulationChequeBatch extends CmAnnulationChequeBatch_Gen {
 
 			BusinessServiceDispatcher.execute(businessServiceInstance);
 		}
-
-//		public String createObligation(String accountId, String division, String obligationType) {
-//
-//			// Business Service Instance
-//			BusinessServiceInstance bsInstance = BusinessServiceInstance.create("C1-FindCreateObligation");
-//
-//			// Populate BS parameters if available
-//			if (null != accountId && null != division && null != obligationType) {
-//				COTSInstanceNode group = bsInstance.getGroupFromPath("input");
-//				group.set("accountId", accountId);
-//				group.set("division", division);
-//				group.set("obligationType", obligationType); 
-//			}
-//			bsInstance = BusinessServiceDispatcher.execute(bsInstance);
-//			String obligationId = null;
-//			System.out.println(getSystemDateTime().getDate());
-//			// log.info(bsInstance.getDocument().asXML());
-//			// Getting the list of results
-//			COTSInstanceNode group = bsInstance.getGroupFromPath("output"); 
-//
-//			// If list IS NOT empty
-//			if (group != null) {
-//				obligationId = group.getString("obligationId");
-//			}
-//			return obligationId;
-//
-//		}
 		
 		private String createObligation(String accountId, String division, String obligationType){
 			BusinessObjectInstance obligationInstance = BusinessObjectInstance.create("C1-FilingPeriodObligation");
 			obligationInstance.set("accountId", accountId);  
-			obligationInstance.set("obligationStatus", ServiceAgreementStatusLookup.constants.PENDING_START);
+			obligationInstance.set("obligationStatus", ServiceAgreementStatusLookup.constants.ACTIVE);
 			obligationInstance.set("startDate", getSystemDateTime().getDate());
 			obligationInstance.set("division", division);
 			obligationInstance.set("obligationType",obligationType); 

@@ -21,18 +21,14 @@ public class TestBatchJob extends BatchJobTestCase{
 	@Override
 	protected SubmissionParameters setupRun(SubmissionParameters arg0) {
 		// TODO Auto-generated method stub
-/*		HashMap<String, HashMap<String,String>> map = new HashMap<String, HashMap<String,String>>();
-		map.get(key); 
-		map.put("BO", value);*/
-		
-		arg0.setBatchControlId(new BatchControl_Id("CM-PAYBA"));
+		arg0.setBatchControlId(new BatchControl_Id("CM-FABIL"));
 		//arg0.setBatchControlId(new BatchControl_Id("CM-UPST"));
 		Properties  properties = new Properties();
-		//properties.setProperty("formType", "IMMAT_EMPL");
-		properties.setProperty("externalSourceId", "EPORTAIL");
-		properties.setProperty("typeOfDistributionRule", "PDNS");
-		properties.setProperty("typeOfReconciliation", "PFORMS");
-		properties.setProperty("typeOfPaymentBatch", "VEPO");
+		properties.setProperty("billType", "FAMILY ALLOWANCE");
+		properties.setProperty("numberOfDays", "10");
+		properties.setProperty("numberOfBills", "4");
+		//properties.setProperty("typeOfReconciliation", "PFORMS");
+		//properties.setProperty("typeOfPaymentBatch", "VEPO");
 		//properties.setProperty("pathToMove", "D:\\PSRM\\Success\\");
 		//properties.setProperty("errorFilePathToMove", "D:\\PSRM\\Failure\\");
 		arg0.setExtraParameters(properties);
@@ -40,6 +36,7 @@ public class TestBatchJob extends BatchJobTestCase{
 		arg0.setIsTracingProgramStart(Bool.TRUE);
 		arg0.setIsTracingSQL(Bool.TRUE);
 		arg0.setIsTracingStandardOut(Bool.TRUE);
+		return arg0;
 		//private TaxRole_Id taxRoleId;
 		
 			/*String cancelledSiblings = "";
@@ -194,7 +191,7 @@ public class TestBatchJob extends BatchJobTestCase{
 			psPreparedStatement = null;
 		}*/
 		
-		return arg0;
+	
 	}
 	
 	

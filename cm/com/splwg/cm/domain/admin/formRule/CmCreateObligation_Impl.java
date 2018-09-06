@@ -29,10 +29,7 @@ import com.splwg.tax.domain.admin.formRule.ApplyFormRuleAlgorithmInputOutputData
 import com.splwg.tax.domain.admin.formRule.FormRule;
 import com.splwg.tax.domain.admin.formRule.FormRuleBORuleProcessingAlgorithmSpot;
 import com.splwg.tax.domain.admin.idType.IdType_Id;
-import com.splwg.tax.domain.customerinfo.account.Account_DTO;
-import com.splwg.tax.domain.customerinfo.account.Account_Id;
 import com.splwg.tax.domain.customerinfo.person.Person;
-import com.splwg.tools.artifactgen.metadata.Lookup;
 
 /**
  * @author Papa
@@ -65,7 +62,7 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 		formRuleBoInstance.set("bo", formRule.getBusinessObject().getId().getTrimmedValue());
 		formRuleBoInstance.set("formRuleGroup", formRule.getId().getFormRuleGroup().getId().getTrimmedValue());
 		formRuleBoInstance.set("formRule", formRule.getId().getFormRule());
-		formRuleBoInstance.set("sequence", BigDecimal.valueOf(formRule.getSequence().longValue())); 
+		formRuleBoInstance.set("sequence", BigDecimal.valueOf(formRule.getSequence().longValue()));
 		formRuleBoInstance = BusinessObjectDispatcher.read(formRuleBoInstance);
 
 		Date dateDebutCotisation = (Date) formBoInstance
@@ -73,7 +70,7 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 		Date dateFinCotisation = (Date) formBoInstance
 				.getFieldAndMDForPath("informationEmployeur/dateFinCotisation/asCurrent").getValue();
 		logger.info("After form rule BO");
- 
+
 		// Form Rule Details Group
 		String factorNbreSal = formRuleBoInstance.getString("nbrSal");
 
@@ -112,99 +109,106 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 		double montantTotalDouble = montantRCC.getAmount().doubleValue() + montantRRG.getAmount().doubleValue();
 		BigDecimal montantTotalBD = new BigDecimal(montantTotalDouble);
 		Money montantTotalIPRES = new Money(montantTotalBD);
-		List<String> listeComptes = getAccountsByIdPerson(idEmployeur);
+		String compte = getAccountsByIdPerson(idEmployeur);
 		List<BigDecimal> listesequences = getSequences();
-		for (String compte : listeComptes) {   
-			String taxRoleId = getTaxRolesByAccountId(compte);
-			// String taxType = getTaxTypeByTaxeRoleId(taxRoleId);
-			Account_DTO acctDTO = new Account_Id(compte).getEntity().getDTO();
-			String typeCompte = acctDTO.getCustomerClassId().getTrimmedValue();
-			BusinessObjectInstance obligationInstance = BusinessObjectInstance.create("C1-FilingPeriodObligation");
-			obligationInstance.set("accountId", compte);
+		List<String> taxRoles = getTaxRolesByAccountId(compte);
+		BusinessObjectInstance obligationInstance = BusinessObjectInstance.create("C1-FilingPeriodObligation");
+		obligationInstance.set("accountId", compte);
+		for (String taxRoleId : taxRoles) {
+			String taxType = getTaxTypeByTaxeRoleId(taxRoleId);
 			obligationInstance.set("taxRole", taxRoleId);
 			if (!verifierDateFinMonThLy(dateFinCotisation)) {
 				addError(CmMessageRepository90000.MSG_14());
 			} else {
 				if (toTalSalaries >= nombreSalToBD.intValue()) {
-					ajoutCalendrierTaxRole(taxRoleId, dateDebutCotisation, "SU-MONTHLY");
+					updateOrInsertCalendrier(taxRoleId, dateDebutCotisation, "SU-MONTHLY");
 					obligationInstance.set("filingCalendar", "SU-MONTHLY");
 				} else if (!verifierDateFinCotisation(dateFinCotisation)) {
 					addError(CmMessageRepository90000.MSG_13(idNumber, nbko.toString()));
 				} else {
-					ajoutCalendrierTaxRole(taxRoleId, dateDebutCotisation, "SU-QUARTER");
+					updateOrInsertCalendrier(taxRoleId, dateDebutCotisation, "SU-QUARTER");
 					obligationInstance.set("filingCalendar", "SU-QUARTER");
 				}
 			}
-
 			obligationInstance.set("filingCalendarEndDate", dateFinCotisation);
 			obligationInstance.set("obligationStatus", ServiceAgreementStatusLookup.constants.PENDING_START);
 			obligationInstance.set("startDate", dateDebutCotisation);
 			obligationInstance.set("endDate", dateFinCotisation);
+
 			for (BigDecimal sequence : listesequences) {
 				List<String> listeOptionValuesBySeq = getOptionValues(sequence.intValue());
 				Map<String, String> mapOptionValues = new HashMap<String, String>();
-				mapOptionValues.put("COMPTE", listeOptionValuesBySeq.get(0));
-				System.out.println("TYPE COMPTE: " + typeCompte);
-				String optioValue = mapOptionValues.get("COMPTE");
-				System.out.println(optioValue);
-				mapOptionValues.put("OBLIGATION", listeOptionValuesBySeq.get(1));  
-				mapOptionValues.put("AJUSTEMENT", listeOptionValuesBySeq.get(2));
-				System.out.println("OptionValue= " + optioValue + " et typecompte= " + typeCompte);
-				if (typeCompte.equals(optioValue)) {
-					String division = getDivisionByObligationType(mapOptionValues.get("OBLIGATION"));
+				mapOptionValues.put("OBLIGATION", listeOptionValuesBySeq.get(0));
+				mapOptionValues.put("AJUSTEMENT", listeOptionValuesBySeq.get(1));
+				mapOptionValues.put("TAXE", listeOptionValuesBySeq.get(2));
+				String optioValue = mapOptionValues.get("TAXE");
+				String division = getDivisionByObligationType(mapOptionValues.get("OBLIGATION"));
+				if (taxType.equals(optioValue)) {
+					obligationInstance.set("taxRole", taxRoleId);
 					obligationInstance.set("division", division);
-					obligationInstance.set("obligationType",mapOptionValues.get("OBLIGATION")); 
+					obligationInstance.set("obligationType", mapOptionValues.get("OBLIGATION"));
 					obligationInstance = BusinessObjectDispatcher.add(obligationInstance);
 					String obligationId = obligationInstance.getString("obligationId");
-					//creation ID_DNS pour obligation
-					ajouterDNSObligation(obligationId, idFormulaire, idFormulaire,dateDebutCotisation); 
+
+					// creation ID_DNS pour obligation
+					ajouterDNSObligation(obligationId, idFormulaire, idFormulaire, dateDebutCotisation);
 					logger.info("obligationId: " + obligationId);
 					String obligationType = obligationInstance.getString("obligationType");
 
 					if (obligationType.equals("O-EPF")) {
-						if(dateFinCotisation.getYear()!=getSystemDateTime().getDate().getYear()){
-							String idAdjustment = createAjustementBS("CPFHE", obligationId, montantPF.getAmount(),dateDebutCotisation); //CPFHE
+						if (dateFinCotisation.getYear() != getSystemDateTime().getDate().getYear()) {
+							String idAdjustment = createAjustementBS("CPFHE", obligationId, montantPF.getAmount(),
+									dateDebutCotisation); // CPFHE
 							ajouterDNSAdj(idAdjustment, idFormulaire, idFormulaire);
+							String idGroupeFT=getFtIdByAdjId(idAdjustment);
+							updateGroupFtId(idGroupeFT); 
+							logger.info("idAdjustmentPF: " + idAdjustment);
+						} else {
+							String idAdjustment = createAjustementBS(mapOptionValues.get("AJUSTEMENT"), obligationId,
+									montantPF.getAmount(), dateDebutCotisation); // CPF
+							ajouterDNSAdj(idAdjustment, idFormulaire, idFormulaire);
+							String idGroupeFT=getFtIdByAdjId(idAdjustment);
+							updateGroupFtId(idGroupeFT); 
 							logger.info("idAdjustmentPF: " + idAdjustment);
 						}
-						else{
-							String idAdjustment = createAjustementBS(mapOptionValues.get("AJUSTEMENT"), obligationId, montantPF.getAmount(),dateDebutCotisation); //CPF
-							ajouterDNSAdj(idAdjustment, idFormulaire, idFormulaire);
-							logger.info("idAdjustmentPF: " + idAdjustment);
-						}
-						
 
 					} else if (obligationType.equals("O-EATMP")) {
-						if(dateFinCotisation.getYear()!=getSystemDateTime().getDate().getYear()){
-						String idAdjustment = createAjustementBS("CATMPHE", obligationId, montantATMP.getAmount(),dateDebutCotisation); //CATMPHE
-						ajouterDNSAdj(idAdjustment, idFormulaire, idFormulaire);
-						logger.info("idAdjustmentPF: " + idAdjustment);
-					}
-					else{
-						String idAdjustment = createAjustementBS(mapOptionValues.get("AJUSTEMENT"), obligationId,
-								montantATMP.getAmount(),dateDebutCotisation);
-						ajouterDNSAdj(idAdjustment, idFormulaire, idFormulaire);
-						logger.info("idAdjustmentATMP: " + idAdjustment);
-					}
-						
+						if (dateFinCotisation.getYear() != getSystemDateTime().getDate().getYear()) {
+							String idAdjustment = createAjustementBS("CATMPHE", obligationId, montantATMP.getAmount(),
+									dateDebutCotisation); // CATMPHE
+							ajouterDNSAdj(idAdjustment, idFormulaire, idFormulaire);
+							String idGroupeFT=getFtIdByAdjId(idAdjustment);
+							updateGroupFtId(idGroupeFT); 
+							logger.info("idAdjustmentPF: " + idAdjustment);
+						} else {
+							String idAdjustment = createAjustementBS(mapOptionValues.get("AJUSTEMENT"), obligationId,
+									montantATMP.getAmount(), dateDebutCotisation);
+							ajouterDNSAdj(idAdjustment, idFormulaire, idFormulaire);
+							String idGroupeFT=getFtIdByAdjId(idAdjustment);
+							updateGroupFtId(idGroupeFT); 
+							logger.info("idAdjustmentATMP: " + idAdjustment);  
+						}
 
 					} else if (obligationType.equals("O-ER")) {
-						if(dateFinCotisation.getYear()!=getSystemDateTime().getDate().getYear()){
-							String idAdjustment = createAjustementBS("CRHE", obligationId, montantTotalIPRES.getAmount(),dateDebutCotisation); //CRHE
+						if (dateFinCotisation.getYear() != getSystemDateTime().getDate().getYear()) {
+							String idAdjustment = createAjustementBS("CRHE", obligationId,
+									montantTotalIPRES.getAmount(), dateDebutCotisation); // CRHE
 							ajouterDNSAdj(idAdjustment, idFormulaire, idFormulaire);
+							String idGroupeFT=getFtIdByAdjId(idAdjustment);
+							updateGroupFtId(idGroupeFT); 
 							logger.info("idAdjustmentPF: " + idAdjustment);
-						}
-						else{
+						} else {
 							String idAdjustment = createAjustementBS(mapOptionValues.get("AJUSTEMENT"), obligationId,
-									montantTotalIPRES.getAmount(),dateDebutCotisation);
+									montantTotalIPRES.getAmount(), dateDebutCotisation);
 							ajouterDNSAdj(idAdjustment, idFormulaire, idFormulaire);
+							String idGroupeFT=getFtIdByAdjId(idAdjustment);
+							updateGroupFtId(idGroupeFT); 
 							logger.info("idAdjustmentVIEILLESSE: " + idAdjustment);
 						}
-						
-					}
 
+					}
 				}
-				if (typeCompte.equals(optioValue)) {
+				if (taxType.equals(optioValue)) {
 					break;
 				}
 			}
@@ -286,48 +290,68 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 		return resultat;
 	}
 
-	public List<String> getAccountsByIdPerson(String personId) { 
-		List<String> listeAccounts = new ArrayList<String>();
+	public void updateOrInsertCalendrier(String idTaxRole, Date effetDate, String filingCal) {
+		String query = "SELECT * FROM CI_TAX_ROLE_CAL WHERE TAX_ROLE_ID =:idTaxRoleSoft AND EFFDT =:effetDateSoft";
+		PreparedStatement preparedStatement = createPreparedStatement(query);
+		preparedStatement.bindString("idTaxRoleSoft", idTaxRole, null);
+		preparedStatement.bindDate("effetDateSoft", effetDate);
+		SQLResultRow sqlResultRow = preparedStatement.firstRow();
+		System.out.println(sqlResultRow);
+		if (sqlResultRow != null) {
+			if (!sqlResultRow.getString("FILING_CAL_CD").trim().equals(filingCal)) {
+				updateCalendrierTaxRole(filingCal, idTaxRole, effetDate);
+			}
+		} else {
+			ajoutCalendrierTaxRole(idTaxRole, effetDate, filingCal);
+		}
+
+		// if(sqlResultRow.getInteger("nb") > 0)
+		// Update
+		// else
+		// Insert
+	}
+
+	public String getAccountsByIdPerson(String personId) {
+		String result = null;
 		// Business Service Instance
 		BusinessServiceInstance bsInstance = BusinessServiceInstance.create("C1-GetPersonAccounts");
 
 		bsInstance.set("personId", personId);
 		bsInstance = BusinessServiceDispatcher.execute(bsInstance);
-
-		Iterator<COTSInstanceListNode> iterator = bsInstance.getList("results").iterator();
-		while (iterator.hasNext()) {
-			COTSInstanceListNode nextElt = iterator.next();
-			System.out.println("AccountId: " + nextElt.getNumber("accountId"));
-			System.out.println("AccountInfo: " + nextElt.getString("accountInfo"));
-			listeAccounts.add(nextElt.getFieldAndMDForPath("accountId").getXMLValue());
+		COTSInstanceList list = bsInstance.getList("results");
+		if (!list.isEmpty()) {
+			COTSInstanceListNode fistRow = list.iterator().next();
+			if (fistRow != null) {
+				result=fistRow.getFieldAndMDForPath("accountId").getXMLValue(); 
+			}
 
 		}
-		return listeAccounts;
+		return result;
 	}
 
-	public String getTaxRolesByAccountId(String accountId) {
-
+	public List<String> getTaxRolesByAccountId(String accountId) {
+		List<String> listeTaxRoles = new ArrayList<String>();
 		// Business Service Instance
 		BusinessServiceInstance bsInstance = BusinessServiceInstance.create("C1-RetTaxRolesOfAccountList");
 
 		bsInstance.set("accountId", accountId);
 		bsInstance = BusinessServiceDispatcher.execute(bsInstance);
+		Iterator<COTSInstanceListNode> iterator = bsInstance.getList("results").iterator();
 		// System.out.println("Adjustement ID: " +bsInstance.getString(name));
-		String resultat = null;
-		COTSInstanceList list = bsInstance.getList("results");
+		// String resultat = null;
 		// COTSInstanceList list = bsInstance.getList("results");
-		System.out.println("liste: " + list);
+		// COTSInstanceList list = bsInstance.getList("results");
+		// System.out.println("liste: " + list);
 		// If list IS NOT empty
-		if (!list.isEmpty()) {
-			COTSInstanceListNode fistRow = list.iterator().next();
-			if (fistRow != null) {
-				System.out.println("TaxRoleId: " + fistRow.getString("taxRoleId"));
-				System.out.println("TaxRoleInformation: " + fistRow.getString("taxRoleInformation"));
-				resultat = fistRow.getString("taxRoleId");
-			}
+		while (iterator.hasNext()) {
+			COTSInstanceListNode nextElt = iterator.next();
+			System.out.println("TaxRoleId: " + nextElt.getString("taxRoleId"));
+			System.out.println("TaxRoleInformation: " + nextElt.getString("taxRoleInformation"));
+			listeTaxRoles.add(nextElt.getString("taxRoleId"));
 
 		}
-		return resultat;
+		return listeTaxRoles;
+
 	}
 
 	public String getTaxTypeByTaxeRoleId(String taxRoleId) {
@@ -347,6 +371,7 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 			COTSInstanceListNode fistRow = list.iterator().next();
 			if (fistRow != null) {
 				System.out.println("TaxType: " + fistRow.getString("taxType"));
+				resultat=fistRow.getString("taxType");
 			}
 
 		}
@@ -447,8 +472,8 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 		preparedStatement.executeUpdate();
 
 	}
-	
-	private void ajouterDNSObligation(String obligationId, String valFk1, String srchval,Date dateEff) {
+
+	private void ajouterDNSObligation(String obligationId, String valFk1, String srchval, Date dateEff) {
 		String query = "INSERT INTO CI_SA_CHAR(SA_ID, EFFDT, CHAR_VAL_FK1, SRCH_CHAR_VAL, CHAR_TYPE_CD) VALUES(:obligationIdSoft, :effdtSoft, :valFk1Soft, :srchvalSoft, 'ID_DNS')";
 		PreparedStatement preparedStatement = createPreparedStatement(query);
 		preparedStatement.bindString("obligationIdSoft", obligationId, null);
@@ -482,7 +507,8 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 
 	}
 
-	private String createAjustementBS(String adjustType, String obligationId, BigDecimal adjustmentAmount, Date effectiveDate) {
+	private String createAjustementBS(String adjustType, String obligationId, BigDecimal adjustmentAmount,
+			Date effectiveDate) {
 
 		// Business Service Instance
 		BusinessServiceInstance bsInstance = BusinessServiceInstance.create("C1-AdjustmentAddFreeze");
@@ -501,7 +527,29 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 		return output.getString("adjustment");
 
 	}
-
+	private String getFtIdByAdjId(String adjId){
+		String resultat=null;
+		String query = "SELECT * FROM CI_FT WHERE SIBLING_ID=:adjIdSoft  AND FT_TYPE_FLG = 'AD'";
+		PreparedStatement preparedStatement = createPreparedStatement(query);
+		preparedStatement.bindString("adjIdSoft", adjId, null);
+		SQLResultRow sqlResultRow = preparedStatement.firstRow();
+		if (sqlResultRow != null) {
+			resultat=sqlResultRow.getString("FT_ID");
+		}
+	
+		return resultat; 
+		
+	}
+	
+	private void updateGroupFtId(String ftId){
+		String query = "UPDATE CI_FT SET GRP_FT_ID=:ftIdSoft1 WHERE FT_ID=:ftIdSoft2";
+		PreparedStatement preparedStatement = createPreparedStatement(query);
+		preparedStatement.bindString("ftIdSoft1", ftId, null);
+		preparedStatement.bindString("ftIdSoft2", ftId, null);
+		preparedStatement.executeUpdate();
+		System.out.println("MISA JOUR REUSSI");
+		
+	}
 	public List<BigDecimal> getSequences() {
 		List<BigDecimal> listeSequences = new ArrayList<BigDecimal>();
 		String query = "SELECT DISTINCT(SEQ_NUM) FROM CI_WFM_OPT WHERE WFM_NAME='CMCO'";
@@ -526,7 +574,7 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 		QueryIterator<SQLResultRow> iter1 = preparedStatement.iterate();
 		while (iter1.hasNext()) {
 			SQLResultRow result = (SQLResultRow) iter1.next();
-			String accountType = result.getString("WFM_OPT_VAL"); 
+			String accountType = result.getString("WFM_OPT_VAL");
 			listeAccountType.add(accountType);
 		}
 		return listeAccountType;

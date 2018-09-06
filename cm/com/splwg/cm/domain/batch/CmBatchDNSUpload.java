@@ -214,6 +214,20 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 											URLEncoder.encode(CmDNSConstant.TYPE_IDENTIFIANT, CmConstant.UTF))){
 										typeIdentifiant = cell.getStringCellValue();
 									}
+									if (!isBlankOrNull(headerName)
+											&& (typeIdentifiant.equalsIgnoreCase(CmDNSConstant.SCI) && headerName.equalsIgnoreCase(
+													URLEncoder.encode(CmDNSConstant.NUMERO_IDENTIFANT, CmConstant.UTF)))) {
+										nineaNumber = cell.getStringCellValue();
+										if (nineaNumber.length() == 7) {
+											nineaNumber = CmDNSConstant.NINEA_PREFIX + nineaNumber;
+										}
+										if (!customHelper.validateNineaNumber(nineaNumber)) {
+											checkErrorInExcel = true;
+											createToDo("", nineaNumber, CmDNSConstant.NINEA_INVALID, fileName);
+											log.info("Given Ninea Number is Invalid: " + cell.getNumericCellValue());
+											break;
+										}
+									}
 									employerObject.add(cell.getStringCellValue());
 								} else if (row.getRowNum() == 5) {
 									syntheseObject.add(cell.getStringCellValue());
@@ -328,19 +342,19 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 							}
 							uploadXML.append("<informationsDesSalaries> <informationsDesSalariesList>");
 							for (int i = 0; i < employeeXmlList.size(); i++) {
-								uploadXML.append("<" + employeeXmlList.get(i) + ">" + (i<=21?employeeObject.get(i):"") + "</" + employeeXmlList.get(i) + ">");
+								uploadXML.append("<" + employeeXmlList.get(i) + ">" + (i<=45?employeeObject.get(i):"") + "</" + employeeXmlList.get(i) + ">");
 							}
 							uploadXML.append("</informationsDesSalariesList>");
 						} else{
 							uploadXML.append("<informationsDesSalariesList>");
 							for (int i = 0; i < employeeXmlList.size(); i++) {
-								uploadXML.append("<" + employeeXmlList.get(i) + ">" + (i<=21?employeeObject.get(i):"") + "</" + employeeXmlList.get(i) + ">");
+								uploadXML.append("<" + employeeXmlList.get(i) + ">" + (i<=45?employeeObject.get(i):"") + "</" + employeeXmlList.get(i) + ">");
 							}
 							uploadXML.append("</informationsDesSalariesList>");
 						}
 					}
 				}
-				foundNinea = false; 
+				foundNinea = false;
 			}
 			try {
 				processed = saveFormBatchHeaderXML(formHeaderId,nineaNumber);
@@ -428,6 +442,7 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 			employerNameList.add("idNumber");
 			employerNameList.add("raisonSociale");
 			employerNameList.add("adresse");
+			employerNameList.add("typeDeclaration");
 			employerNameList.add("dateDebutCotisation");
 			employerNameList.add("dateFinCotisation");
 			
@@ -448,18 +463,14 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 			syntheseList.add("mntCotAtMpEmp");
 			syntheseList.add("mntCotRgEmp");
 			syntheseList.add("mntCotRccEmp");
-			syntheseList.add("tauxCotisationPF");
-			syntheseList.add("tauxCotisationAtMp");
-			syntheseList.add("tauxCotisationRetraite");
-			syntheseList.add("tauxCotisationRetraiteRcc");
-			syntheseList.add("plafondPF");
-			syntheseList.add("plafondATMP");
-			syntheseList.add("plafondCRRG");
-			syntheseList.add("cotisationRGCC");
 			syntheseList.add("montantPF");
 			syntheseList.add("montantATMP");
-			syntheseList.add("montantRCC");
 			syntheseList.add("montantRRG");
+			syntheseList.add("montantRCC");
+			syntheseList.add("mntCotPfDiff");
+			syntheseList.add("mntCotAtMpDiff");
+			syntheseList.add("mntCotRrgDiff");
+			syntheseList.add("mntCotRrccDiff");
 					
 			return syntheseList;
 		}
@@ -474,22 +485,46 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 			employeeNameList.add("dateDeNaisssance");
 			employeeNameList.add("typePieceIdentite");
 			employeeNameList.add("numeroPieceIdentite");
-			employeeNameList.add("regimeGeneral");
-			employeeNameList.add("regimCompCadre");
-			employeeNameList.add("dateEffetRegime");
-			employeeNameList.add("totSalAssIpresRge");
-			employeeNameList.add("totSalAssIpresRcce");
-			employeeNameList.add("totSalAssCssAtmpe");
-			employeeNameList.add("totSalAssCssPfe");
-			employeeNameList.add("salaireBrut");
 			employeeNameList.add("typeContrat");
 			employeeNameList.add("dateEntree");
 			employeeNameList.add("dateSortie");
 			employeeNameList.add("motifSortie");
-			employeeNameList.add("nombreJours");
-			employeeNameList.add("nombreHeures");
-			employeeNameList.add("tempsTravail");
-			employeeNameList.add("trancheTravail");
+			employeeNameList.add("totSalAssCssPfe1");
+			employeeNameList.add("totSalAssCssAtmpe1");
+			employeeNameList.add("totSalAssIpresRge1");
+			employeeNameList.add("totSalAssIpresRcce1");
+			employeeNameList.add("salaireBrut1");
+			employeeNameList.add("nombreJours1");
+			employeeNameList.add("nombreHeures1");
+			employeeNameList.add("tempsTravail1");
+			employeeNameList.add("trancheTravail1");
+			employeeNameList.add("regimeGeneral1");
+			employeeNameList.add("regimCompCadre1");
+			employeeNameList.add("dateEffetRegime1");
+			employeeNameList.add("totSalAssCssPfe2");
+			employeeNameList.add("totSalAssCssAtmpe2");
+			employeeNameList.add("totSalAssIpresRge2");
+			employeeNameList.add("totSalAssIpresRcce2");
+			employeeNameList.add("salaireBrut2");
+			employeeNameList.add("nombreJours2");
+			employeeNameList.add("nombreHeures2");
+			employeeNameList.add("tempsTravail2");
+			employeeNameList.add("trancheTravail2");
+			employeeNameList.add("regimeGeneral2");
+			employeeNameList.add("regimCompCadre2");
+			employeeNameList.add("dateEffetRegime2");
+			employeeNameList.add("totSalAssCssPfe3");
+			employeeNameList.add("totSalAssCssAtmpe3");
+			employeeNameList.add("totSalAssIpresRge3");
+			employeeNameList.add("totSalAssIpresRcce3");
+			employeeNameList.add("salaireBrut3");
+			employeeNameList.add("nombreJours3");
+			employeeNameList.add("nombreHeures3");
+			employeeNameList.add("tempsTravail3");
+			employeeNameList.add("trancheTravail3");
+			employeeNameList.add("regimeGeneral3");
+			employeeNameList.add("regimCompCadre3");
+			employeeNameList.add("dateEffetRegime3");
 			employeeNameList.add("smig");
 			employeeNameList.add("tauxCssCpf");
 			employeeNameList.add("tauxCssCatmp");
@@ -604,8 +639,10 @@ public class CmBatchDNSUpload extends CmBatchDNSUpload_Gen {
 								URLEncoder.encode(CmDNSConstant.DATE_FIN_PERIOD, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.TYPE_PIECE, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.NUMERO_PIECE, CmDNSConstant.UTF),
-								URLEncoder.encode(CmDNSConstant.TOTAL_SALARIE_IPRES_RG, CmDNSConstant.UTF),
-								URLEncoder.encode(CmDNSConstant.TOTAL_SALARIE_IPRES_RCC, CmDNSConstant.UTF),
+								//URLEncoder.encode(CmDNSConstant.TOTAL_SALARIE_IPRES_RG, CmDNSConstant.UTF),
+								//URLEncoder.encode(CmDNSConstant.TOTAL_SALARIE_IPRES_RCC, CmDNSConstant.UTF),
+								//URLEncoder.encode(CmDNSConstant.TOTAL_SALARIE_CSS_PF, CmDNSConstant.UTF),
+								//URLEncoder.encode(CmDNSConstant.TOTAL_SALARIE_CSS_ATMP, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.NOM, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.PRENOM, CmDNSConstant.UTF),
 								URLEncoder.encode(CmDNSConstant.REGIME, CmDNSConstant.UTF),

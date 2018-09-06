@@ -16,6 +16,25 @@ public class ScannerTest {
 		/*String money = "21206";
 		Float.valueOf(money);
 		*/
+		
+		List<String> myList = new ArrayList<String>();
+		myList.add("123");
+		myList.add("324");
+		myList.add("2132");
+		myList.add("12331");
+		
+		int money = 100;
+		int value = 0;
+		
+		for (int i = 0; i < myList.size(); i++) {
+		
+			if(i == myList.size()-1) {
+				System.out.println(myList.get(i));
+			} else {
+				System.out.println(myList.get(i));
+			}
+		}
+		
 		int a = 100;
 		int div = Math.floorDiv(300, 100);
 		System.out.println("Answer: " + Math.multiplyExact(div, 100));

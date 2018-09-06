@@ -8,77 +8,66 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.splwg.base.api.QueryIterator;
-import com.splwg.base.api.businessObject.BusinessObjectDispatcher;
 import com.splwg.base.api.businessObject.BusinessObjectInstance;
-import com.splwg.base.api.businessObject.BusinessObjectInstanceKey;
 import com.splwg.base.api.businessObject.COTSInstanceNode;
 import com.splwg.base.api.businessService.BusinessServiceDispatcher;
 import com.splwg.base.api.businessService.BusinessServiceInstance;
-import com.splwg.base.api.datatypes.Date;
-import com.splwg.base.api.datatypes.EntityId;
 import com.splwg.base.api.datatypes.Money;
-import com.splwg.base.api.lookup.BusinessObjectActionLookup;
 import com.splwg.base.api.sql.PreparedStatement;
 import com.splwg.base.api.sql.SQLResultRow;
 import com.splwg.base.domain.StandardMessages;
-import com.splwg.base.domain.common.businessObject.BusinessObject;
-import com.splwg.base.domain.common.businessObject.ValidateBusinessObjectAlgorithmSpot;
-import com.splwg.base.domain.common.maintenanceObject.MaintenanceObject;
 import com.splwg.shared.logging.Logger;
 import com.splwg.shared.logging.LoggerFactory;
-import com.splwg.tax.api.lookup.PaymentStatusLookup;
-import com.splwg.tax.domain.adjustment.adjustment.Adjustment_Id;
 import com.splwg.tax.domain.admin.formRule.ApplyFormRuleAlgorithmInputData;
 import com.splwg.tax.domain.admin.formRule.ApplyFormRuleAlgorithmInputOutputData;
-import com.splwg.tax.domain.admin.generalLedgerDistributionCode.GeneralLedgerDistributionCode;
-import com.splwg.tax.domain.admin.serviceAgreementType.ServiceAgreementType;
+import com.splwg.tax.domain.admin.formRule.FormRuleBORuleProcessingAlgorithmSpot;
 import com.splwg.tax.domain.customerinfo.serviceAgreement.ServiceAgreement;
 import com.splwg.tax.domain.customerinfo.serviceAgreement.ServiceAgreement_Id;
-import com.splwg.tax.domain.financial.matchEvent.MatchEvent_Id;
-import com.splwg.tax.domain.payment.payment.CreateDistributeFreezePayment;
-import com.splwg.tax.domain.payment.payment.CreateDistributeFreezePayment.Factory;
-import com.splwg.tax.domain.payment.payment.Payment;
-import com.splwg.tax.domain.payment.payment.PaymentSegment;
-import com.splwg.tax.domain.payment.payment.PaymentSegment_DTO;
-import com.splwg.tax.domain.payment.payment.Payment_DTO;
-import com.splwg.tax.domain.payment.paymentEvent.PaymentEvent_Id;
 
 /**
- * @author Anita M
+ * @author Deepak P
  *
-@AlgorithmComponent (softParameters = { @AlgorithmSoftParameter (name = adjustmentTypeInterest2, type = string)
- *            , @AlgorithmSoftParameter (name = adjustmentTypeInterest1, type = string)
- *            , @AlgorithmSoftParameter (name = adjustmentTypePenalty1, type = string)
- *            , @AlgorithmSoftParameter (name = adjustmentTypeContribution3, type = string)
- *            , @AlgorithmSoftParameter (name = adjustmentTypeContribution2, type = string)
- *            , @AlgorithmSoftParameter (name = adjustmentTypeContribution1, type = string)
- *            , @AlgorithmSoftParameter (name = obligationTypeContribution3, type = string)
- *            , @AlgorithmSoftParameter (name = obligationTypeContribution2, type = string)
- *            , @AlgorithmSoftParameter (name = obligationTypeContribution1, type = string)
- *            , @AlgorithmSoftParameter (name = obligationTypeOverpayment, type = string)})
+@AlgorithmComponent (softParameters = { @AlgorithmSoftParameter (name = obligationTypeRejectedFeesPv, type = string)
+ *            , @AlgorithmSoftParameter (name = obligationTypeRejectedFeesAtmp, type = string)
+ *            , @AlgorithmSoftParameter (name = obligationTypeRejectedFeesPf, type = string)
+ *            , @AlgorithmSoftParameter (name = adjustmentTypeOverpayment, type = string)
+ *            , @AlgorithmSoftParameter (name = adjustmentTypeInterest, type = string)
+ *            , @AlgorithmSoftParameter (name = adjustmentTypePenalty, type = string)
+ *            , @AlgorithmSoftParameter (name = adjustmentTypeContribution, type = string)
+ *            , @AlgorithmSoftParameter (name = obligationTypeContributionEr, type = string)
+ *            , @AlgorithmSoftParameter (name = obligationTypeContributionAtmp, type = string)
+ *            , @AlgorithmSoftParameter (name = obligationTypeContributionPf, type = string)
+ *            , @AlgorithmSoftParameter (name = obligationTypeOverpaymentEr, type = string)
+ *            , @AlgorithmSoftParameter (name = obligationTypeOverpaymentAtmp, type = string)
+ *            , @AlgorithmSoftParameter (name = obligationTypeOverpaymentPf, type = string)})
  */
-
-
 public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOverpaymentObligationAmount_Gen
-		implements ValidateBusinessObjectAlgorithmSpot {
+		implements FormRuleBORuleProcessingAlgorithmSpot {
 
-	
-	private BusinessObjectInstanceKey boKey;
-	private BusinessObjectInstance boInstance;
+
+    
+	private ApplyFormRuleAlgorithmInputData inputData;
+	private ApplyFormRuleAlgorithmInputOutputData inputOutputData;
+	Money epfAmount = Money.ZERO;
+	Money erAmount = Money.ZERO;
+	Money atmpAmount = Money.ZERO;
 	
 	private static final Logger logger = LoggerFactory
 			.getLogger(CmDistributeOverpaymentObligationAmount_Impl.class);
 	private Money overPaymentTotalAmount = Money.ZERO;
 	String overpaymentObligationId = null;
+	List<String> saList = new ArrayList<String>();
 	
 	@SuppressWarnings("deprecation")
 	@Override
 	public void invoke() {
 
-		this.boInstance = BusinessObjectDispatcher.read(this.boKey, false);
-		//BusinessObjectInstance formBusinessObjectInstance = (BusinessObjectInstance) this.inputOutputData.getFormBusinessObject();
-		String taxFormId = this.boInstance.getFieldAndMDForPath("taxFormId").getXMLValue();
-		//String taxFormId = formBusinessObjectInstance.getFieldAndMDForPath("taxFormId").getXMLValue();
+
+		//this.boInstance = BusinessObjectDispatcher.read(this.boKey, false);
+		//String taxFormId = this.boInstance.getFieldAndMDForPath("taxFormId").getXMLValue();
+		BusinessObjectInstance formBoInstance = (BusinessObjectInstance) inputOutputData.getFormBusinessObject();
+		String taxFormId = formBoInstance.getString("taxFormId");
+		//String taxFormId = "768493889427";
 		logger.info("Tax form ID: " + taxFormId);
 		startChanges();
 		PreparedStatement psPreparedStatement = null;
@@ -109,17 +98,25 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 				String totalAmount = null;
 				for(int index=0 ; index<obList.size();index++){
 					String ObliId  = obList.get(index);
+					ServiceAgreement_Id saId = new ServiceAgreement_Id(ObliId);
+					String saType = saId.getEntity().getServiceAgreementType().getId().getSaType().trim();
 					psPreparedStatement = createPreparedStatement("select sum(cur_amt) as TOTAL_AMOUNT from ci_ft where sa_id=\'"+ObliId+"\'","select");
 					QueryIterator<SQLResultRow> resultTotal = null;
 					
 					try{
-						//psPreparedStatement.bindString("SA_ID", ObliId, null);
 						resultTotal = psPreparedStatement.iterate();
 						
 						while(resultTotal.hasNext()){
 							SQLResultRow lookUpVal = resultTotal.next();
 							totalAmount = lookUpVal.getString("TOTAL_AMOUNT");
 							Money money = new Money(totalAmount);
+							if("E-AVPF".equalsIgnoreCase(saType)) {
+								epfAmount = money.negate();
+							} else if("E-AVATMP".equalsIgnoreCase(saType)) {
+								atmpAmount = money.negate();
+							} else if("E-AVCR".equalsIgnoreCase(saType)) {
+								erAmount = money.negate();
+							}
 							overPaymentTotalAmount = overPaymentTotalAmount.add(money);
 							oblTotalAmountMap.put(ObliId, totalAmount); //
 						}
@@ -133,12 +130,14 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			}
 		
 			
-			LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>, List<Money>>>> debtOblMap = getDebtObligation(accountId);
+			LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>, List<Money>>>> debtOblMapObj = getDebtObligation(accountId);
 			  
 			  //logger.info("debtOblMap: " + debtOblMap.size());
-			  System.out.println("debtOblMap: " + debtOblMap.size());
+			  System.out.println("debtOblMapObj: " + debtOblMapObj.size());
 			  ServiceAgreement debtObligation = null;
-			  ServiceAgreementType debtObligationType = null;
+			  ServiceAgreement overPayObligation = null;
+			  String debtObligationType = null;
+			  String overPayObligationType = null;
 			  Money debtMoney = Money.ZERO;
 			  Money moneyValue = Money.ZERO;
 			  Money actualMoneyValue = overPaymentTotalAmount;
@@ -146,8 +145,8 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			  String adjustmentTypeValue = null;
 			  String debtOblID = null;
 			  
-			  if(!debtOblMap.isEmpty()) {
-			  for(Map.Entry<HashMap<String, Money>, HashMap<String, HashMap<List<String>,List<Money>>>> debtMapObj : debtOblMap.entrySet()){
+			  if(!debtOblMapObj.isEmpty()) {
+			  for(Map.Entry<HashMap<String, Money>, HashMap<String, HashMap<List<String>,List<Money>>>> debtMapObj : debtOblMapObj.entrySet()){
 			   HashMap<String,Money> moneyMapkey = debtMapObj.getKey();
 			   HashMap<String, HashMap<List<String>,List<Money>>> moneyMap = debtMapObj.getValue();
 			   for(Map.Entry<String, Money> moneyMapObj : moneyMapkey.entrySet() ){
@@ -167,7 +166,9 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			     logger.info("ServiceAgreement_Id: " + sa_id);
 			     System.out.println("ServiceAgreement_Id, : " + sa_id);
 			     debtObligation = (ServiceAgreement) sa_id.getEntity();
-			     debtObligationType = (ServiceAgreementType) sa_id.getEntity().getServiceAgreementType();
+			     //ServiceAgreement_Id saId = new ServiceAgreement_Id(monthObligation);
+			     debtObligationType = sa_id.getEntity().getServiceAgreementType().getId().getSaType().trim();
+			     //debtObligationType = (ServiceAgreementType) sa_id.getEntity().getServiceAgreementType().getId().getSaType();
 			     logger.info("ServiceAgreement: " + debtObligation);
 			     System.out.println("ServiceAgreement: " + debtObligation);
 			     debtOblID = moneyEntry.getKey();
@@ -175,25 +176,91 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			     System.out.println("DebtMoney: " + debtMoney);
 			     logger.info("Amount before the payment creation:: " + overPaymentTotalAmount);
 			     System.out.println("Amount before the payment creation:: " + overPaymentTotalAmount);
-			     if (!overPaymentTotalAmount.isZero() && overPaymentTotalAmount.isNegative()) {
-			    	 
-			    	 //String adjTypeRetrieve = getAllAdjustmentType(accountId);
-			    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-EPF") && String.valueOf(debtObligationType)!=null )
+			     System.out.println(debtObligationType);
+			     //ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overpaymentObligationId);
+			     overPayObligation = (ServiceAgreement) sa_id.getEntity();
+			     //overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim();
+			     if(debtObligationType.equalsIgnoreCase("O-EPF") && debtObligationType!=null && epfAmount.isGreaterThan(Money.ZERO) )
+		    	 {
+		    		 adjustmentTypeValue = "A-AVPF";
+		    		 if(debtMoney.isGreaterThan(epfAmount))
 			    	 {
-			    		 adjustmentTypeValue = "CPF";
+			    		 debtMoney = epfAmount;
 			    	 }
-			    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-EATMP") && String.valueOf(debtObligationType)!=null)
+		    		 for(String overPayId :  saList){
+		    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+		    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+		    		
+		    		 if(overPayObligationType.equalsIgnoreCase("E-AVPF")){
+		    			 
+		    			 overpaymentObligationId = overPayId;
+		    			 
+		    		 }
+		    		 }
+		    		 createAdjustment(overpaymentObligationId,debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+				     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+				     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+				     if(debtMoney.isGreaterThan(epfAmount))
 			    	 {
-			    		 adjustmentTypeValue = "CATMP";
+			    		 epfAmount = epfAmount.subtract(epfAmount);
+			    	 }else{
+			    	 epfAmount = epfAmount.subtract(debtMoney);
 			    	 }
-			    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-ER") && String.valueOf(debtObligationType)!=null)
+		    	 }
+		    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-EATMP") && String.valueOf(debtObligationType)!=null && atmpAmount.isGreaterThan(Money.ZERO))
+		    	 {
+		    		 adjustmentTypeValue = "A-AVATMP";
+		    		 if(debtMoney.isGreaterThan(atmpAmount))
 			    	 {
-			    		 adjustmentTypeValue = "CR";
+			    		 debtMoney = atmpAmount;
 			    	 }
-			     String adjustmentIdPendingOblg = createAdjustment(debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
-			     String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
-			     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
-			     }
+		    		 for(String overPayId :  saList){
+		    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+		    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+		    		
+		    		 if(overPayObligationType.equalsIgnoreCase("E-AVATMP")){
+		    			 
+		    			 overpaymentObligationId = overPayId;
+		    			 
+		    		 }
+		    		 }
+		    		 createAdjustment(overpaymentObligationId,debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+				     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+				     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+				     if(debtMoney.isGreaterThan(atmpAmount))
+			    	 {
+				    	 atmpAmount = atmpAmount.subtract(atmpAmount);
+			    	 }else{
+			    		 atmpAmount = atmpAmount.subtract(debtMoney);
+			    	 }
+		    	 }
+		    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-ER") && String.valueOf(debtObligationType)!=null && erAmount.isGreaterThan(Money.ZERO))
+		    	 {
+		    		 adjustmentTypeValue = "A-AVCR";
+		    		 if(debtMoney.isGreaterThan(erAmount))
+			    	 {
+			    		 debtMoney = erAmount;
+			    	 }
+		    		 for(String overPayId :  saList){
+		    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+		    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+		    		
+		    		 if(overPayObligationType.equalsIgnoreCase("E-AVCR")){
+		    			 
+		    			 overpaymentObligationId = overPayId;
+		    			 
+		    		 }
+		    		 }
+		    		 createAdjustment(overpaymentObligationId,debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+				     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+				     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+				     if(debtMoney.isGreaterThan(erAmount))
+			    	 {
+				    	 erAmount = erAmount.subtract(erAmount);
+			    	 }else{
+			    		 erAmount = erAmount.subtract(debtMoney);
+			    	 }
+		    	 }
 			          }
 			     
 			   } 
@@ -211,14 +278,15 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			          monthObligationMoney = moneyList.get(i).add(monthObligationMoney);
 			         }
 			         
-			         if(!monthObligationMoney.isZero() && overPaymentTotalAmount.negate().isLessThanOrEqual(monthObligationMoney)){
+			         if(!monthObligationMoney.isZero() && overPaymentTotalAmount.negate().isLessThanOrEqual(monthObligationMoney) && !overPaymentTotalAmount.negate().isZero()){
 			          logger.info("###Creating payment for same month obligations####" );
 			         System.out.println("###Creating payment for same month obligations####" );
 			          for(int i=0;i<moneyList.size();i++){
 			           Money obligationMoney = moneyList.get(i);
 			           String oblStr = obligIdList.get(i);
-			           int prorateMoney = Math.round(overPaymentTotalAmount.negate().getAmount().floatValue()/monthObligationMoney.getAmount().floatValue()*obligationMoney.getAmount().floatValue());
-			           debtMoney = new Money(String.valueOf(prorateMoney));
+			        //int prorateMoney = Math.round(overPaymentTotalAmount.negate().getAmount().floatValue()/monthObligationMoney.getAmount().floatValue()*obligationMoney.getAmount().floatValue());
+			        //debtMoney = new Money(String.valueOf(prorateMoney));
+			           debtMoney = obligationMoney;
 			           ServiceAgreement_Id sa_id = new ServiceAgreement_Id(oblStr);
 			           logger.info("obligation Money: " + obligationMoney);
 			           logger.info("Screen Amount: " + overPaymentTotalAmount);
@@ -228,31 +296,97 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			          logger.info("ServiceAgreement_Id: " + sa_id);
 			          System.out.println("ServiceAgreement_Id: " + sa_id);
 			          debtObligation = (ServiceAgreement) sa_id.getEntity();
-			          debtObligationType = (ServiceAgreementType) sa_id.getEntity().getServiceAgreementType();
+			          debtObligationType = sa_id.getEntity().getServiceAgreementType().getId().getSaType().trim();
+			          //debtObligationType = (ServiceAgreementType) sa_id.getEntity().getServiceAgreementType();
 			          logger.info("ServiceAgreement: " + debtObligation);
 			          System.out.println("ServiceAgreement: " + debtObligation);
 			          System.out.println("DebtMoney: " + debtMoney);
 			          logger.info("Amount before the payment creation:: " + overPaymentTotalAmount);
 			          System.out.println("Amount before the payment creation:: " + overPaymentTotalAmount);
-			          if (!overPaymentTotalAmount.isZero() && overPaymentTotalAmount.isNegative()) {
-			           //this.createFrozenPayment(debtObligation, debtMoney);
-			        	  //String adjTypeRetrieve = getAllAdjustmentType(accountId);
-					    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-EPF") && String.valueOf(debtObligationType)!=null )
+			          if(debtObligationType.equalsIgnoreCase("O-EPF") && debtObligationType!=null && epfAmount.isGreaterThan(Money.ZERO) )
+				    	 {
+				    		 adjustmentTypeValue = "A-AVPF";
+				    		 if(debtMoney.isGreaterThan(epfAmount))
 					    	 {
-					    		 adjustmentTypeValue = "CPF";
+					    		 debtMoney = epfAmount;
 					    	 }
-					    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-EATMP") && String.valueOf(debtObligationType)!=null)
+				    		 for(String overPayId :  saList){
+				    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+				    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+				    		
+				    		 if(overPayObligationType.equalsIgnoreCase("E-AVPF")){
+				    			 
+				    			 overpaymentObligationId = overPayId;
+				    			 
+				    		 }
+				    		 }
+				    		 debtOblID = oblStr;
+				    		 createAdjustment(overpaymentObligationId,debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+						     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+						     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+						     if(debtMoney.isGreaterThan(epfAmount))
 					    	 {
-					    		 adjustmentTypeValue = "CATMP";
+					    		 epfAmount = epfAmount.subtract(epfAmount);
+					    	 }else{
+					    	 epfAmount = epfAmount.subtract(debtMoney);
 					    	 }
-					    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-ER") && String.valueOf(debtObligationType)!=null)
+				    	 }
+				    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-EATMP") && String.valueOf(debtObligationType)!=null && atmpAmount.isGreaterThan(Money.ZERO))
+				    	 {
+				    		 adjustmentTypeValue = "A-AVATMP";
+				    		 if(debtMoney.isGreaterThan(atmpAmount))
 					    	 {
-					    		 adjustmentTypeValue = "CR";
+					    		 debtMoney = atmpAmount;
 					    	 }
-			             String adjustmentIdPendingOblg = createAdjustment(oblStr,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
-					     String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
-					     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
-			          }
+				    		 for(String overPayId :  saList){
+				    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+				    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+				    		
+				    		 if(overPayObligationType.equalsIgnoreCase("E-AVATMP")){
+				    			 
+				    			 overpaymentObligationId = overPayId;
+				    			 
+				    		 }
+				    		 }
+				    		 debtOblID = oblStr;
+				    		 createAdjustment(overpaymentObligationId,debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+						     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+						     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+						     if(debtMoney.isGreaterThan(atmpAmount))
+					    	 {
+						    	 atmpAmount = atmpAmount.subtract(atmpAmount);
+					    	 }else{
+					    		 atmpAmount = atmpAmount.subtract(debtMoney);
+					    	 }
+				    	 }
+				    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-ER") && String.valueOf(debtObligationType)!=null && erAmount.isGreaterThan(Money.ZERO))
+				    	 {
+				    		 adjustmentTypeValue = "A-AVCR";
+				    		 if(debtMoney.isGreaterThan(erAmount))
+					    	 {
+					    		 debtMoney = erAmount;
+					    	 }
+				    		 for(String overPayId :  saList){
+				    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+				    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+				    		
+				    		 if(overPayObligationType.equalsIgnoreCase("E-AVCR")){
+				    			 
+				    			 overpaymentObligationId = overPayId;
+				    			 
+				    		 }
+				    		 }
+				    		 debtOblID = oblStr;
+				    		 createAdjustment(overpaymentObligationId,debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+						     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+						     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+						     if(debtMoney.isGreaterThan(erAmount))
+					    	 {
+						    	 erAmount = erAmount.subtract(erAmount);
+					    	 }else{
+					    		 erAmount = erAmount.subtract(debtMoney);
+					    	 }
+				    	 }
 			          }
 			         }
 			         else
@@ -267,7 +401,8 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			           logger.info("ServiceAgreement_Id: " + sa_id);
 			           System.out.println("ServiceAgreement_Id: " + sa_id);
 			           debtObligation = (ServiceAgreement) sa_id.getEntity();
-			           debtObligationType = (ServiceAgreementType) sa_id.getEntity().getServiceAgreementType();
+			           debtObligationType = sa_id.getEntity().getServiceAgreementType().getId().getSaType().trim();
+			           //debtObligationType = (ServiceAgreementType) sa_id.getEntity().getServiceAgreementType();
 			           logger.info("ServiceAgreement: " + debtObligation);
 			           System.out.println("ServiceAgreement: " + debtObligation);
 			           debtOblID = obligIdListt.get(i);
@@ -276,25 +411,88 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			           logger.info("DebtMoney:" + debtMoney);
 			           logger.info("Amount before the payment creation :: " + overPaymentTotalAmount);
 			           System.out.println("Amount before the payment creation:: " + overPaymentTotalAmount);
-			           if (!overPaymentTotalAmount.isZero() && overPaymentTotalAmount.isNegative()) {
-			            //this.createFrozenPayment(debtObligation, debtMoney);
-			        	   //String adjTypeRetrieve = getAllAdjustmentType(accountId);
-					    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-EPF") && String.valueOf(debtObligationType)!=null )
+			           if(debtObligationType.equalsIgnoreCase("O-EPF") && debtObligationType!=null && epfAmount.isGreaterThan(Money.ZERO) )
+				    	 {
+				    		 adjustmentTypeValue = "A-AVPF";
+				    		 if(debtMoney.isGreaterThan(epfAmount))
 					    	 {
-					    		 adjustmentTypeValue = "CPF";
+					    		 debtMoney = epfAmount;
 					    	 }
-					    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-EATMP") && String.valueOf(debtObligationType)!=null)
+				    		 for(String overPayId :  saList){
+				    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+				    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+				    		
+				    		 if(overPayObligationType.equalsIgnoreCase("E-AVPF")){
+				    			 
+				    			 overpaymentObligationId = overPayId;
+				    			 
+				    		 }
+				    		 }
+				    		 createAdjustment(overpaymentObligationId,debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+						     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+						     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+						     if(debtMoney.isGreaterThan(epfAmount))
 					    	 {
-					    		 adjustmentTypeValue = "CATMP";
+					    		 epfAmount = epfAmount.subtract(epfAmount);
+					    	 }else{
+					    	 epfAmount = epfAmount.subtract(debtMoney);
 					    	 }
-					    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-ER") && String.valueOf(debtObligationType)!=null)
+				    	 }
+				    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-EATMP") && String.valueOf(debtObligationType)!=null && atmpAmount.isGreaterThan(Money.ZERO))
+				    	 {
+				    		 adjustmentTypeValue = "A-AVATMP";
+				    		 if(debtMoney.isGreaterThan(atmpAmount))
 					    	 {
-					    		 adjustmentTypeValue = "CR";
+					    		 debtMoney = atmpAmount;
 					    	 }
-			             String adjustmentIdPendingOblg = createAdjustment(debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
-					     String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
-					     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
-			           }
+				    		 for(String overPayId :  saList){
+				    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+				    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+				    		
+				    		 if(overPayObligationType.equalsIgnoreCase("E-AVATMP")){
+				    			 
+				    			 overpaymentObligationId = overPayId;
+				    			 
+				    		 }
+				    		 }
+				    		 createAdjustment(overpaymentObligationId,debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+						     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+						     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+						     if(debtMoney.isGreaterThan(atmpAmount))
+					    	 {
+						    	 atmpAmount = atmpAmount.subtract(atmpAmount);
+					    	 }else{
+					    		 atmpAmount = atmpAmount.subtract(debtMoney);
+					    	 }
+				    	 }
+				    	 if(String.valueOf(debtObligationType).equalsIgnoreCase("O-ER") && String.valueOf(debtObligationType)!=null && erAmount.isGreaterThan(Money.ZERO))
+				    	 {
+				    		 adjustmentTypeValue = "A-AVCR";
+				    		 if(debtMoney.isGreaterThan(erAmount))
+					    	 {
+					    		 debtMoney = erAmount;
+					    	 }
+				    		 for(String overPayId :  saList){
+				    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+				    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+				    		
+				    		 if(overPayObligationType.equalsIgnoreCase("E-AVCR")){
+				    			 
+				    			 overpaymentObligationId = overPayId;
+				    			 
+				    		 }
+				    		 }
+				    		 createAdjustment(overpaymentObligationId,debtOblID,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+						     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+						     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+						     if(debtMoney.isGreaterThan(erAmount))
+					    	 {
+						    	 erAmount = erAmount.subtract(erAmount);
+					    	 }else{
+					    		 erAmount = erAmount.subtract(debtMoney);
+					    	 }
+				    	 }
+			           //}
 			          }
 			         }
 			        }
@@ -304,7 +502,101 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			    }
             }else {
 			    logger.info("There is no overpayment obligation money to pay");
-			   } }
+			   } 
+            for(Map.Entry<String, Money> moneyMapObj : moneyMapkey.entrySet() ){
+			    Money rejectFeesMoney = moneyMapObj.getValue();
+			    String rejectFeesObligation = moneyMapObj.getKey();
+			    debtMoney = rejectFeesMoney;
+			    ServiceAgreement_Id rejectFeesOblId = new ServiceAgreement_Id(rejectFeesObligation);
+			    String rejectFeesOblType = rejectFeesOblId.getEntity().getServiceAgreementType().getId().getSaType().trim();
+			    if(rejectFeesOblType.equalsIgnoreCase("FREJ-PF") && rejectFeesOblType!=null && epfAmount.isGreaterThan(Money.ZERO) )
+		    	 {
+		    		 adjustmentTypeValue = "A-AVPF";
+		    		 if(debtMoney.isGreaterThan(epfAmount))
+			    	 {
+			    		 debtMoney = epfAmount;
+			    	 }
+		    		 for(String overPayId :  saList){
+		    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+		    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+		    		
+		    		 if(overPayObligationType.equalsIgnoreCase("E-AVPF")){
+		    			 
+		    			 overpaymentObligationId = overPayId;
+		    			 
+		    		 }
+		    		 }
+		    		 
+		    		 createAdjustment(overpaymentObligationId,rejectFeesObligation,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+				     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+				     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+				     if(debtMoney.isGreaterThan(epfAmount))
+			    	 {
+			    		 epfAmount = epfAmount.subtract(epfAmount);
+			    	 }else{
+			    	 epfAmount = epfAmount.subtract(debtMoney);
+			    	 }
+		    	 }
+			    if(String.valueOf(rejectFeesOblType).equalsIgnoreCase("FREJ-AT") && String.valueOf(rejectFeesOblType)!=null && atmpAmount.isGreaterThan(Money.ZERO))
+		    	 {
+		    		 adjustmentTypeValue = "A-AVATMP";
+		    		 if(debtMoney.isGreaterThan(atmpAmount))
+			    	 {
+			    		 debtMoney = atmpAmount;
+			    	 }
+		    		 for(String overPayId :  saList){
+		    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+		    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+		    		
+		    		 if(overPayObligationType.equalsIgnoreCase("E-AVATMP")){
+		    			 
+		    			 overpaymentObligationId = overPayId;
+		    			 
+		    		 }
+		    		 }
+		    		 
+		    		 createAdjustment(overpaymentObligationId,rejectFeesObligation,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+				     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+				     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+				     if(debtMoney.isGreaterThan(atmpAmount))
+			    	 {
+				    	 atmpAmount = atmpAmount.subtract(atmpAmount);
+			    	 }else{
+			    		 atmpAmount = atmpAmount.subtract(debtMoney);
+			    	 }
+		    	 }
+			    if(String.valueOf(rejectFeesOblType).equalsIgnoreCase("FREJ-PV") && String.valueOf(rejectFeesOblType)!=null && erAmount.isGreaterThan(Money.ZERO))
+		    	 {
+		    		 adjustmentTypeValue = "A-AVCR";
+		    		 if(debtMoney.isGreaterThan(erAmount))
+			    	 {
+			    		 debtMoney = erAmount;
+			    	 }
+		    		 for(String overPayId :  saList){
+		    			 ServiceAgreement_Id overpaySa_id = new ServiceAgreement_Id(overPayId);
+		    			 overPayObligationType = overpaySa_id.getEntity().getServiceAgreementType().getId().getSaType().trim(); 
+		    		
+		    		 if(overPayObligationType.equalsIgnoreCase("E-AVCR")){
+		    			 
+		    			 overpaymentObligationId = overPayId;
+		    			 
+		    		 }
+		    		 }
+		    		 createAdjustment(overpaymentObligationId,rejectFeesObligation,adjustmentTypeValue,debtMoney.negate(),"COTISATION",getSystemDateTime().getDate());
+				     //String adjustmentIdOverpayOblg = createAdjustment(overpaymentObligationId,"A-TPERCU",debtMoney,"COTISATION",getSystemDateTime().getDate());
+				     overPaymentTotalAmount = overPaymentTotalAmount.add(debtMoney);
+				     if(debtMoney.isGreaterThan(erAmount))
+			    	 {
+				    	 erAmount = erAmount.subtract(erAmount);
+			    	 }else{
+			    		 erAmount = erAmount.subtract(debtMoney);
+			    	 }
+		    	 }
+			    
+			    //moneyValue = moneyMapList.add(moneyValue);
+			   }
+            
+			  }
 			   }else {
 			    logger.info("There is oblogation to pay");
 			   } 
@@ -319,137 +611,109 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 		}
 		
 		
-	}
 	
+
+	}
 	
 	@SuppressWarnings("deprecation")
 	 private LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>, List<Money>>>> getDebtObligation(String accountId) {
-	  
-	  PreparedStatement psPreparedStatement = null;
 
-	  String perID  =  "9200542892";
-	  String oblType1 = "O-EPF";
-	  String oblType2 = "O-EATMP";
-	  String oblType3 = "O-ER";
-	  String oblType4 = "CPF";
-	  String adjType1 = "CPF";
-	  String adjType2 = "CATMP";
-	  String adjType3 = "CR";
-	
-	  String period = null;
-	  HashMap<String, Money> debtOblMap = new HashMap<String, Money>();
-	  HashMap<String, HashMap<List<String>,List<Money>>> periodMap = new HashMap<String, HashMap<List<String>,List<Money>>>();
-	     LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>,List<Money>>>> debtPriorityMap = new LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>,List<Money>>>>();
-	  
-	     psPreparedStatement = createPreparedStatement("select OBL.acct_id,OBL.SA_ID,OBL.SA_TYPE_CD,OBL.SA_STATUS_FLG, "
-	                +" ADJ.ADJ_TYPE_CD,ADJ.ADJ_ID,ADJ.ADJ_AMT,OBL.START_DT,ADJ.CRE_DT from CI_SA OBL,CI_ADJ ADJ,ci_ft FT "
-	                +" where ADJ.SA_ID=OBL.SA_ID "
-	                +" and FT.SA_ID=OBL.SA_ID "
-	                +" and OBL.acct_id = \'"+accountId+"\' "
-	                +" and ADJ.ADJ_TYPE_CD IN(\'"+adjType1+"\',\'"+adjType2+"\',\'"+adjType3+"\') "
-	                +" and OBL.SA_TYPE_CD in(\'"+oblType1+"\',\'"+oblType2+"\',\'"+oblType3+"\') "
-	                +" and OBL.SA_STATUS_FLG=40 ORDER BY OBL.START_DT","select");
-	                
-	     
-	     psPreparedStatement.setAutoclose(false);
-	     QueryIterator<SQLResultRow> result = psPreparedStatement.iterate();
-	   try {
-	    
-	    
-	    List<Money> moneyList = new ArrayList<Money>();
-	    List<String> oblgList = new ArrayList<String>();
-	    List<String> saIdList = new  ArrayList<String>();
-	    HashMap<List<String>, List<Money>> oblMoneyMap = new HashMap<List<String>, List<Money>>();
-	    while (result.hasNext()) {
-	     System.out.println("I am In");
-	     SQLResultRow lookUpValue = result.next();
-	     System.out.println(lookUpValue.getString("SA_ID"));
-	     if(!saIdList.contains(lookUpValue.getString("SA_ID"))){
-	      saIdList.add(lookUpValue.getString("SA_ID"));
-	      QueryIterator<SQLResultRow> oblResultIterator = psPreparedStatement.iterate();
-	     try {
-	      psPreparedStatement = createPreparedStatement("SELECT SUM(CUR_AMT) AS \"Total\" from CI_FT where SA_ID = "+ lookUpValue.getString("SA_ID"), "select");
-	      psPreparedStatement.setAutoclose(false);
-	      while (oblResultIterator.hasNext()) {
-	       System.out.println("I am In");
-	       SQLResultRow oblResult = oblResultIterator.next();
-	       System.out.println(lookUpValue.getString("SA_ID"));
-	       if (oblResult.getString("Total") != null && Integer.parseInt(oblResult.getString("Total")) > 0) {
-	        debtOblMap.put(lookUpValue.getString("SA_ID"), new Money(oblResult.getString("Total")));
-	        
-	        if(null == period || lookUpValue.getString("START_DT").equalsIgnoreCase(period)){
-	         period = lookUpValue.getString("START_DT");
-	         moneyList.add(new Money(oblResult.getString("Total")));
-	         oblgList.add(lookUpValue.getString("SA_ID"));
-	         oblMoneyMap = new HashMap<List<String>,List<Money>>();
-	         oblMoneyMap.put(oblgList, moneyList);
-	         periodMap.put(period, oblMoneyMap);
-	        } else if(!lookUpValue.getString("START_DT").equalsIgnoreCase(period)) {
-	         moneyList = new ArrayList<Money>();
-	         oblgList = new ArrayList<String>();
-	         oblMoneyMap = new HashMap<List<String>,List<Money>>();
-	         moneyList.add(new Money(oblResult.getString("Total")));
-	         oblgList.add(lookUpValue.getString("SA_ID"));
-	         oblMoneyMap.put(oblgList, moneyList);
-	         periodMap.put(lookUpValue.getString("START_DT"), oblMoneyMap);
-	         period = lookUpValue.getString("START_DT");
-	        }
-	       }
-	      } 
-	     } catch (Exception exception) {
-	      exception.printStackTrace();
-	     }finally {
-	    	 oblResultIterator.close();
-	     }
-	    }
-	     
-	   }
-	    if (!debtOblMap.isEmpty() && !periodMap.isEmpty()) {
-	    debtPriorityMap.put(debtOblMap, periodMap);
-	    }else{
-	    	addError(StandardMessages.fieldInvalid("The DNS ID mentioned for payment is not linked with ID-DNS characteristic type"));
-	    }
-	  } catch (Exception exception) {
-	    exception.printStackTrace();
-	   } finally {
-	    psPreparedStatement.close();
-	    psPreparedStatement = null;
-	    result.close();
-	   }
-	  //}
-	  return debtPriorityMap;
-	 }
-
-	
-	private String getAllAdjustmentType(String accountId) {
 		  
-		  PreparedStatement adjTypePreparedStatement = null;
-		  QueryIterator<SQLResultRow> adjTypeResultIterator = null;
-		  //List<String> adjTypeList = null;
-		  String adjustmentTypeForAccount = null;
-		  //String perID1 = "9200542892";
-		  adjTypePreparedStatement = createPreparedStatement("select CUST_CL_CD from ci_acct where acct_id =\'"+accountId+"\'", "select");
-		  adjTypePreparedStatement.setAutoclose(false);
-		  try {
-		   startChanges();
-		   //adjTypeList = new ArrayList<String>();
-		   adjTypeResultIterator = adjTypePreparedStatement.iterate();
-		   while (adjTypeResultIterator.hasNext()) {
-		    SQLResultRow lookUpValue = adjTypeResultIterator.next();
-		    adjustmentTypeForAccount = lookUpValue.getString("CUST_CL_CD").trim();
-		    //adjTypeList.add(accountId);
+		  PreparedStatement psPreparedStatement = null;
+
+		  
+		  String oblType1 = getObligationTypeContributionPf();
+		  String oblType2 = getObligationTypeContributionAtmp();
+		  String oblType3 = getObligationTypeContributionEr();
+		  String adjType1 = "CPF";
+		  String adjType2 = "CATMP";
+		  String adjType3 = "CR";
+		
+		  String period = null;
+		  LinkedHashMap<String, Money> debtOblMap = new LinkedHashMap<String, Money>();
+		  LinkedHashMap<String, HashMap<List<String>,List<Money>>> periodMap = new LinkedHashMap<String, HashMap<List<String>,List<Money>>>();
+		     LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>,List<Money>>>> debtPriorityMap = new LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>,List<Money>>>>();
+		  
+		     psPreparedStatement = createPreparedStatement("select OBL.acct_id,OBL.SA_ID,OBL.SA_TYPE_CD,OBL.SA_STATUS_FLG, "
+		                +" ADJ.ADJ_TYPE_CD,ADJ.ADJ_ID,ADJ.ADJ_AMT,OBL.START_DT,ADJ.CRE_DT from CI_SA OBL,CI_ADJ ADJ "
+		                +" where ADJ.SA_ID=OBL.SA_ID "
+		                +" and OBL.acct_id = \'"+accountId+"\' "
+		                +" and ADJ.ADJ_TYPE_CD IN(\'"+adjType1+"\',\'"+adjType2+"\',\'"+adjType3+"\') "
+		                +" and OBL.SA_TYPE_CD in(\'"+oblType1+"\',\'"+oblType2+"\',\'"+oblType3+"\') "
+		                +" and OBL.SA_STATUS_FLG=40 ORDER BY OBL.START_DT","select");
+		                
+		     
+		     psPreparedStatement.setAutoclose(false);
+		     QueryIterator<SQLResultRow> result = null;
+		   try {
+		    
+			 result = psPreparedStatement.iterate();
+			 QueryIterator<SQLResultRow> oblResultIterator = null;
+		    List<Money> moneyList = new ArrayList<Money>();
+		    List<String> oblgList = new ArrayList<String>();
+		    List<String> saIdList = new  ArrayList<String>();
+		    HashMap<List<String>, List<Money>> oblMoneyMap = new HashMap<List<String>, List<Money>>();
+		    while (result.hasNext()) {
+		     System.out.println("I am In");
+		     SQLResultRow lookUpValue = result.next();
+		     System.out.println(lookUpValue.getString("SA_ID"));
+		     if(!saIdList.contains(lookUpValue.getString("SA_ID"))){
+		      saIdList.add(lookUpValue.getString("SA_ID"));
+		     try {
+		      psPreparedStatement = createPreparedStatement("SELECT SUM(CUR_AMT) AS \"Total\" from CI_FT where SA_ID = "+ lookUpValue.getString("SA_ID"), "select");
+		      psPreparedStatement.setAutoclose(false);
+		      oblResultIterator = psPreparedStatement.iterate();
+		      while (oblResultIterator.hasNext()) {
+		       System.out.println("I am In");
+		       SQLResultRow oblResult = oblResultIterator.next();
+		       System.out.println("Total :: "+oblResult.getString("Total"));
+		       System.out.println(lookUpValue.getString("SA_ID"));
+		       if (oblResult.getString("Total") != null && Integer.parseInt(oblResult.getString("Total")) > 0) {
+		        debtOblMap.put(lookUpValue.getString("SA_ID"), new Money(oblResult.getString("Total")));
+		        
+		        if(null == period || lookUpValue.getString("START_DT").equalsIgnoreCase(period)){
+		         period = lookUpValue.getString("START_DT");
+		         moneyList.add(new Money(oblResult.getString("Total")));
+		         oblgList.add(lookUpValue.getString("SA_ID"));
+		         oblMoneyMap = new HashMap<List<String>,List<Money>>();
+		         oblMoneyMap.put(oblgList, moneyList);
+		         periodMap.put(period, oblMoneyMap);
+		        } else if(!lookUpValue.getString("START_DT").equalsIgnoreCase(period)) {
+		         moneyList = new ArrayList<Money>();
+		         oblgList = new ArrayList<String>();
+		         oblMoneyMap = new HashMap<List<String>,List<Money>>();
+		         moneyList.add(new Money(oblResult.getString("Total")));
+		         oblgList.add(lookUpValue.getString("SA_ID"));
+		         oblMoneyMap.put(oblgList, moneyList);
+		         periodMap.put(lookUpValue.getString("START_DT"), oblMoneyMap);
+		         period = lookUpValue.getString("START_DT");
+		        }
+		       }
+		      } 
+		     } catch (Exception exception) {
+		      exception.printStackTrace();
+		     }finally {
+		    	 oblResultIterator.close();
+		     }
+		    }
+		     
 		   }
-		  } catch (Exception excep) {
-		   logger.error("Exception in getting  getAllAccountDetailsFromAccountId : " + excep);
-		  } finally {
-		   saveChanges();
-		   adjTypePreparedStatement.close();
-		   adjTypePreparedStatement = null;
-		  }
-		  return adjustmentTypeForAccount;
-		  
-		 }
-	
+		    if (!debtOblMap.isEmpty() && !periodMap.isEmpty()) {
+		    debtPriorityMap.put(debtOblMap, periodMap);
+		    }else{
+		    	addError(StandardMessages.fieldInvalid("The DNS ID mentioned for payment is not linked with ID-DNS characteristic type"));
+		    }
+		  } catch (Exception exception) {
+		    exception.printStackTrace();
+		   } finally {
+		    psPreparedStatement.close();
+		    psPreparedStatement = null;
+		    result.close();
+		   }
+		  //}
+		  return debtPriorityMap;
+		 
+	}
 	
 	public String createObligation(String accountId, String division, String obligationType) {
 
@@ -498,7 +762,7 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	 * @param date
 	 * @return
 	 */
-	private String createAdjustment(String obligationId, String adjustmentType, Money debtMoney,String debtCat,
+	private String createAdjustment(String obligationId, String overpaymentObligationId, String adjustmentType, Money debtMoney,String debtCat,
 			com.splwg.base.api.datatypes.Date date) { 
 		
 		    BusinessServiceInstance businessServiceInstanc = BusinessServiceInstance.create("CM-AdjustmentAddFreeze");
@@ -508,6 +772,8 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 			cotsGroup.set("adjustmentAmount", debtMoney);
 			cotsGroup.set("debtCategory", debtCat); //	
 			cotsGroup.set("adjustmentDate", date);
+			cotsGroup.set("transferServiceAgreement", overpaymentObligationId);
+			
 
 		  return executeBSAndCreateAdjustment(businessServiceInstanc);
 		  
@@ -539,15 +805,18 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 		PreparedStatement psPreparedStatement = null;
 		String saId = null;
 		String accntId = null;
-		String oblType="E-TPERCU";
+		//String oblTypePf="E-AVPF";
+		String oblTypePf=getObligationTypeOverpaymentPf();
+		String oblTypeAtmp=getObligationTypeOverpaymentAtmp();
+		String oblTypeVr=getObligationTypeOverpaymentEr();
 		psPreparedStatement = createPreparedStatement("SELECT OBL.SA_ID,OBL.ACCT_ID FROM  "      
         +" CI_SA OBL WHERE "
         +" OBL.ACCT_ID =\'"+accountId+"\' "
-        +" AND OBL.SA_TYPE_CD =\'"+oblType+"\'");
+        +" AND OBL.SA_TYPE_CD in(\'"+oblTypePf+"\',\'"+oblTypeAtmp+"\',\'"+oblTypeVr+"\')","select");
 		
 		QueryIterator<SQLResultRow> result = null;
 		HashMap<String,List<String>> mapOblID =  new HashMap<String,List<String>>();
-		List<String> saList = new ArrayList<String>();
+		
 		
 		try{
 			//psPreparedStatement.bindString("PER_ID", perId, null);
@@ -581,68 +850,21 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	}
 
 	@Override
-	public void setAction(BusinessObjectActionLookup arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setBusinessObject(BusinessObject arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setBusinessObjectKey(BusinessObjectInstanceKey boKey) {
-		// TODO Auto-generated method stub
-	 this.boKey=boKey;
-
-	}
-
-	@Override
-	public void setEntityId(EntityId arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setMaintenanceObject(MaintenanceObject arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setNewBusinessObject(BusinessObjectInstance arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setOriginalBusinessObject(BusinessObjectInstance arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-
-	@Override
-	public void setApplyFormRuleAlgorithmInputData(ApplyFormRuleAlgorithmInputData applyFormRuleAlgorithmInputData) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void setApplyFormRuleAlgorithmInputOutputData(
-			ApplyFormRuleAlgorithmInputOutputData applyFormRuleAlgorithmInputOutputData) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
 	public ApplyFormRuleAlgorithmInputOutputData getApplyFormRuleAlgorithmInputOutputData() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void setApplyFormRuleAlgorithmInputData(ApplyFormRuleAlgorithmInputData arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setApplyFormRuleAlgorithmInputOutputData(ApplyFormRuleAlgorithmInputOutputData arg0) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

@@ -28,6 +28,10 @@ public class DateTest {
 
 	public static void main(String[] args) throws IOException {
 		
+		String name = "Denash,Kumar";
+		String[] billTypeArray = name.split(",");
+		System.out.println(billTypeArray.length);
+		
 		String dateString1 = "2018-05-01-00.00.00";
 		String oblId1 = "4062146591, 4062146591, 4062146591";
 		String dateString2 = "2018-05-01-00.00.00";

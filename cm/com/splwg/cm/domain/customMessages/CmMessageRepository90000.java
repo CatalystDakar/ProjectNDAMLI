@@ -934,12 +934,32 @@ public class CmMessageRepository90000 extends AbstractMessageRepository {
         return getCommonInstance().getMessage(Messages.MSG_6003, params);
     }
     
+    public static ServerMessage MSG_6004(String paramValue) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(paramValue);
+        return getCommonInstance().getMessage(Messages.MSG_6004, params);
+    }
+    
+    public static ServerMessage MSG_6005(String paramValue) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(paramValue);
+        return getCommonInstance().getMessage(Messages.MSG_6005, params);
+    }
+    
+    public static ServerMessage MSG_6006(String paramValue) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(paramValue);
+        return getCommonInstance().getMessage(Messages.MSG_6006, params);
+    }
 
     public static class Messages {
 		public static final int MSG_6000 = 6000;
     	public static final int MSG_6001 = 6001;
         public static final int MSG_6002 = 6002;
         public static final int MSG_6003 = 6003;
+        public static final int MSG_6004 = 6004;
+        public static final int MSG_6005 = 6005;
+        public static final int MSG_6006 = 6006;
         /**
         * Message Text: "%1 %2 %3 %4 %5 %6 %7 %8 %9"
         */

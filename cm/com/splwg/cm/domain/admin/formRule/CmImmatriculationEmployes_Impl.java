@@ -93,7 +93,7 @@ public class CmImmatriculationEmployes_Impl extends CmImmatriculationEmployes_Ge
 
 		if (sqlResultRow != null) {
 			Date startDate = sqlResultRow.getDate("START_DT");
-			System.out.println("RESULTAT SQL= " + startDate);
+			System.out.println("RESULTAT SQL=: " + startDate);
 			return startDate;
 		} else
 			return null;
@@ -626,7 +626,7 @@ public class CmImmatriculationEmployes_Impl extends CmImmatriculationEmployes_Ge
 							CmAccountRegistrationComponent accountRegistrationHelper=null;
 
 							// // #################################################################################
-							// Set Account Information PF PH
+							// Set Account Information Employé
 							accountRegistrationHelper = CmAccountRegistrationComponent.Factory
 									.newInstance();
 							accountRegistrationHelper
@@ -640,83 +640,16 @@ public class CmImmatriculationEmployes_Impl extends CmImmatriculationEmployes_Ge
 							accountRegistrationHelper.setFinancialResponsibleSwitch(
 									ruleDetails.getBoolean("financialResponsibleSwitch"));
 							accountRegistrationHelper.setCanReceiveNotificationSwitch(
-									ruleDetails.getBoolean("canReceiveNotificationSwitch"));
+									ruleDetails.getBoolean("canReceiveNotificationSwitch")); 
 							accountRegistrationHelper.setCanReceiveCopyOfBillSwitch(
 									ruleDetails.getBoolean("canReceiveCopyOfBillSwitch"));
 							accountRegistrationHelper.setBillAddressSource(ruleDetails.getLookup("billAddressSource"));
 							accountRegistrationHelper.setPersonIdString(personBoInstance.getString("personId"));
 							//
-							// // Creating Account PF PH
+							// // Creating Account Employé
 							BusinessObjectInstance accountInstance = accountRegistrationHelper.createAccount(); 
 							//
 							logger.info("Creating Account BO: " + accountInstance.getDocument().asXML());
-
-							// Setting Tax Role information
-//							CmTaxRoleRegistrationComponent taxRoleRegistrationHelper = CmTaxRoleRegistrationComponent.Factory
-//									.newInstance();
-//							taxRoleRegistrationHelper
-//									.setServiceType(ruleDetails.getEntity("taxType", ServiceType.class));
-//							taxRoleRegistrationHelper.setStartDate(getSystemDateTime().getDate());
-//							taxRoleRegistrationHelper.setAccountIdString(accountInstance.getString("accountId"));
-//							taxRoleRegistrationHelper
-//									.setFormType(applyFormRuleAlgorithmInputData.getFormTypeId().getEntity());
-//							//
-//							// // Creating Tax Role
-//							BusinessObjectInstance taxRoleBoInstance = taxRoleRegistrationHelper.createTaxRoleBO();
-//
-//							logger.info("Creating Tax Role BO: " + taxRoleBoInstance.getDocument().asXML());
-							
-							// #################################################################################
-							// Set Account Main Information AT/MP PH
-							accountRegistrationHelper = CmAccountRegistrationComponent.Factory
-									.newInstance();
-							accountRegistrationHelper
-									.setAccountType(ruleDetails.getEntity("accountTypeATMPPH", CustomerClass.class));
-							accountRegistrationHelper
-									.setAccessGroup(ruleDetails.getEntity("accessGroup", AccessGroup.class));
-							accountRegistrationHelper.setAccountRelationshipType(
-									ruleDetails.getEntity("accountRelationshipType", AccountRelationshipType.class));
-							accountRegistrationHelper
-									.setMainCustomerSwitch(ruleDetails.getBoolean("mainCustomerSwitch"));
-							accountRegistrationHelper.setFinancialResponsibleSwitch(
-									ruleDetails.getBoolean("financialResponsibleSwitch"));
-							accountRegistrationHelper.setCanReceiveNotificationSwitch(
-									ruleDetails.getBoolean("canReceiveNotificationSwitch"));
-							accountRegistrationHelper.setCanReceiveCopyOfBillSwitch(
-									ruleDetails.getBoolean("canReceiveCopyOfBillSwitch"));
-							accountRegistrationHelper.setBillAddressSource(ruleDetails.getLookup("billAddressSource"));
-							accountRegistrationHelper.setPersonIdString(personBoInstance.getString("personId"));
-							//
-							// // Creating Account AT/MP PH
-							BusinessObjectInstance accountInstance2 = accountRegistrationHelper.createAccount();
-							//
-							logger.info("Creating Account BO: " + accountInstance2.getDocument().asXML());
-														
-							// #################################################################################
-							// Set Account Main Information Vieillesse
-							accountRegistrationHelper = CmAccountRegistrationComponent.Factory
-									.newInstance();
-							accountRegistrationHelper
-									.setAccountType(ruleDetails.getEntity("accountTypeVIEPH", CustomerClass.class));
-							accountRegistrationHelper
-									.setAccessGroup(ruleDetails.getEntity("accessGroup", AccessGroup.class));
-							accountRegistrationHelper.setAccountRelationshipType(
-									ruleDetails.getEntity("accountRelationshipType", AccountRelationshipType.class));
-							accountRegistrationHelper
-									.setMainCustomerSwitch(ruleDetails.getBoolean("mainCustomerSwitch"));
-							accountRegistrationHelper.setFinancialResponsibleSwitch(
-									ruleDetails.getBoolean("financialResponsibleSwitch"));
-							accountRegistrationHelper.setCanReceiveNotificationSwitch(
-									ruleDetails.getBoolean("canReceiveNotificationSwitch"));
-							accountRegistrationHelper.setCanReceiveCopyOfBillSwitch(
-									ruleDetails.getBoolean("canReceiveCopyOfBillSwitch"));
-							accountRegistrationHelper.setBillAddressSource(ruleDetails.getLookup("billAddressSource"));
-							accountRegistrationHelper.setPersonIdString(personBoInstance.getString("personId"));
-							//
-							// // Creating Account Vieillesse PH
-							BusinessObjectInstance accountInstance3 = accountRegistrationHelper.createAccount();
-							//
-							logger.info("Creating Account BO: " + accountInstance3.getDocument().asXML());
 
 							// ------------------------------Insertion des
 							// donnees dans

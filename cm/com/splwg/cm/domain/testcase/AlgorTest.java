@@ -5,33 +5,26 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-import com.splwg.base.api.QueryIterator;
 import com.splwg.base.api.businessObject.BusinessObjectInstance;
-import com.splwg.base.api.sql.PreparedStatement;
-import com.splwg.base.api.sql.SQLResultRow;
 import com.splwg.base.api.testers.AlgorithmImplementationTestCase;
 import com.splwg.base.domain.common.algorithm.Algorithm;
 import com.splwg.base.domain.common.algorithm.Algorithm_Id;
-import com.splwg.cm.domain.admin.formRule.CmEmployerRegistrationAlgo;
+import com.splwg.cm.domain.admin.formRule.CmImmatriculationEmployer;
 
 public class AlgorTest extends AlgorithmImplementationTestCase{
 	@SuppressWarnings("deprecation")
 	public void testInvoke() {
-		Algorithm alg = new Algorithm_Id("CM-EMPLREGAL").getEntity();
+		Algorithm alg = new Algorithm_Id("CM-EMPLRREG").getEntity();
 		
-		CmEmployerRegistrationAlgo cmEmployerRegAlgo = alg.getAlgorithmComponent(CmEmployerRegistrationAlgo.class);
+		CmImmatriculationEmployer cmEmployerRegAlgo = alg.getAlgorithmComponent(CmImmatriculationEmployer.class);
 		BusinessObjectInstance busInst = BusinessObjectInstance.create("CM-DemandeServicePflwTransBO");
 		busInst.set("processFlowId", "59273964034676");
 		//busInst = BusinessObjectDispatcher.execute(busInst, BusinessObjectActionLookup.constants.UPDATE);//read(busInst);
 		//COTSFieldDataAndMD cots = busInst.getFieldAndMDForPath("employerDetails/ninea");
 		//BusinessObjectInstanceKey bus = null;
 		//cmEmployerRegAlgo.setBusinessObjectKey(busInst.get);
-		
+		//458343243EMPLR
 		startChanges();		
 		//PreparedStatement psPreparedStatement = null;
 		/*Map<String,String> docMap = new HashMap<String, String>();
@@ -155,7 +148,7 @@ public class AlgorTest extends AlgorithmImplementationTestCase{
 	@Override
 	protected Class getAlgorithmImplementationClass() {
 		// TODO Auto-generated method stub
-		return CmEmployerRegistrationAlgo.class;
+		return CmImmatriculationEmployer.class;
 	}
 
 }

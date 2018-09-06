@@ -12,8 +12,11 @@ import com.splwg.base.api.sql.SQLResultRow;
 import com.splwg.base.api.testers.AlgorithmImplementationTestCase;
 import com.splwg.base.domain.common.algorithm.Algorithm;
 import com.splwg.base.domain.common.algorithm.Algorithm_Id;
+import com.splwg.base.domain.common.currency.Currency_Id;
 import com.splwg.cm.domain.admin.formRule.CmDistributionRuleCreatePaymentOnAccountAlgoComp;
+import com.splwg.cm.domain.admin.formRule.CmDistributionRuleCreatePaymentOnAccountAlgoComp_Gen;
 import com.splwg.cm.domain.admin.formRule.CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl;
+import com.splwg.cm.domain.admin.formRule.CmFamilyBenefitsBillGenerationAlgo;
 import com.splwg.tax.domain.admin.distributionRule.DistributionRule;
 import com.splwg.tax.domain.customerinfo.account.Account;
 import com.splwg.tax.domain.customerinfo.account.Account_Id;
@@ -27,8 +30,9 @@ public class AlgoTest extends AlgorithmImplementationTestCase{
 public void testInvoke() {
 		
 	 Algorithm alg = new Algorithm_Id("CM-PAYACCALG").getEntity();
-	 //alg.getAlgorithmComponent(arg0, arg1)
-	 CmDistributionRuleCreatePaymentOnAccountAlgoComp cc = alg.getAlgorithmComponent(CmDistributionRuleCreatePaymentOnAccountAlgoComp.class);
+	 //alg.getAlgorithmComponent(arg0, arg1)CmFamilyBenefitsBillGenerationAlgo_Impl
+	 CmFamilyBenefitsBillGenerationAlgo cc = alg.getAlgorithmComponent(CmFamilyBenefitsBillGenerationAlgo.class);
+	 //CmDistributionRuleCreatePaymentOnAccountAlgoComp cc = alg.getAlgorithmComponent(CmDistributionRuleCreatePaymentOnAccountAlgoComp.class);
 	 PaymentEvent paymentEvent;
 	 DistributionRule distributionRule;
 	 Money amount;
@@ -37,13 +41,13 @@ public void testInvoke() {
 	 Payment_Id paymentId;
 	 
 		System.out.println("***test start***");
-		//Account_Id id = new Account_Id("2456607326");
-		//Account tenderObligation =  id.getEntity();
-		cc.setCharacteristicValueFk1(new Account_Id("2516419454").getEntity().getId().getIdValue());
-		cc.setAmount(new Money("500000"));
-		cc.setPaymentEvent(new PaymentEvent_Id("245660788074").getEntity());
-		cc.setSequence(new java.math.BigInteger("1"));
-		//cc.setCharacteristicValueFk1("2456607326");
+		Account_Id id = new Account_Id("0959861870");
+		Account tenderObligation =  id.getEntity();
+		//cc.setCharacteristicValueFk1("0959861870");
+		//cc.setAmount(new Money("2000000"));//18422211
+		//cc.setPaymentEvent(new PaymentEvent_Id("123456789012").getEntity());
+		//paymentDTO.setPaymentEventId(new PaymentEvent_Id("245693748074"));
+		//cc.setSequence(new BigInteger("1"));
 		cc.invoke();
 		startChanges();			
 		/*PreparedStatement psPreparedStatement = null;
@@ -139,7 +143,7 @@ public void testInvoke() {
 	@Override
 	protected Class getAlgorithmImplementationClass() {
 		// TODO Auto-generated method stub
-		return CmDistributionRuleCreatePaymentOnAccountAlgoComp.class;
+		return CmFamilyBenefitsBillGenerationAlgo.class;
 	}
 
 }
