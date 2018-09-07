@@ -77,7 +77,8 @@ import com.splwg.tax.domain.taxBilling.taxBill.TaxBill_Id;
  *            , @AlgorithmSoftParameter (name = billTypeBusObjCd, required = true, type = string)
  *            , @AlgorithmSoftParameter (name = billType, required = true, type = string)
  *            , @AlgorithmSoftParameter (name = obligationType, required = true, type = string)
- *            , @AlgorithmSoftParameter (name = valuationDetailType, required = true, type = string)
+ *            , @AlgorithmSoftParameter (name = preNatalvaluationDetailType, required = true, type = string)
+ *            , @AlgorithmSoftParameter (name = postNatalvaluationDetailType, required = true, type = string)
  *            , @AlgorithmSoftParameter (name = postNatalFactorId, required = true, type = string)
  *            , @AlgorithmSoftParameter (name = prenatalFactorId, required = true, type = string)
  *            , @AlgorithmSoftParameter (name = calculationControlId, required = true, type = string)})
@@ -165,12 +166,18 @@ public class CmFamilyBenefitsBillGenerationAlgo_Impl extends CmFamilyBenefitsBil
 							String factorId = this.getPrenatalFactorId();
 							effectiveDatePre = getEffectiveDate("CM-PRENATAL");
 							String factorCharValue = null;
+							String[] valuationDetailTypeArray = this.getPreNatalvaluationDetailType().split(",");
+							//Map<String, String> valuationMap = getLinkedMap(valuationDetailTypeArray);
+							String valuationDetailTypeValue = null;
 							if ("DOCUMENT1".equalsIgnoreCase(preNata.getKey().trim())) {
 								factorCharValue = "DOCUMENT1";
+								valuationDetailTypeValue = valuationDetailTypeArray[0];
 							} else if ("DOCUMENT2".equalsIgnoreCase(preNata.getKey().trim())) {
 								factorCharValue = "DOCUMENT2";
+								valuationDetailTypeValue = valuationDetailTypeArray[1];
 							} else if ("DOCUMENT3".equalsIgnoreCase(preNata.getKey().trim())) {
 								factorCharValue = "DOCUMENT3";
+								valuationDetailTypeValue = valuationDetailTypeArray[2];
 							}
 							BigDecimal detailValue = getFactorValue(factorId, String.valueOf(effectiveDatePre),
 									factorCharValue);
@@ -181,13 +188,6 @@ public class CmFamilyBenefitsBillGenerationAlgo_Impl extends CmFamilyBenefitsBil
 							ValuationDetail_DTO valuationDetailDTO = createDTO(ValuationDetail.class);
 							valuationDetailDTO.setDetailValue(detailValue);
 							valuationDetailDTO.setCurrencyId(new Currency_Id(currency.getId().getIdValue()));
-							String[] valuationDetailTypeArray = this.getValuationDetailType().split(",");
-							String valuationDetailTypeValue = "";
-							if("PRE".equalsIgnoreCase(benefitType)) {
-								valuationDetailTypeValue =  valuationDetailTypeArray[0];
-							} else {
-								valuationDetailTypeValue =  valuationDetailTypeArray[1];
-							}
 							valuationDetailDTO.setValueDetailTypeId(new ValueDetailType_Id(valuationDetailTypeValue));
 							valuationDetailDTO.setId(new ValuationDetail_Id(valuationDetailId, BigInteger.valueOf(sequence)));
 							valuationDetailDTO.newEntity();
@@ -208,16 +208,25 @@ public class CmFamilyBenefitsBillGenerationAlgo_Impl extends CmFamilyBenefitsBil
 							String factorId = this.getPostNatalFactorId();
 							effectiveDatePost = getEffectiveDate("CM-POSTNATAL");
 							String factorCharValue = null;
+							
+							String[] valuationDetailTypeArray = this.getPostNatalvaluationDetailType().split(",");
+							//Map<String, String> valuationMap = getLinkedMap(valuationDetailTypeArray);
+							String valuationDetailTypeValue = null;
 							if ("DOCUMENT4".equalsIgnoreCase(postNatal.getKey().trim())) {
 								factorCharValue = "DOCUMENT4";
+								valuationDetailTypeValue = valuationDetailTypeArray[0];
 							} else if ("DOCUMENT5".equalsIgnoreCase(postNatal.getKey().trim())) {
 								factorCharValue = "DOCUMENT5";
+								valuationDetailTypeValue = valuationDetailTypeArray[1];
 							} else if ("DOCUMENT6".equalsIgnoreCase(postNatal.getKey().trim())) {
 								factorCharValue = "DOCUMENT6";
+								valuationDetailTypeValue = valuationDetailTypeArray[2];
 							} else if ("DOCUMENT7".equalsIgnoreCase(postNatal.getKey().trim())) {
 								factorCharValue = "DOCUMENT7";
+								valuationDetailTypeValue = valuationDetailTypeArray[3];
 							} else if ("DOCUMENT8".equalsIgnoreCase(postNatal.getKey().trim())) {
 								factorCharValue = "DOCUMENT8";
+								valuationDetailTypeValue = valuationDetailTypeArray[4];
 							}
 							BigDecimal detailValue = getFactorValue(factorId, String.valueOf(effectiveDatePost),
 									factorCharValue);
@@ -225,13 +234,6 @@ public class CmFamilyBenefitsBillGenerationAlgo_Impl extends CmFamilyBenefitsBil
 							ValuationDetail_DTO valuationDetailDTO = createDTO(ValuationDetail.class);
 							valuationDetailDTO.setDetailValue(detailValue);
 							valuationDetailDTO.setCurrencyId(new Currency_Id(currency.getId().getIdValue()));
-							String[] valuationDetailTypeArray = this.getValuationDetailType().split(",");
-							String valuationDetailTypeValue = "";
-							if("PRE".equalsIgnoreCase(benefitType)) {
-								valuationDetailTypeValue =  valuationDetailTypeArray[0];
-							} else {
-								valuationDetailTypeValue =  valuationDetailTypeArray[1];
-							}
 							valuationDetailDTO.setValueDetailTypeId(new ValueDetailType_Id(valuationDetailTypeValue));
 							valuationDetailDTO.setId(new ValuationDetail_Id(valuationDetailId, BigInteger.valueOf(sequence)));
 							valuationDetailDTO.newEntity();
@@ -256,6 +258,25 @@ public class CmFamilyBenefitsBillGenerationAlgo_Impl extends CmFamilyBenefitsBil
 	    	 LOGGER.info("PersonId is not found for the NIN:: " + ninNumber);
 	    	 addWarning(CmMessageRepository90000.MSG_6004(ninNumber));
 	    }
+	}
+	
+	/**
+	 * @param valueArray
+	 * @return
+	 */
+	private Map<String, String> getLinkedMap(String[] valueArray) {
+		// TODO Auto-generated method stub
+		Map<String, String> calcMap = new HashMap<String, String>();
+		for (int i = 0; i < valueArray.length; i++) {
+			if(valueArray[i].contains("FAM")) {
+				calcMap.put("FAMILY", valueArray[i]);
+			} else if(valueArray[i].contains("PRE")) {
+				calcMap.put("PRE", valueArray[i]);
+			} else if (valueArray[i].contains("POST")) {
+				calcMap.put("POST", valueArray[i]);
+			}
+		}
+		return calcMap;
 	}
 
 	/**

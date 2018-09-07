@@ -114,7 +114,7 @@ public class CmAllocationFamilyBillGenerationAlgo_Impl extends CmAllocationFamil
 		LOGGER.info("I am In Invoke method BO instance " + this.boInstance);
 	    COTSFieldDataAndMD<?> processFlowNode = this.boInstance.getFieldAndMDForPath("processFlowId");
 	    processFlowId = processFlowNode.getValue().toString();
-	    ProcessFlowCharacteristic_DTO processFlowCharacteristic_DTO = createDTO(ProcessFlowCharacteristic.class);
+	    
 	    LOGGER.info("ProcessFlowId :: " + processFlowId);
 	    System.out.println("ProcessFlowId :: " + processFlowId);
 	    
@@ -129,12 +129,12 @@ public class CmAllocationFamilyBillGenerationAlgo_Impl extends CmAllocationFamil
 	    
 	    COTSFieldDataAndMD<?> cotsRegId = this.boInstance.getFieldAndMDForPath("billDetail/billId");
 		
-	    
+	    ProcessFlowCharacteristic_DTO processFlowCharacteristic_DTO = createDTO(ProcessFlowCharacteristic.class);
 	    LOGGER.info("ninNumber :: " + ninNumber);
 	    System.out.println("ninNumber :: " + ninNumber);
 		
-	/*	benefitType = "POST";
-		ninNumber = "97534689";*/
+		/*benefitType = "FAMILY";
+		ninNumber = "1225974783185";*/
 	    
 	    personId = getPersonByNin(ninNumber);
 	    
@@ -161,62 +161,29 @@ public class CmAllocationFamilyBillGenerationAlgo_Impl extends CmAllocationFamil
 				Valuation_Id valuationDetailId = createValuation(assetId, endDate);
 				BigDecimal detailValue = null;
 				ValuationDetail_DTO valuationDetailDTO = null;
-				if ("FAMILY".equalsIgnoreCase(benefitType.trim())) {
-					List<String> familyAlloList = getAllocationFamilyList();
-					LOGGER.info("familyAlloList :: " + familyAlloList);
-					System.out.println("familyAlloList :: " + familyAlloList);
-					int sequence = Integer.parseInt(getSequence("FAMILY VALUATION"));
-					String[] valuationDetailTypeArray = this.getValuationDetailType().split(",");
-					Map<String, String> valuationMap = getLinkedMap(valuationDetailTypeArray);
-					String valuationDetailTypeValue = null;
-					for (String documentName : familyAlloList) {
-						if (!isNull(documentName)) {
-							LOGGER.info("Sequence:: " + sequence + " ocumentName:: " + documentName);
-							docName = documentName;
-							String factorId = this.getFactorId();							
-							String factorCharValue = null;
-							if ("APPRENTIS".equalsIgnoreCase(documentName)) {
-								factorCharValue = "APPRENTIS";
-								effectiveDateAllocationFam = getEffectiveDate("CM-FAMILYALLOWANCE", documentName);
-							} else if ("MEDICAL".equalsIgnoreCase(documentName)) {
-								factorCharValue = "MEDICAL";
-								effectiveDateAllocationFam = getEffectiveDate("CM-FAMILYALLOWANCE", documentName);
-							} else if ("SCHOOL".equalsIgnoreCase(documentName)) {
-								factorCharValue = "SCHOOL";
-								effectiveDateAllocationFam = getEffectiveDate("CM-FAMILYALLOWANCE", documentName);
-							}
-							if (effectiveDateAllocationFam != null) {
-								detailValue = getFactorValue(factorId, String.valueOf(effectiveDateAllocationFam),
-										factorCharValue);
-							} else {
-								 LOGGER.info("Effective date is Null " + personId);
-								 addWarning(CmMessageRepository90000.MSG_6005(documentName));
-							}
+				int sequence = Integer.parseInt(getSequence("FAMILY VALUATION"));
+				String[] valuationDetailTypeArray = this.getValuationDetailType().split(",");
+				Map<String, String> valuationMap = getLinkedMap(valuationDetailTypeArray);
+				String valuationDetailTypeValue = null;
+				String factorId = this.getFactorId();	
+				effectiveDateAllocationFam = getEffectiveDate("CM-FAMILYALLOWANCE");
+				detailValue = getFactorValue(factorId, String.valueOf(effectiveDateAllocationFam));
 						
-							
-							LOGGER.info("Factor Value:: " + detailValue);
-							System.out.println("Factor Value:: " + detailValue);
-							valuationDetailDTO = createDTO(ValuationDetail.class);
-							detailValue = detailValue.multiply(BigDecimal.valueOf(3));
-							valuationDetailDTO.setDetailValue(detailValue);
-							LOGGER.info("Factor Value after update:: " + valuationDetailDTO.getDetailValue());
-							System.out.println("Factor Value after update:: " + valuationDetailDTO.getDetailValue());
-							valuationDetailDTO.setCurrencyId(new Currency_Id(currency.getId().getIdValue()));							
-							
-							if("FAMILY".equalsIgnoreCase(benefitType)) {
-								valuationDetailTypeValue = valuationMap.get("FAMILY");
-								LOGGER.info("valuationDetailTypeValue:: " + valuationDetailTypeValue);
-							}
-							valuationDetailDTO.setValueDetailTypeId(new ValueDetailType_Id(valuationDetailTypeValue));
-							valuationDetailDTO.setId(new ValuationDetail_Id(valuationDetailId, BigInteger.valueOf(sequence)));
-							valuationDetailDTO.newEntity();
-							System.out.println("valuationDetailId:: " + valuationDetailDTO.getEntity().getId().toString());
-							LOGGER.info("valuationDetailId:: " + valuationDetailDTO.getEntity().getId().toString());
-							sequence++;
-
-						}
-					}
+				LOGGER.info("Factor Value:: " + detailValue);
+				System.out.println("Factor Value:: " + detailValue);
+				valuationDetailDTO = createDTO(ValuationDetail.class);
+				valuationDetailDTO.setDetailValue(detailValue);
+				valuationDetailDTO.setCurrencyId(new Currency_Id(currency.getId().getIdValue()));				
+				if("FAMILY".equalsIgnoreCase(benefitType)) {
+					valuationDetailTypeValue = valuationMap.get("FAMILY");
+					LOGGER.info("valuationDetailTypeValue:: " + valuationDetailTypeValue);
 				}
+				valuationDetailDTO.setValueDetailTypeId(new ValueDetailType_Id(valuationDetailTypeValue));
+				valuationDetailDTO.setId(new ValuationDetail_Id(valuationDetailId, BigInteger.valueOf(sequence)));
+				valuationDetailDTO.newEntity();
+				System.out.println("valuationDetailId:: " + valuationDetailDTO.getEntity().getId().toString());
+				LOGGER.info("valuationDetailId:: " + valuationDetailDTO.getEntity().getId().toString());
+
 				String obligationId = findOrCreateObligation(taxRoleId);
 
 				TaxBill_Id taxbBillId = generateBill(taxRoleId, obligationId);
@@ -265,10 +232,10 @@ public class CmAllocationFamilyBillGenerationAlgo_Impl extends CmAllocationFamil
 	 * @param factorType
 	 * @return
 	 */
-	private Date getEffectiveDate(String factorType, String factorChar) {
+	private Date getEffectiveDate(String factorType) {
 
-		LOGGER.info("Enters getEffectiveDate factorType:: " + factorType +" factorChar:: " + factorChar);
-		PreparedStatement preparedStatement = createPreparedStatement("SELECT EFFDT FROM C1_FACTOR_VALUE where FACTOR_CD= \'"+factorType+"\' and FACTOR_CHAR_VAL = \'"+factorChar+"\' order by EFFDT DESC","SELECT");
+		LOGGER.info("Enters getEffectiveDate factorType:: " + factorType);
+		PreparedStatement preparedStatement = createPreparedStatement("SELECT EFFDT FROM C1_FACTOR_VALUE where FACTOR_CD= \'"+factorType+"\' order by EFFDT DESC","SELECT");
 		preparedStatement.setAutoclose(false);
 		Date endDate = null;
 
@@ -318,7 +285,7 @@ public class CmAllocationFamilyBillGenerationAlgo_Impl extends CmAllocationFamil
 		billDTO.setTaxRoleId(new TaxRole_Id(taxRoleId));
 	
 		String[] billTypeArray = this.getBillType().split(",");
-		String[] calcControlArray = this.getCalculationControlId().split(",");//POSTNATAL CALC,PRENATAL CALC, FAMILY C
+		String[] calcControlArray = this.getCalculationControlId().split(",");
 		String calcControlValue = null;
 		Map<String, String> calcControlMap = getLinkedMap(calcControlArray);
 		Map<String, String> billTypeMap = getLinkedMap(billTypeArray);
@@ -452,7 +419,7 @@ public class CmAllocationFamilyBillGenerationAlgo_Impl extends CmAllocationFamil
 		List<String> allocationFamilyList = new LinkedList<String>();
 		while(conjointIterator.hasNext()) {
 			COTSInstanceListNode cOTSInstanceListNode = conjointIterator.next();
-			//docName = cOTSInstanceListNode.getFieldAndMDForPath("documnet").toString();
+			docName = cOTSInstanceListNode.getFieldAndMDForPath("documnet").toString();
 			COTSFieldDataAndMD<?> cots = cOTSInstanceListNode.getFieldAndMDForPath("documnet");
 			docName = cots.getXMLValue();
 			allocationFamilyList.add(docName);
@@ -467,12 +434,12 @@ public class CmAllocationFamilyBillGenerationAlgo_Impl extends CmAllocationFamil
 	 * @param effectiveDate
 	 * @return
 	 */
-	private BigDecimal getFactorValue(String factorId, String effectiveDate, String factorCharValue) {
+	private BigDecimal getFactorValue(String factorId, String effectiveDate) {
 
-		LOGGER.info("Enters getFactorValue : " + "factorId:: " + factorId +" effectiveDate:: " + effectiveDate +" factorCharValue:: " + factorCharValue);
-		System.out.println("Enters getFactorValue : " + "factorId:: " + factorId +"effectiveDate:: " + effectiveDate +"factorCharValue:: " + factorCharValue);
+		LOGGER.info("Enters getFactorValue : " + "factorId:: " + factorId +" effectiveDate:: " + effectiveDate);
+		System.out.println("Enters getFactorValue : " + "factorId:: " + factorId +"effectiveDate:: " + effectiveDate);
 		PreparedStatement preparedStatement = createPreparedStatement(
-				"SELECT FACTOR_VAL FROM C1_FACTOR_VALUE where FACTOR_CHAR_VAL=\'"+factorCharValue+"\' and FACTOR_CD=\'"+factorId+"\' and TO_CHAR(EFFDT,'YYYY-MM-DD') <=\'"+effectiveDate+"\' order by EFFDT DESC",
+				"SELECT FACTOR_VAL FROM C1_FACTOR_VALUE where FACTOR_CD=\'"+factorId+"\' and TO_CHAR(EFFDT,'YYYY-MM-DD') <=\'"+effectiveDate+"\' order by EFFDT DESC",
 				"SELECT");
 		/*preparedStatement.bindString("factorCharValue", factorCharValue, null);
 		preparedStatement.bindString("factor", factorId, null);

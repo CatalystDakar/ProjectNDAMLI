@@ -1,37 +1,26 @@
 package com.splwg.cm.domain.testcase;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
-import com.splwg.base.api.QueryIterator;
 import com.splwg.base.api.datatypes.Money;
-import com.splwg.base.api.sql.PreparedStatement;
-import com.splwg.base.api.sql.SQLResultRow;
 import com.splwg.base.api.testers.AlgorithmImplementationTestCase;
 import com.splwg.base.domain.common.algorithm.Algorithm;
 import com.splwg.base.domain.common.algorithm.Algorithm_Id;
-import com.splwg.base.domain.common.currency.Currency_Id;
-import com.splwg.cm.domain.admin.formRule.CmDistributionRuleCreatePaymentOnAccountAlgoComp;
-import com.splwg.cm.domain.admin.formRule.CmDistributionRuleCreatePaymentOnAccountAlgoComp_Gen;
-import com.splwg.cm.domain.admin.formRule.CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl;
-import com.splwg.cm.domain.admin.formRule.CmFamilyBenefitsBillGenerationAlgo;
+import com.splwg.cm.domain.admin.formRule.CmAllocationFamilyBillGenerationAlgo;
 import com.splwg.tax.domain.admin.distributionRule.DistributionRule;
 import com.splwg.tax.domain.customerinfo.account.Account;
 import com.splwg.tax.domain.customerinfo.account.Account_Id;
 import com.splwg.tax.domain.payment.payment.Payment_Id;
 import com.splwg.tax.domain.payment.paymentEvent.PaymentEvent;
-import com.splwg.tax.domain.payment.paymentEvent.PaymentEvent_Id;
 
 public class AlgoTest extends AlgorithmImplementationTestCase{
 
 @SuppressWarnings("deprecation")
 public void testInvoke() {
 		
-	 Algorithm alg = new Algorithm_Id("CM-PAYACCALG").getEntity();
+	 Algorithm alg = new Algorithm_Id("CM-FALBILALG").getEntity();
 	 //alg.getAlgorithmComponent(arg0, arg1)CmFamilyBenefitsBillGenerationAlgo_Impl
-	 CmFamilyBenefitsBillGenerationAlgo cc = alg.getAlgorithmComponent(CmFamilyBenefitsBillGenerationAlgo.class);
+	 CmAllocationFamilyBillGenerationAlgo cc = alg.getAlgorithmComponent(CmAllocationFamilyBillGenerationAlgo.class);
 	 //CmDistributionRuleCreatePaymentOnAccountAlgoComp cc = alg.getAlgorithmComponent(CmDistributionRuleCreatePaymentOnAccountAlgoComp.class);
 	 PaymentEvent paymentEvent;
 	 DistributionRule distributionRule;
@@ -143,7 +132,7 @@ public void testInvoke() {
 	@Override
 	protected Class getAlgorithmImplementationClass() {
 		// TODO Auto-generated method stub
-		return CmFamilyBenefitsBillGenerationAlgo.class;
+		return CmAllocationFamilyBillGenerationAlgo.class;
 	}
 
 }
