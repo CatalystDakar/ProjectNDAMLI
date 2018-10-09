@@ -1,6 +1,8 @@
 package com.splwg.cm.domain.admin.formRule;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.splwg.base.api.businessObject.BusinessObjectDispatcher;
 import com.splwg.base.api.businessObject.BusinessObjectInstance;
@@ -15,10 +17,13 @@ import com.splwg.base.support.schema.BusinessObjectInfo;
 import com.splwg.base.support.schema.MaintenanceObjectInfo;
 import com.splwg.base.support.schema.MaintenanceObjectInfoCache;
 import com.splwg.cm.domain.common.businessComponent.CmPersonSearchComponent;
+import com.splwg.cm.domain.customMessages.CmMessageRepository90000;
 import com.splwg.tax.domain.admin.formRule.ApplyFormRuleAlgorithmInputData;
 import com.splwg.tax.domain.admin.formRule.ApplyFormRuleAlgorithmInputOutputData;
 import com.splwg.tax.domain.admin.formRule.FormRuleBORuleProcessingAlgorithmSpot;
 import com.splwg.tax.domain.admin.idType.IdType_Id;
+import com.splwg.tax.domain.customerinfo.account.Account;
+import com.splwg.tax.domain.customerinfo.account.Account_Id;
 import com.splwg.tax.domain.customerinfo.person.Person;
 
 /**
@@ -56,18 +61,16 @@ public class CmRetrieveInfosCalc_Impl extends CmRetrieveInfosCalc_Gen implements
 	}
 	
 	private String getFactorVal(String factor, String dateDebutCotisation, String dateFinCotisation ){
-		PreparedStatement preparedStatement = createPreparedStatement("SELECT FACTOR_VAL FROM C1_FACTOR_VALUE where FACTOR_CD=:factor and"
-				+ " TO_CHAR(EFFDT,'DD/MM/YYYY') <=:effectiveDate order by EFFDT DESC", "SELECT");
+		PreparedStatement preparedStatement = createPreparedStatement("SELECT FACTOR_VAL FROM C1_FACTOR_VALUE where FACTOR_CD=:factor and TO_CHAR(EFFDT,'DD/MM/YYYY') <=:effectiveDate order by EFFDT DESC","SELECT");
 		preparedStatement.bindString("factor",factor, null);
 		preparedStatement.bindString("effectiveDate", dateFinCotisation,null);
 		SQLResultRow sqlResultRow = preparedStatement.firstRow();
 		return sqlResultRow.getString("FACTOR_VAL");
 	}
 	
-	/**
-	 * @param listSalaries
-	 */
-	private void initInfosSalaries(Iterator<COTSInstanceListNode> listSalaries){
+
+	
+	private void initInfosSalaries(Iterator<COTSInstanceListNode> listSalaries)	{
 		SchemaInstance formInstance = this.inputOutputData.getFormBusinessObject();
 		String dateDebutCotisation=formInstance.getFieldAndMDForPath("informationEmployeur/dateDebutCotisation/asCurrent").getXMLValue();
 		String dateFinCotisation=formInstance.getFieldAndMDForPath("informationEmployeur/dateFinCotisation/asCurrent").getXMLValue();
@@ -115,6 +118,33 @@ public class CmRetrieveInfosCalc_Impl extends CmRetrieveInfosCalc_Gen implements
 		 formInstance.getFieldAndMDForPath("primaryTaxpayerIdValue").setXMLValue(idNumber);
 		 formInstance.getFieldAndMDForPath("address1").setXMLValue(address1);
 		 
+		 List<Account> accounts = getAccountsByIdPerson(personId);
+			if (accounts.size() > 1) throw new RuntimeException("Plusieurs compte existe");
+		 Account account = accounts.get(0);
+		 if(isNull(account)) addError(CmMessageRepository90000.MSG_7038(personId));
+		 if(notNull(account.getId())) {
+			 String idAccount = account.getId().getIdValue();
+			 formInstance.getFieldAndMDForPath("account").setXMLValue(idAccount);
+		 }
+		 
+	}
+	
+	
+	
+	public List<Account> getAccountsByIdPerson(String idEmployeur) {
+		List<Account> listeAccounts = new ArrayList<Account>();
+		// Business Service Instance
+		BusinessServiceInstance bsInstance = BusinessServiceInstance.create("C1-GetPersonAccounts");
+		bsInstance.set("personId", idEmployeur);
+		bsInstance = BusinessServiceDispatcher.execute(bsInstance);
+		//List des comptes ratachés à l'employeur
+		Iterator<COTSInstanceListNode> iterator = bsInstance.getList("results").iterator();
+		while (iterator.hasNext()) {
+			COTSInstanceListNode nextElt = iterator.next();
+			Account_Id accountId=new Account_Id(nextElt.getNumber("accountId").toString());
+			listeAccounts.add(accountId.getEntity());
+		}
+		return listeAccounts;
 	}
 	/**
 	 * Permet de recuperer le taux AT de l'employeur

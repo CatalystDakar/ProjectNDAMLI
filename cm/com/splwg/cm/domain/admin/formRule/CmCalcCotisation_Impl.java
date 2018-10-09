@@ -101,8 +101,10 @@ public class CmCalcCotisation_Impl extends CmCalcCotisation_Gen implements FormR
 		COTSFieldDataAndMD<Money> fieldMontantAtMpDiff = inputOutputData.getFormBusinessObject().getFieldAndMDForPath(MONTANT_COTISATION_ATMP_DIFF_PATH);
 		if(!isNull(fieldMontantAtMpDiff)){
 			Money montantAtMpEmp = (Money) inputOutputData.getFormBusinessObject().getFieldAndMDForPath(MONTANT_COTISATION_ATMP_EMP_PATH).getValue();
+			double montantAtMpEmpCalculer = montantAtMpEmp.getAmount().doubleValue();
+			if (isNull(montantAtMpEmp)) montantAtMpEmpCalculer = 0.0;
 			//Difference entre les montants
-			fieldMontantAtMpDiff.setXMLValue(String.valueOf(montantAtMpEmp.getAmount().doubleValue()-montantAtMp));
+			fieldMontantAtMpDiff.setXMLValue(String.valueOf(montantAtMpEmpCalculer - montantAtMp));
 		}
 		
 		
@@ -117,8 +119,10 @@ public class CmCalcCotisation_Impl extends CmCalcCotisation_Gen implements FormR
 		COTSFieldDataAndMD<Money> fieldMontantPfDiff = inputOutputData.getFormBusinessObject().getFieldAndMDForPath(MONTANT_COTISATION_PF_DIFF_PATH);
 		if(!isNull(fieldMontantPfDiff)){
 			Money montantPfEmp = (Money) inputOutputData.getFormBusinessObject().getFieldAndMDForPath(MONTANT_COTISATION_PF_EMP_PATH).getValue();
+			double montantPfEmpCalculer = montantPfEmp.getAmount().doubleValue();
+			if (isNull(montantPfEmp)) montantPfEmpCalculer = 0.0;
 			//Difference entre les montants
-			fieldMontantPfDiff.setXMLValue(String.valueOf(montantPfEmp.getAmount().doubleValue()-montantPF));
+			fieldMontantPfDiff.setXMLValue(String.valueOf(montantPfEmpCalculer - montantPF));
 		}
 	
 		
@@ -132,8 +136,10 @@ public class CmCalcCotisation_Impl extends CmCalcCotisation_Gen implements FormR
 		COTSFieldDataAndMD<Money> fieldMontantRgDiff = inputOutputData.getFormBusinessObject().getFieldAndMDForPath(MONTANT_COTISATION_RRG_DIFF_PATH);
 		if(!isNull(fieldMontantRgDiff)){
 			Money montantRgEmp = (Money) inputOutputData.getFormBusinessObject().getFieldAndMDForPath(MONTANT_COTISATION_RG_EMP_PATH).getValue();
+			double montantRgEmpCalcule = montantRgEmp.getAmount().doubleValue();
+			if (isNull(montantRgEmp)) montantRgEmpCalcule = 0.0;
 			//Difference entre les montants
-			fieldMontantRgDiff.setXMLValue(String.valueOf(montantRgEmp.getAmount().doubleValue()-montantCotisationRetraiteRG));
+			fieldMontantRgDiff.setXMLValue(String.valueOf(montantRgEmpCalcule - montantCotisationRetraiteRG));
 		}
 		
 		//Chargement montant Cotisation Retraite Regime Cadre au niveau du formulaire DNS
@@ -146,8 +152,10 @@ public class CmCalcCotisation_Impl extends CmCalcCotisation_Gen implements FormR
 		COTSFieldDataAndMD<Money> fieldMontantRccDiff = inputOutputData.getFormBusinessObject().getFieldAndMDForPath(MONTANT_COTISATION_RCC_DIFF_PATH);
 		if(!isNull(fieldMontantRccDiff)){
 			Money montantRccEmp = (Money) inputOutputData.getFormBusinessObject().getFieldAndMDForPath(MONTANT_COTISATION_RCC_EMP).getValue();
+			double montantRccEmpCalculer = montantRccEmp.getAmount().doubleValue();
+			if (isNull(montantRccEmp)) montantRccEmpCalculer = 0.0;
 			//Difference entre les montants
-			fieldMontantRccDiff.setXMLValue(String.valueOf(montantRccEmp.getAmount().doubleValue()-montantCotisationRetraiteRC));
+			fieldMontantRccDiff.setXMLValue(String.valueOf(montantRccEmpCalculer - montantCotisationRetraiteRC));
 		}
 	}
 	
@@ -671,7 +679,9 @@ public class CmCalcCotisation_Impl extends CmCalcCotisation_Gen implements FormR
 	
 	
 	
-	
+	/**
+	 * @param salaire
+	 */
 	private double getTauxProrota(COTSInstanceListNode salarie, String classMoisParam) {
 		
 		BusinessObjectInstance formBoInstance = (BusinessObjectInstance) inputOutputData.getFormBusinessObject();

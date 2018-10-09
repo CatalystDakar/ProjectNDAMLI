@@ -7,10 +7,7 @@ import java.math.BigInteger;
 
 import com.splwg.base.api.datatypes.Bool;
 import com.splwg.base.domain.report.reportDefinition.ReportDefinition;
-
-
-
-
+import com.splwg.cm.domain.admin.letterTemplate.CmExtractPdf_Gen;
 import com.splwg.tax.api.lookup.PrintPlatformLookup;
 import com.splwg.tax.domain.admin.letterTemplate.LetterTemplate;
 import com.splwg.tax.domain.admin.letterTemplate.LetterTemplateLetterExtractAlgorithmSpot;

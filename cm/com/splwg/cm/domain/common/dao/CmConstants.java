@@ -13,7 +13,7 @@ public class CmConstants {
 	/** Type de relation "principale" en anglais entre un compte et un acteur */
     public static final String MAIN_ACCT_PER_RELATIONSHIP = "MAIN";
     
-    /** Type de relation "principale" en franÃ§ais entre un compte et un acteur */
+    /** Type de relation "principale" en français entre un compte et un acteur */
     public static final String PRINC_ACCT_PER_RELATIONSHIP = "PRINC";//GSPAYEUR
     
     

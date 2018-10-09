@@ -6,7 +6,6 @@ import com.splwg.base.api.sql.SQLResultRow;
 import com.splwg.base.domain.security.user.User_Id;
 import com.splwg.shared.logging.Logger;
 import com.splwg.shared.logging.LoggerFactory;
-import com.splwg.tax.domain.customerinfo.serviceAgreement.ServiceAgreement_Id;
 import com.splwg.tax.domain.payment.depositControl.DepositControl;
 import com.splwg.tax.domain.payment.depositControl.DepositControl_Id;
 
@@ -44,7 +43,7 @@ public class CmDepositControlDao extends GenericBusinessObject {
     /*
      * Message
      * */    
-    private static String vMultipleDepositControl="Plusieurs controles de lot de rÃ©glement trouvÃ©s";
+    private static String vMultipleDepositControl="Plusieurs controles de lot de réglement trouvés";
 
 
     /**
@@ -62,8 +61,6 @@ public class CmDepositControlDao extends GenericBusinessObject {
      * @return DepositControl     
      */
     public DepositControl searchDepositControlEligibleToPrintPdf( final User_Id pUserId,   String pTenderType ) {
-        LOGGER.info( "START - searchDepositControlEligibleToPrintPdf( final User_Id pUserId : " + pUserId
-                       + " , String pTenderType : " + pTenderType + ")" );
 
         String vQuery = GET_DEPOSITECONTROLE_ELIGIBLE_TO_PRINT_PDF;
 

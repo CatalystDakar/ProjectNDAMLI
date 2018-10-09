@@ -27,7 +27,8 @@ import com.splwg.shared.logging.LoggerFactory;
  *            , @BatchJobSoftParameter (name = typeOfVentilation, required = true, type = string)
  *            , @BatchJobSoftParameter (name = typeOfBatchSettlement, required = true, type = string)
  *            , @BatchJobSoftParameter (name = accountId, required = true, type = string)
- *            , @BatchJobSoftParameter (name = typeEmployerAccount, required = true, type = string)})
+ *            , @BatchJobSoftParameter (name = typeEmployerAccount, required = true, type = string)
+ *            , @BatchJobSoftParameter (name = distributionRulePNI, required = true, type = string)})
  */
 public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 	
@@ -76,6 +77,7 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 							String extRefId = payDetailRow.getString("EXT_REFERENCE_ID"); 
 							log.info("External Reference Id: " + extRefId);
 							String dstRuleValue = null;
+							String dstRuleCD = null ;
 							String personId = null;
 							String personName = null;
 							String accntId = null;
@@ -88,10 +90,12 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 									personId = getPersonIdAcctId(this.getParameters().getAccountId());
 								}
 								personName = getPersonNamePerId(personId);
+								dstRuleCD = this.getParameters().getTypeOfVentilation();
 							} else{
 								personId = getPersonIdAcctId(this.getParameters().getAccountId());
 								personName = getPersonNamePerId(personId);
-								//dsts_rule_value Raphael working
+								dstRuleCD = this.getParameters().getDistributionRulePNI();
+								dstRuleValue = this.getParameters().getAccountId();
 							}
 							accntId = getAccountId(personId);
 							if(isBlankOrNull(accntId)){
@@ -106,10 +110,14 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 							if(isBlankOrNull(personName)){
 								personName = " ";
 							}
+							if(isBlankOrNull(dstRuleCD)){
+								dstRuleCD = " ";
+							}
 							log.info("Account Id :" + accntId);
 							log.info("Person Id :" + personId);
 							log.info("Person Name :" + personName);
 							log.info("DST Rule Value :" + dstRuleValue);
+							log.info("DST Rule Value :" + dstRuleCD);
 								try {
 									startChanges();
 									psPreparedStatement = createPreparedStatement("UPDATE CI_PEVT_DTL_ST SET EXT_SOURCE_ID=:EXT_SOURCE_ID,DST_RULE_CD=:DST_RULE_CD, DST_RULE_VALUE=:DST_RULE_VALUE, "
@@ -117,7 +125,7 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 													+ " PEVT_STG_ST_FLG =:PEVT_STG_ST_FLG WHERE EXT_TRANSMIT_ID = :EXT_TRANSMIT_ID");
 		
 									psPreparedStatement.bindString("EXT_SOURCE_ID", externalSrcId,null);
-									psPreparedStatement.bindString("DST_RULE_CD", this.getParameters().getTypeOfVentilation(),null);
+									psPreparedStatement.bindString("DST_RULE_CD", dstRuleCD,null);
 									psPreparedStatement.bindString("DST_RULE_VALUE", dstRuleValue, null);
 									psPreparedStatement.bindDate("ACCOUNTING_DT", dtime);
 									psPreparedStatement.bindString("TENDER_TYPE_CD",this.getParameters().getTypeOfBatchSettlement(), null);

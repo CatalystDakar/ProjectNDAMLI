@@ -27,6 +27,19 @@ public class CmMessageRepository1001 extends AbstractMessageRepository {
         return getCommonInstance().getMessage(Messages.MSG_103, params);
     }
     
+    public static ServerMessage MSG_105(String spouseNin, String employeeNin) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(spouseNin);
+        params.addRawString(employeeNin);
+        return getCommonInstance().getMessage(Messages.MSG_105, params);
+    }
+    
+    public static ServerMessage MSG_106(String spouseNin) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(spouseNin);
+        return getCommonInstance().getMessage(Messages.MSG_106, params);
+    }
+    
     private static CmMessageRepository1001 getCommonInstance() {
         if (instance == null) {
           instance = new CmMessageRepository1001();
@@ -42,6 +55,10 @@ public class CmMessageRepository1001 extends AbstractMessageRepository {
          public static final int MSG_101 = 101;
          
          public static final int MSG_103 = 103;
+         
+         public static final int MSG_105 = 105;
+         
+         public static final int MSG_106 = 106;
     }
 
 }

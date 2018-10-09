@@ -1,10 +1,13 @@
 package com.splwg.cm.domain.admin.formRule;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.ibm.icu.math.BigDecimal;
@@ -93,12 +96,10 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
 	private BusinessObjectInstance boInstance;
 	private BusinessObjectInstanceKey boKey;
 	String processFlowId = null;
-	String benefitType = null;
 	String ninNumber = null;
 	String personId = null;
 	String accountId = null;
-	private Date effectiveDatePre;
-	private Date effectiveDatePost;
+	private Date effectiveDate;
 	FilingPeriod_Id filingPeriod = FilingPeriod_Id.NULL;
 	GregorianCalendar gregorianCalendar = new GregorianCalendar(); 
 	Date currentDate = new Date(gregorianCalendar.get(GregorianCalendar.YEAR),
@@ -119,19 +120,36 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
 	    
 	    String numIdentification = null;
 	    
+	    
+	    
 	  //CHAMPS
-		 Date dateAT =(Date) this.boInstance.getFieldAndMDForPath("champs/dateAT").getValue();
-		 BigDecimal nbreJoursRepos =(BigDecimal) this.boInstance.getFieldAndMDForPath("champs/nbreJoursRepos").getValue();
-		 BigDecimal salaireDernierMois =(BigDecimal) this.boInstance.getFieldAndMDForPath("champs/salaireDernierMois").getValue();
-		 BigDecimal nbreJoursTrav =(BigDecimal) this.boInstance.getFieldAndMDForPath("champs/nbreJoursTrav").getValue();
-		 BigDecimal salaireJournalier =(BigDecimal) this.boInstance.getFieldAndMDForPath("champs/salaireJournalier").getValue();
-		 BigDecimal nbreHeurSalJourn =(BigDecimal) this.boInstance.getFieldAndMDForPath("champs/nbreHeurSalJourn").getValue();
+	     COTSFieldDataAndMD<?> dateAT =this.boInstance.getFieldAndMDForPath("champs/dateAT");
+		 //COTSFieldDataAndMD<?> nbreJoursRepos = this.boInstance.getFieldAndMDForPath("champs/nbreJoursRepos");
+		 COTSFieldDataAndMD<?> salaireDernierMois =this.boInstance.getFieldAndMDForPath("champs/salaireDernierMois");
+		 COTSFieldDataAndMD<BigDecimal> nbreJoursTrav =this.boInstance.getFieldAndMDForPath("champs/nbreJoursTrav");
+		 COTSFieldDataAndMD<?> salaireJournalier = this.boInstance.getFieldAndMDForPath("champs/salaireJournalier");
+		 COTSFieldDataAndMD<BigDecimal> nbreHeurSalJourn = this.boInstance.getFieldAndMDForPath("champs/nbreHeurSalJourn");
 		 Date dateOuverture=getSystemDateTime().getDate();
 	    
 	    COTSFieldDataAndMD<?> typePieceNode = this.boInstance.getFieldAndMDForPath("ruleDetails/typeOfIdentity");
 	    COTSFieldDataAndMD<?> ninNumberNode = this.boInstance.getFieldAndMDForPath("ruleDetails/nin");
 	    COTSFieldDataAndMD<?> cdeaoNumberNode = this.boInstance.getFieldAndMDForPath("ruleDetails/ninCedeo");
 	    COTSFieldDataAndMD<?> passORconcNumberNode = this.boInstance.getFieldAndMDForPath("ruleDetails/identityIdNumber");
+	    
+	    int nobreJours=diffDates((Date)dateAT.getValue(), dateOuverture); 
+	    
+	    int k = min (28, nobreJours);
+	    int z = max (0, nobreJours - 28);	
+	    		
+	    LOGGER.info("salaireDernierMois :: " + (BigDecimal)salaireDernierMois.getValue());  
+	    LOGGER.info("nbreJoursTrav :: " + (BigDecimal) nbreJoursTrav.getValue());  
+	    
+	    if(nbreJoursTrav.getValue()==null){
+	    	nbreJoursTrav.setValue(new BigDecimal(100));   
+	    }
+	    if(nbreHeurSalJourn.getValue()==null){
+	    	nbreHeurSalJourn.setValue(new BigDecimal(100));  
+	    }
 	    
 		if (typePieceNode.getValue().toString().equals("NIN")) {
 			numIdentification = ninNumberNode.getValue().toString();
@@ -141,32 +159,14 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
 			numIdentification = passORconcNumberNode.getValue().toString();
 		}
 		
-		BigDecimal salaireMoyen=new BigDecimal(0); 
+		List<BigDecimal> listevalues=new ArrayList<>();
+		listevalues.add((BigDecimal)salaireDernierMois.getValue());
+		listevalues.add(nbreJoursTrav.getValue()); 
+		listevalues.add((BigDecimal)salaireJournalier.getValue()); 
+		listevalues.add(nbreHeurSalJourn.getValue());
+		listevalues.add(new BigDecimal(k));
+		listevalues.add(new BigDecimal(z));      
 		
-		BigDecimal montantApayer=new BigDecimal(0);
-		 
-		 if((salaireDernierMois!=null) && (nbreJoursTrav!=null)){
-			 salaireMoyen=salaireDernierMois.divide(nbreJoursTrav);  
-		 }
-		 else{
-			 salaireMoyen=salaireJournalier.multiply(nbreHeurSalJourn).divide(new BigDecimal(8));     
-		 }
-		  
-		 if(salaireMoyen.compareTo(new BigDecimal(getSalaireJournalierMoyen()))==1){ 
-			 salaireMoyen=new BigDecimal(getSalaireJournalierMoyen()); 
-		 }
-		 
-		 if(nbreJoursRepos.compareTo(new BigDecimal(getTwentyEightDays()))==-1 || nbreJoursRepos.compareTo(new BigDecimal(getTwentyEightDays()))==0){
-			montantApayer=salaireMoyen.divide(new BigDecimal(2)).multiply(nbreJoursRepos); 
-			
-		 }
-		 else{
-			 montantApayer=salaireMoyen.divide(new BigDecimal(2)).multiply(new BigDecimal(getTwentyEightDays())).add(salaireMoyen.divide(new BigDecimal(2/3)).multiply(nbreJoursRepos.subtract(new BigDecimal(getTwentyEightDays()))));
-			 
-			 
-		 }
-		 
-	    
 	    personId = getPersonByIdTypeAndIdNumber(typePieceNode.getValue().toString(), numIdentification);
 	    
 	    LOGGER.info("personId :: " + personId);
@@ -178,7 +178,7 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
 			LOGGER.info("accountId :: " + accountId);
 			System.out.println("accountId :: " + accountId);
 			if(!isBlankOrNull(accountId)) {
-				Currency currency = new Account_Id(accountId).getEntity().getCurrency();
+				Currency currency = new Account_Id(accountId).getEntity().getCurrency();  
 
 				LOGGER.info("currency :: " + currency.getId().getIdValue());
 				System.out.println("currency :: " + currency.getId().getIdValue());
@@ -190,31 +190,37 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
 
 				Asset_Id assetId = getAssetId();
 				String taxRoleId = findOrCreateTaxRole(accountId, this.getServiceType(), assetId);
-
-				Valuation_Id valuationDetailId = createValuation(assetId, endDate);
-
-							ValuationDetail_DTO valuationDetailDTO = createDTO(ValuationDetail.class);
-							valuationDetailDTO.setDetailValue(montantApayer);
-							valuationDetailDTO.setCurrencyId(new Currency_Id(currency.getId().getIdValue()));
-							String valuationDetailTypeValue = this.getValuationDetailType();
-							valuationDetailDTO.setValueDetailTypeId(new ValueDetailType_Id(valuationDetailTypeValue));
-							valuationDetailDTO.setId(new ValuationDetail_Id(valuationDetailId, BigInteger.valueOf(1)));
-							valuationDetailDTO.newEntity();
-							System.out.println("valuationDetailId:: " + valuationDetailDTO.getEntity().getId().toString());
-							LOGGER.info("valuationDetailId:: " + valuationDetailDTO.getEntity().getId().toString());
+				String[] valuationDetailTypeArray = this.getValuationDetailType().split(",");
+				Valuation_Id valuationId = createValuation(assetId, endDate);    
+				int sequence=1;
+				effectiveDate = getEffectiveDate("CM-POSTNATAL");
+				for(int i=0; i<valuationDetailTypeArray.length; i++){
+					ValuationDetail_DTO valuationDetailDTO = createDTO(ValuationDetail.class);
+					valuationDetailDTO.setDetailValue(listevalues.get(i)); 
+					valuationDetailDTO.setCurrencyId(new Currency_Id(currency.getId().getIdValue()));
+					//String valuationDetailTypeValue = this.getValuationDetailType();
+					valuationDetailDTO.setValueDetailTypeId(new ValueDetailType_Id(valuationDetailTypeArray[i]));
+					valuationDetailDTO.setId(new ValuationDetail_Id(valuationId, BigInteger.valueOf(sequence)));
+					valuationDetailDTO.newEntity();
+					System.out.println("valuationDetailId:: " + valuationDetailDTO.getEntity().getId().toString());
+					LOGGER.info("valuationDetailId:: " + valuationDetailDTO.getEntity().getId().toString());
+					LOGGER.info("sequence: " + sequence);
+					sequence++;  
+				}
+						
 							
 				String obligationId = findOrCreateObligation(taxRoleId);
-				TaxBill_Id tabBillId = generateBill(taxRoleId, obligationId);
+				TaxBill_Id tabBillId = generateBill(taxRoleId, obligationId); 
 				ProcessFlowCharacteristic_Id pp = new ProcessFlowCharacteristic_Id(new ProcessFlow_Id(processFlowId),
 						new CharacteristicType_Id("CM-BILID"), new BigInteger("1"));
 				processFlowCharacteristic_DTO.setId(pp);
-				processFlowCharacteristic_DTO.setAdhocCharacteristicValue(tabBillId.getIdValue());
+				processFlowCharacteristic_DTO.setCharacteristicValueForeignKey1(tabBillId.getIdValue()); 
 				processFlowCharacteristic_DTO.newEntity();
 			} else {
 				 LOGGER.info("Account is not found for the Person ID:: " + personId);
 			}
 
-		} else {
+		} else { 
 	    	 LOGGER.info("PersonId is not found for the NIN:: " + ninNumber);
 	    }
 	}
@@ -240,7 +246,37 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
 		}
 		return endDate;
 	}
-
+	private int min(int a, int b){
+		if(a<b)
+			return a;
+		else
+			return b;
+	}
+	
+	private int max(int a, int b){
+		if(a>b)
+			return a;
+		else
+			return b;
+	}
+	
+	private int diffDates(Date date1, Date date2){
+		 
+        Calendar c1=Calendar.getInstance();
+        c1.set(date1.getYear(),date1.getMonth(), date1.getDay() );
+        Calendar c2=Calendar.getInstance();
+        c2.set(date2.getYear(),date2.getMonth(), date2.getDay());
+ 
+        java.util.Date d1=c1.getTime();
+        java.util.Date d2=c2.getTime();
+ 
+        long diff=d2.getTime()-d1.getTime();
+        int noofdays=(int)(diff/(1000*24*60*60));
+        System.out.println(noofdays);
+        return noofdays;
+   
+}
+	
 	private String getSequence(String valuationType) {
 		String listeSequences = null;
 		QueryIterator<SQLResultRow> queryIterator = null;
@@ -261,7 +297,7 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
 		}
 		return listeSequences;
    }
-
+ 
 	/**
 	 * @param taxRoleId
 	 * @param obligationId
@@ -277,7 +313,7 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
 		String calcControlValue = this.getCalculationControlId();
 		
 		billDTO.setTaxBillTypeId(new TaxBillType_Id(billTypeValue));
-		billDTO.setCalculationControlVersionId(new CalculationControlVersion_Id(new CalculationControl_Id(calcControlValue), effectiveDatePre));
+		billDTO.setCalculationControlVersionId(new CalculationControlVersion_Id(new CalculationControl_Id(calcControlValue),effectiveDate));
 		billDTO.setFilingPeriodId(filingPeriod);
 		LOGGER.info("currentDate:: " + currentDate);
 		billDTO.setTaxBillStartDate(currentDate);// current date
@@ -294,7 +330,7 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
    	    
 		
    	 try {
-			BusinessObject businessObject = new BusinessObject_Id("CM-TaxBillAndPrint").getEntity();
+			BusinessObject businessObject = new BusinessObject_Id(this.getBillTypeBusObjCd()).getEntity(); //CM-TaxBillAndPrint
 			BusinessObjectInstance boi = BusinessObjectInstance.create(businessObject);		
 			boi.set("taxBillId", billDTO.getEntity().getId().getIdValue());//boStatus		
 			BusinessObjectInstance dispatchedBoi = BusinessObjectDispatcher.read(boi);
@@ -357,6 +393,7 @@ public class CmIncapaciteTemporaireBenefitsBillGenerationAlgo_Impl extends CmInc
 		
 		Valuation_DTO valuationDTO = createDTO(Valuation.class);
 		valuationDTO.setValuationTypeId(new ValuationType_Id(this.getValuationType()));
+		LOGGER.info("Valuation type: " + this.getValuationType());
 		valuationDTO.setAssetId(assetId);
 		valuationDTO.setValuationDate(endDate);
 		valuationDTO.setFilingPeriodId(filingPeriod);

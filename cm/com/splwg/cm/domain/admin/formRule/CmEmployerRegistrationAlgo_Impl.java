@@ -42,6 +42,8 @@ import com.splwg.base.domain.common.businessObject.BusinessObject;
 import com.splwg.base.domain.common.businessObject.BusinessObjectExitStatusAlgorithmSpot;
 import com.splwg.base.domain.todo.role.Role;
 import com.splwg.base.domain.todo.role.Role_Id;
+import com.splwg.base.support.context.Session;
+import com.splwg.base.support.context.SessionHolder;
 import com.splwg.cm.domain.common.constant.CmEmployerRegConstant;
 import com.splwg.cm.domain.common.constant.CmEmployerRegHelper;
 import com.splwg.cm.domain.customMessages.CmMessageRepository90000;
@@ -101,7 +103,7 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 	    System.out.println("processFlowId:: " + processFlowId);
 	    log.info("processFlowId:: " + processFlowId);
 		String nineaNumber = cots.getValue().toString();
-		//String nineaNumber = "";
+		//String nineaNumber = "156548572";
 		System.out.println("Ninea: " + nineaNumber);// 90909090990EMPLR.xlsx/99009099909099EMPLE.xlsx
 		log.info("Ninea: " + nineaNumber);
 		fileName = nineaNumber + "EMPLR" + ".csv";
@@ -196,13 +198,24 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		System.out.println("Before While:: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
 				"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
 		Set<String> headerConstants = getHeaderConstants();
+		try {
+			log.info(URLEncoder.encode(CmEmployerRegConstant.IMMATRICULATION_DATE, CmEmployerRegConstant.UTF));
+			log.info(URLEncoder.encode(CmEmployerRegConstant.ESTABLISHMENT_DATE, CmEmployerRegConstant.UTF));
+			log.info(URLEncoder.encode(CmEmployerRegConstant.PREMIER_EMP_DATE, CmEmployerRegConstant.UTF));
+			log.info(URLEncoder.encode(CmEmployerRegConstant.DATE_DE_DELIVRANCE, CmEmployerRegConstant.UTF));
+			log.info(URLEncoder.encode(CmEmployerRegConstant.DATE_IDENTIFICATION_FISCALE, CmEmployerRegConstant.UTF));
+		}catch(Exception exception) {
+			exception.printStackTrace();
+		}
+		
 		while (headerIterator.hasNext() && listIterator.hasNext()) {
 			String header = headerIterator.next();
 			actualHeader = header;
 			String value = listIterator.next();
-			log.info("CSV Value: " + value);
 			try {
 				headerName = URLEncoder.encode(header.trim(), CmEmployerRegConstant.UTF);
+			
+				log.info("CSV Header :"+ actualHeader +" Value: " + value +" Encoded HeaderName: "+headerName);
 				if (headerName != null && headerName.equalsIgnoreCase(
 						URLEncoder.encode(CmEmployerRegConstant.EMAIL_EMPLOYER, CmEmployerRegConstant.UTF))) {
 					checkValidationFlag = customHelper.validateEmail(value);
@@ -291,7 +304,7 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 					}
 
 				} else if (!isBlankOrNull(headerName) && headerName.equalsIgnoreCase(
-						URLEncoder.encode(CmEmployerRegConstant.IMMATRICULATION_DATE, CmEmployerRegConstant.UTF))) {
+						URLEncoder.encode(CmEmployerRegConstant.IMMATRICULATION_DATE.trim(), CmEmployerRegConstant.UTF))) {
 				
 					log.info("Inside IMMATRICULATION_DATE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
 							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
@@ -1273,28 +1286,26 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 	 * @param fileName
 	 */
 	private void createToDo(String messageParam, String nineaNumber, String messageNumber, String fileName) {
-		log.info("Creating to Do:: messageParam:: " + messageParam+"messageNumber:: "+ messageNumber + "processFlowId " + processFlowId);
+		log.info("Creating to Do:: messageParam:: " + messageParam+" messageNumber:: "+ messageNumber + " processFlowId " + processFlowId);
 		
-		startChanges();
-		
+		Session session = SessionHolder.getSession();
 		BusinessServiceInstance businessServiceInstance = BusinessServiceInstance.create("F1-AddToDoEntry");
-		Role_Id toDoRoleId = new Role_Id("CM-REGTODO");
+		Role_Id toDoRoleId = new Role_Id("CM-REGTODO");//CMRDNS
+		
 		Role toDoRole = toDoRoleId.getEntity();
-		businessServiceInstance.getFieldAndMDForPath("sendTo").setXMLValue("SNDR");
-		businessServiceInstance.getFieldAndMDForPath("subject").setXMLValue("Batch Update from PSRM");
-		businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-REGTO");
+		businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-REGTO");//CMDNS
 		businessServiceInstance.getFieldAndMDForPath("toDoRole").setXMLValue(toDoRole.getId().getTrimmedValue());
-		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue(processFlowId);
-		businessServiceInstance.getFieldAndMDForPath("messageCategory").setXMLValue("90007");
-		businessServiceInstance.getFieldAndMDForPath("messageNumber").setXMLValue(messageNumber);
+		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue(processFlowId);//963579919834
+		businessServiceInstance.getFieldAndMDForPath("messageCategory").setXMLValue("90007");//90000
+		businessServiceInstance.getFieldAndMDForPath("messageNumber").setXMLValue(messageNumber);//10002
 		businessServiceInstance.getFieldAndMDForPath("messageParm1").setXMLValue(messageParam);
 		businessServiceInstance.getFieldAndMDForPath("messageParm2").setXMLValue(nineaNumber);
-		businessServiceInstance.getFieldAndMDForPath("messageParm3").setXMLValue(fileName);
-		businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue(processFlowId);
-
+		businessServiceInstance.getFieldAndMDForPath("messageParm3").setXMLValue(fileName);//SONATEL
 		BusinessServiceDispatcher.execute(businessServiceInstance);
-		saveChanges();
-		// getSession().commit();
+		session.commit();
+		session.initialize();
+		log.info("To Do generated Successfully");
+		
 	}
 
 	@Override

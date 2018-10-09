@@ -37,7 +37,6 @@ public class CmServiceAgreementDao extends GenericBusinessObject {
 
 
     public List<ServiceAgreement> getSABySATypeByAccount( Account_Id pAccountId ) {
-        LOGGER.info( "+ getSABySATypeByAccount  => SA_TYPE | " + pAccountId );
 
         final List<ServiceAgreement> vServiceAgreements =new ArrayList<ServiceAgreement>();
         String vQuery = GET_SA_BY_SATYPEACCT;
@@ -45,7 +44,6 @@ public class CmServiceAgreementDao extends GenericBusinessObject {
         vQuery = vQuery.replaceAll( ":accountId", pAccountId.getEntity().getId().toString());
         
         final PreparedStatement vPreparedStatement = createPreparedStatement( vQuery );
-        ServiceAgreement vSA=null;
         
         try {
 	            for(SQLResultRow vRow:vPreparedStatement.list())
@@ -60,7 +58,6 @@ public class CmServiceAgreementDao extends GenericBusinessObject {
             vPreparedStatement.close();
         }
        
-        LOGGER.info( "- getSABySATypeByAccount => size : " + vServiceAgreements.size() );
         return vServiceAgreements;
     }
 }

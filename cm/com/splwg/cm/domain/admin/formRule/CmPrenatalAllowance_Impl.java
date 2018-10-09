@@ -71,13 +71,12 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 		perperDTO.setId(person);
 		PersonPerson perperReg = perperDTO.newEntity();
 	}
-	
-	private Person getPersonById(String personId) {
-		// log.info("*****Starting getpersonId");
-		CmPersonSearchComponent perSearch = new CmPersonSearchComponent.Factory().newInstance();
-		return perSearch.searchPerson(personId);
-	}
 
+	/**
+	 * @param IdType
+	 * @param idNumber
+	 * @return
+	 */
 	private Person getPersonByNin(String IdType, String idNumber) {
 		// log.info("*****Starting getpersonId");
 		CmPersonSearchComponent perSearch = new CmPersonSearchComponent.Factory().newInstance();
@@ -94,6 +93,18 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 
 		String query = "select * from CI_PER_PER where PER_ID1 = \'" + personId + "\' and PER_ID2 = \'" + personId2
 				+ "\'  and PER_REL_TYPE_CD = \'" + relationType + "\'";
+		PreparedStatement preparedStatement = createPreparedStatement(query);
+		QueryIterator<SQLResultRow> perResultIterator = preparedStatement.iterate();
+		return perResultIterator.hasNext();
+	}
+	
+	/**
+	 * @param spousePerId
+	 * @param emplPerId
+	 * @return
+	 */
+	private boolean verifySpouseRelationAnotherEmpl(String spousePerId){
+		String query = " select * from CI_PER_PER where PER_ID1 = \'" + spousePerId + "\' and PER_REL_TYPE_CD = 'SPOUSE'";
 		PreparedStatement preparedStatement = createPreparedStatement(query);
 		QueryIterator<SQLResultRow> perResultIterator = preparedStatement.iterate();
 		return perResultIterator.hasNext();
@@ -159,14 +170,18 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 	}
 	
 
+	/**
+	 * @param messageNumber
+	 * @param oldEmp
+	 * @param employe
+	 * @param newEmp
+	 * @param paramName
+	 */
 	private void createToDo(String messageNumber, String oldEmp, String employe, String newEmp, String paramName) {
 		startChanges();
 		BusinessServiceInstance businessServiceInstance = BusinessServiceInstance.create("F1-AddToDoEntry");
 		Role_Id toDoRoleId = new Role_Id("CM-DMTTODO");
 		Role toDoRole = toDoRoleId.getEntity();
-		// businessServiceInstance.getFieldAndMDForPath("sendTo").setXMLValue("SNDR");
-		// businessServiceInstance.getFieldAndMDForPath("subject").setXMLValue("Batch
-		// Update from PSRM");
 		businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-DMTTO");
 		businessServiceInstance.getFieldAndMDForPath("toDoRole").setXMLValue(toDoRole.getId().getTrimmedValue());
 		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue(paramName);
@@ -182,6 +197,13 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 		// getSession().commit();
 	}
 	
+	/**
+	 * @param conjointIterator
+	 * @param personType
+	 * @param addressType
+	 * @param spouseNinChildIdMap
+	 * @param enfantPersonBirthDateIdMap
+	 */
 	private void createAccntPersonForSpouse(Iterator<COTSInstanceListNode> conjointIterator,PersonType personType,ExtendedLookupValue addressType,
 			Map<String,List<String>> spouseNinChildIdMap,Map<String,Date> enfantPersonBirthDateIdMap){
 		
@@ -276,6 +298,19 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 						addressConjointCharInstance.set("adhocCharVal",dateDeNaissanceDuMarieStr);
 						addressConjointCharInstance.set("effectiveDate",getSystemDateTime().getDate());
 					}
+					if(!isNull(dateDeFinDuMariage)){
+						addressConjointCharInstance = personConjointBoInstance.getList("personChar").newChild();
+						String dateDeFinDuMariageStr = dateDeFinDuMariage.toString();
+						addressConjointCharInstance.set("charTypeCD","ENDMDAT");
+						addressConjointCharInstance.set("adhocCharVal",dateDeFinDuMariageStr);
+						addressConjointCharInstance.set("effectiveDate",getSystemDateTime().getDate());
+					}
+					if(!isNull(leRang)){
+						addressConjointCharInstance = personConjointBoInstance.getList("personChar").newChild();
+						addressConjointCharInstance.set("charTypeCD","CM-RANG");
+						addressConjointCharInstance.set("adhocCharVal",leRang);
+						addressConjointCharInstance.set("effectiveDate",getSystemDateTime().getDate());
+					}
 					if(!isNullOrEmpty(prenomDuPereDuConjoint)){
 						addressConjointCharInstance = personConjointBoInstance.getList("personChar").newChild();
 						addressConjointCharInstance.set("charTypeCD","PRE_PERE");
@@ -360,7 +395,7 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 								}
 							}
 						}
-							// relationship between Employee and spouse
+						// Relationship between Employee and Spouse
 						if(!verifyRelationship(employeePersonId,conjointPersonId,"SPOUSE")){
 							createRelationSpouse_Child(employeePersonId, conjointPersonId, dateDeDebutDuMariage ,"SPOUSE");
 						}
@@ -368,7 +403,7 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 							createRelationSpouse_Child(conjointPersonId, employeePersonId, dateDeDebutDuMariage ,"SPOUSE");
 						}
 					} else {
-						// Creating relation only for spouse and employee
+						// Creating relation only for Spouse and Employee
 						logger.info("Creating relation link only for spouse and child..");
 						if(!verifyRelationship(employeePersonId,conjointPersonId,"SPOUSE")){
 							createRelationSpouse_Child(employeePersonId, conjointPersonId, dateDeDebutDuMariage ,"SPOUSE");
@@ -377,149 +412,15 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 							createRelationSpouse_Child(conjointPersonId, employeePersonId, dateDeDebutDuMariage ,"SPOUSE");
 						}
 					}
-				} else {/*
-					logger.info("####Spouse Update Details####");
-					//Create Conjoint address
-					addresConjointBoInstance = BusinessObjectInstance.create("CM-PrenatalAddressCharBO");
-					logger.info("Creating addresBoInstance create:Update " + addresConjointBoInstance.getDocument().asXML());
-					addresConjointBoInstance.set("address1", conjointAdresse);
-					//addresConjointBoInstance.set("status", "C1AC");
-					addresConjointBoInstance.set("bo", addresConjointBoInstance.getBusinessObject());
-					String addressIdUpdate = getAddresIDFrmPersonId(spousePersonId);
-					if(isNullOrEmpty(addressIdUpdate)){
-						addError(CmMessageRepository1001.MSG_103());
+				} else {
+					// validation messages for spouse existence.
+					if(verifyRelationship(employeePersonId,spousePersonId,"SPOUSE")){
+						addError(CmMessageRepository1001.MSG_105(ninDuConjointStr,employeeNin));
+					} 
+					if(verifySpouseRelationAnotherEmpl(spousePersonId)){
+						addError(CmMessageRepository1001.MSG_106(ninDuConjointStr));
 					}
-					addresConjointBoInstance.set("addressId", addressIdUpdate);
-					addresConjointBoInstance = BusinessObjectDispatcher.update(addresConjointBoInstance);
-					logger.info("conjointAdresseId: Update" + addresConjointBoInstance.getString("addressId"));
-					//create Conjoint person Bo Instance
-					personConjointBoInstance =  BusinessObjectInstance.create("CM-PersonIndividualChar");
-					personConjointBoInstance.set("personType", personType);
-					//personConjointBoInstance.set("language", "ENG");
-					//Conjoint Person Name
-					personConjointNameInstance = personConjointBoInstance.getList("personName").newChild();
-					personConjointNameInstance.set("nameType", NameTypeLookup.constants.PRIMARY);
-					personConjointNameInstance.set("firstName", prenomDuConjoint);
-					personConjointNameInstance.set("lastName", nomDuConjoint);
-					personConjointNameInstance.set("isPrimaryName", Bool.TRUE);
-					//personConjoint
-					personConjointAddressInstance =  personConjointBoInstance.getList("personAddress").newChild();
-					personConjointAddressInstance.set("addressId",addresConjointBoInstance.getString("addressId"));
-					personConjointAddressInstance.set("addressType",addressType.getId());
-					personConjointAddressInstance.set("startDate",getSystemDateTime().getDate());
-					//Person Id conjoint
-					personConjointIdInstance =   personConjointBoInstance.getList("personIds").newChild();
-					personConjointIdInstance.set("idType","NIN");
-					personConjointIdInstance.set("personIdNumber",ninDuConjointStr);
-					personConjointIdInstance.set("isPrimaryId",Bool.TRUE);
-					//person Char
-					if(!isNull(dateDeNaissanceDuMarie)){
-						addressConjointCharInstance = personConjointBoInstance.getList("personChar").newChild();
-						String dateDeNaissanceDuMarieStr = dateDeNaissanceDuMarie.toString();
-						addressConjointCharInstance.set("charTypeCD","CM-DOB");
-						addressConjointCharInstance.set("adhocCharVal",dateDeNaissanceDuMarieStr);
-						addressConjointCharInstance.set("effectiveDate",getSystemDateTime().getDate());
-					}
-					if(!isNullOrEmpty(prenomDuPereDuConjoint)){
-						addressConjointCharInstance = personConjointBoInstance.getList("personChar").newChild();
-						addressConjointCharInstance.set("charTypeCD","PRE_PERE");
-						addressConjointCharInstance.set("adhocCharVal",prenomDuPereDuConjoint);
-						addressConjointCharInstance.set("effectiveDate",getSystemDateTime().getDate());
-					}
-					if(!isNullOrEmpty(nomDuPereDuConjoint)){
-						addressConjointCharInstance = personConjointBoInstance.getList("personChar").newChild();
-						addressConjointCharInstance.set("charTypeCD","NOM_PERE");
-						addressConjointCharInstance.set("adhocCharVal",nomDuPereDuConjoint);
-						addressConjointCharInstance.set("effectiveDate",getSystemDateTime().getDate());
-					}
-					if(!isNullOrEmpty(prenomDeLaMereDuConjoint)){
-						addressConjointCharInstance = personConjointBoInstance.getList("personChar").newChild();
-						addressConjointCharInstance.set("charTypeCD","PRE_MERE");
-						addressConjointCharInstance.set("adhocCharVal",prenomDeLaMereDuConjoint);
-						addressConjointCharInstance.set("effectiveDate",getSystemDateTime().getDate());
-					}
-					if(!isNullOrEmpty(nomDeLaMereDuConjoint)){
-						addressConjointCharInstance = personConjointBoInstance.getList("personChar").newChild();
-						addressConjointCharInstance.set("charTypeCD","NOM_MERE");
-						addressConjointCharInstance.set("adhocCharVal",nomDeLaMereDuConjoint);
-						addressConjointCharInstance.set("effectiveDate",getSystemDateTime().getDate());
-					}
-					if(!isNull(delivreLe)){
-						addressConjointCharInstance = personConjointBoInstance.getList("personChar").newChild();
-						String delivreLeStr = delivreLe.toString();
-						addressConjointCharInstance.set("charTypeCD","CM-ISSDT");
-						addressConjointCharInstance.set("adhocCharVal",delivreLeStr);
-						addressConjointCharInstance.set("effectiveDate",getSystemDateTime().getDate());
-					}
-					personConjointBoInstance.set("personId", spousePersonId);
-					personConjointBoInstance = BusinessObjectDispatcher.update(personConjointBoInstance);
-					logger.info("Spouse Person Id created: Update"+personConjointBoInstance.getString("personId"));
-					
-					//Account Creation for Spouse
-					accountConjointBoInstance = BusinessObjectInstance.create("CM-PreBenifitsAccount");
-					accountConjointBoInstance.set("setupDate", getSystemDateTime().getDate());
-					accountConjointBoInstance.set("currency", "XOF");
-					accountConjointBoInstance.set("accountType", "ATM/PF/V");
-					
-					accountConjointIdInstance = accountConjointBoInstance.getList("accountPersonList").newChild();
-					accountConjointIdInstance.set("person", personConjointBoInstance.getString("personId"));
-					accountConjointIdInstance.set("accountRelationship", "SPOUSE");
-					accountConjointIdInstance.set("mainCustomer", Bool.TRUE);
-					accountConjointIdInstance.set("isFinanciallyResponsible", Bool.TRUE);
-					
-					accountConjointBoInstance = BusinessObjectDispatcher.update(accountConjointBoInstance);
-					logger.info("Spouse Account Id created:Update"+accountConjointBoInstance.getString("accountId"));
-					
-					//spouseDateMarriageMap.put(ninDuConjointStr, dateDeDebutDuMariage);
-					
-					// linking Spouse and Child
-					if(!spouseNinChildIdMap.isEmpty() && !enfantPersonBirthDateIdMap.isEmpty()){
-						String conjointPersonId = personConjointBoInstance.getString("personId");
-						logger.info("Inside link spouse and child ninDuConjointStr::Update"+ninDuConjointStr);
-						logger.info("Inside link spouse and child spouseNinChildIdMap::Update"+spouseNinChildIdMap);
-						logger.info("Inside link spouse and child enfantPersonBirthDateIdMap::Update"+enfantPersonBirthDateIdMap);
-						//logger.info("Inside link spouse and child spouseDateMarriageMap::Update"+spouseDateMarriageMap);
-						
-						List<String> childPerIdList = spouseNinChildIdMap.get(ninDuConjointStr);
-						logger.info("childPerIdList::Update"+childPerIdList);
-						if(!isNull(childPerIdList)){
-							for(String childPerId : childPerIdList){
-								
-								Date birthDate = enfantPersonBirthDateIdMap.get(childPerId);
-								//Date dateOfMarriage = spouseDateMarriageMap.get(ninDuConjointStr);
-								logger.info("dateOfMarriage:Update"+dateDeDebutDuMariage);
-								logger.info("conjointPersonId::Update"+conjointPersonId);
-								logger.info("childPerId::Update"+childPerId);
-								logger.info("birthDate::Update"+birthDate);
-								if(!verifyRelationship(employeePersonId,conjointPersonId,"SPOUSE")){
-									createRelationSpouse_Child(employeePersonId, conjointPersonId, dateDeDebutDuMariage ,"SPOUSE");
-								}
-								if(!verifyRelationship(conjointPersonId,employeePersonId,"SPOUSE")){
-									createRelationSpouse_Child(conjointPersonId, employeePersonId, dateDeDebutDuMariage ,"SPOUSE");
-								}
-								if(!verifyRelationship(conjointPersonId,childPerId,"PAR-ENF")){
-									createRelationSpouse_Child(conjointPersonId, childPerId, birthDate ,"PAR-ENF");
-								}
-								if(!verifyRelationship(employeePersonId,childPerId,"PAR-ENF")){
-									createRelationSpouse_Child(employeePersonId, childPerId, birthDate ,"PAR-ENF");
-								}
-								if(!verifyRelationship(childPerId,conjointPersonId,"ENF-PAR")){
-									createRelationSpouse_Child(childPerId, conjointPersonId, birthDate ,"ENF-PAR");
-								}
-								if(!verifyRelationship(childPerId,employeePersonId,"ENF-PAR")){
-									createRelationSpouse_Child(childPerId,employeePersonId, birthDate ,"ENF-PAR");
-								}
-							}
-						}
-							// relationship between Employee and spouse
-						if(!verifyRelationship(employeePersonId,conjointPersonId,"SPOUSE")){
-							createRelationSpouse_Child(employeePersonId, conjointPersonId, dateDeDebutDuMariage ,"SPOUSE");
-						}
-						if(!verifyRelationship(conjointPersonId,employeePersonId,"SPOUSE")){
-							createRelationSpouse_Child(conjointPersonId, employeePersonId, dateDeDebutDuMariage ,"SPOUSE");
-						}
-					}
-				*/}
+				}
 			}
 		}
 	}
@@ -587,7 +488,7 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 						if (nextElt != null) {
 							String filiationChild = (String) nextElt.getFieldAndMDForPath("filiation/asCurrent").getValue();
 							logger.info("filiationChild: " + filiationChild);
-							BigDecimal ninConjointChild = (BigDecimal) nextElt.getFieldAndMDForPath("ninDuConjoint/asCurrent").getValue();
+							BigDecimal ninConjointChild = (BigDecimal) nextElt.getFieldAndMDForPath("ninDuConjointEnfant/asCurrent").getValue();
 							logger.info("ninConjointChild: " + ninConjointChild);
 							String ninConjointStr = ninConjointChild.toString();
 							BigDecimal ninDeEnfant = (BigDecimal) nextElt.getFieldAndMDForPath("ninDeEnfant/asCurrent").getValue();
@@ -704,7 +605,6 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 									if(!verifyRelationship(personChildBoInstance.getString("personId"),employeePersonId,"ENF-PAR")){
 										createRelationSpouse_Child(personChildBoInstance.getString("personId"),employeePersonId, dateDeNaissance ,"ENF-PAR");
 									}
-									
 								} else {
 									while(iteratorConjoint.hasNext()){
 										logger.info("inside conjoint iterator: ");
@@ -766,7 +666,7 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 										personCharInstance.set("adhocCharVal", dateNaissance);
 										personCharInstance.set("effectiveDate", getSystemDateTime().getDate());
 									}
-									//Add Child Bo Instance
+									//Add Child BO Instance
 									personChildBoInstance = BusinessObjectDispatcher.add(personChildBoInstance);
 									logger.info("Child person Created: " + personChildBoInstance.getString("personId"));
 									
@@ -796,96 +696,10 @@ public class CmPrenatalAllowance_Impl extends CmPrenatalAllowance_Gen implements
 									}
 									enfantPersonBirthDateIdMap.put(personChildBoInstance.getString("personId"), dateDeNaissance);
 								}
-							} else {/*// Update Code
-								logger.info("###########Update the Child Details##############");
+							} else {
+								// If Child already exists. Validation needs to be added here
 								
-								String childPerId = isNull(getPersonByNin("NIN", ninDeEnfantStr)) ? null : getPersonByNin("NIN", ninDeEnfantStr).getId().getIdValue();
-								addresChildBoInstance = BusinessObjectInstance.create("CM-PrenatalAddressCharBO");
-								COTSInstanceNode groupConjoint = formBoInstance.getGroupFromPath("identiteDuConjoint");
-								Iterator<COTSInstanceListNode> iteratorConjoint = groupConjoint.getList("identiteDuConjointList").iterator();
-								logger.info("Creating addresBoInstance create in Update : " + addresChildBoInstance.getDocument().asXML());
-								boolean checkConjointFlag = false;
-								while(iteratorConjoint.hasNext()){
-									logger.info("inside conjoint iterator: Update ");
-									COTSInstanceListNode nextConjointElt = iteratorConjoint.next();
-									if (nextConjointElt != null) {
-										BigDecimal ninDuConjoint = (BigDecimal) nextConjointElt.getFieldAndMDForPath("ninDuConjoint/asCurrent").getValue();
-										logger.info("ninDuConjoint:UPdate " + ninDuConjoint);
-										String ninDuConjointStr = ninDuConjoint.toString();
-										
-										if(ninConjointStr.equalsIgnoreCase(ninDuConjointStr)){
-											checkConjointFlag = true;
-											String adresse = (String) nextConjointElt.getFieldAndMDForPath("adresse/asCurrent").getValue();
-											addresChildBoInstance.set("address1", adresse);
-										}
-									}
 								}
-								logger.info("checkConjointFlag:Update " + checkConjointFlag);
-								if(!checkConjointFlag){
-									addError(CmMessageRepository1001.MSG_101());
-								}
-								if(!isNullOrEmpty(villeDeNaissance)){
-									addressChildCharInstance = addresChildBoInstance.getList("addressChar").newChild();
-									addressChildCharInstance.set("charTypeCD", "VILENAIS");
-									addressChildCharInstance.set("adhocCharVal", villeDeNaissance);
-									addressChildCharInstance.set("searchCharVal", villeDeNaissance);
-								}
-							 
-								addresChildBoInstance.set("bo", addresChildBoInstance.getBusinessObject());
-								//addresChildBoInstance.set("status","C1AC");
-								String addressIdUpdate = getAddresIDFrmPersonId(childPerId);
-								if(isNullOrEmpty(addressIdUpdate)){
-									addError(CmMessageRepository1001.MSG_103());
-								}
-								addresChildBoInstance.set("addressId", addressIdUpdate);
-								addresChildBoInstance = BusinessObjectDispatcher.update(addresChildBoInstance);
-								
-								logger.info("addresChildBoInstance::addressId:: Update " +  addresChildBoInstance.getString("addressId"));
-								//create person Bo Instance
-								personChildBoInstance =  BusinessObjectInstance.create("CM-PersonIndividualChar");
-								personChildBoInstance.set("personType",personType);
-								//personChildBoInstance.set("language","ENG");
-							
-								//Person Name
-								personChildNameInstance = personChildBoInstance.getList("personName").newChild();
-								personChildNameInstance.set("nameType", NameTypeLookup.constants.PRIMARY);
-								personChildNameInstance.set("firstName", prenomEnfant);
-								personChildNameInstance.set("isPrimaryName", Bool.TRUE);
-								//Person Address
-								personChildAddressInstance = personChildBoInstance.getList("personAddress").newChild();
-								personChildAddressInstance.set("addressId", addresChildBoInstance.getString("addressId"));
-								personChildAddressInstance.set("addressType", addressType.getId());
-								personChildAddressInstance.set("startDate", getSystemDateTime().getDate());
-								personChildAddressInstance.set("deliverable", DeliverableLookup.constants.YES);
-								//person Id
-								personChildIdInstance = personChildBoInstance.getList("personIds").newChild();
-								personChildIdInstance.set("idType", "NIN");
-								personChildIdInstance.set("personIdNumber", ninDeEnfantStr);
-								personChildIdInstance.set("isPrimaryId", Bool.TRUE);
-
-								if(!isNull(dateDeNaissance)){
-									COTSInstanceListNode personCharInstance = personChildBoInstance.getList("personChar").newChild();
-									String dateNaissance = dateDeNaissance.toString();
-									personCharInstance.set("charTypeCD", "CM-DOB");
-									personCharInstance.set("adhocCharVal", dateNaissance);
-									personCharInstance.set("effectiveDate", getSystemDateTime().getDate());
-								}
-								//Add Child Bo Instance
-								personChildBoInstance.set("personId", childPerId);
-								personChildBoInstance = BusinessObjectDispatcher.update(personChildBoInstance);
-								logger.info("Child person Created:Update " + personChildBoInstance.getString("personId"));
-								
-								if(spouseNinChildIdMap.containsKey(ninConjointStr)){
-									childPersonList = spouseNinChildIdMap.get(ninConjointStr);
-									childPersonList.add(personChildBoInstance.getString("personId"));
-									spouseNinChildIdMap.put(ninConjointStr, childPersonList);
-								} else {
-									childPersonList = new ArrayList<String>();
-									childPersonList.add(personChildBoInstance.getString("personId"));
-									spouseNinChildIdMap.put(ninConjointStr, childPersonList);
-								}
-								enfantPersonBirthDateIdMap.put(personChildBoInstance.getString("personId"), dateDeNaissance);
-							*/}
 						}
 					}
 					//create Account and Person for spouse Details 

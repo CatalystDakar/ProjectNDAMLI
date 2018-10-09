@@ -21,6 +21,7 @@ import com.splwg.shared.common.ServerMessage;
  * Any change performed manually to this class will be
  * overridden by the execution of the batch job CMMSGGEN.
 */
+
 public class CmMessageRepository90002 extends AbstractMessageRepository {
 
     /**
@@ -260,15 +261,193 @@ public class CmMessageRepository90002 extends AbstractMessageRepository {
         MessageParameters params = new MessageParameters();
         return getCommonInstance().getMessage(Messages.MSG_300, params);
     }
-
+    
     /**
-    * Message Text: "test  message hilda"
-    * @return ServerMessage
-    */
-    public static ServerMessage MSG_88888() {
+     * Message Text: "test  message hilda"
+     * @return ServerMessage
+     */
+     public static ServerMessage MSG_88888() {
+         MessageParameters params = new MessageParameters();
+         return getCommonInstance().getMessage(Messages.MSG_88888, params);
+     }
+    
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_301() {
         MessageParameters params = new MessageParameters();
-        return getCommonInstance().getMessage(Messages.MSG_88888, params);
+        return getCommonInstance().getMessage(Messages.MSG_301, params);
     }
+    
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_401() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_401, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_402() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_402, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_403() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_403, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_404() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_404, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_405() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_405, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_406() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_406, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_407() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_407, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_408() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_408, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_409() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_409, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_410() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_410, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_411() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_411, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_412() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_412, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_413() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_413, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_414() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_414, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_415() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_415, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_416() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_416, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_417() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_417, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_418() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_418, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_419() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_419, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_420() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_420, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_421() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_421, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_422() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_422, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_423() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_423, params);
+    }
+    /**
+     * @return
+     */
+    public static ServerMessage MSG_424() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_424, params);
+    }
+    
 
     /*
   	 * Author : ADA
@@ -290,6 +469,36 @@ public class CmMessageRepository90002 extends AbstractMessageRepository {
           parms.addField(pMessage);
           return getCommonInstance().getMessage(Messages.PLUSIEURS_CONTROL_LOT_REGLEMENT, parms);
       }
+  	
+  	/**
+     * Message Text: "Le type de compte n’est pas adapté à un paiement non identifié "
+     * Author : DEEPAK
+     * @return ServerMessage
+     */
+     public static ServerMessage MSG_117() {
+         MessageParameters params = new MessageParameters();
+         return getCommonInstance().getMessage(Messages.MSG_117, params);
+     }
+     
+     /**
+      * Message Text: "Les statuts de la tax_bill et/ou de l’obligation ne sont pas au bon statut"
+      * Author : DEEPAK
+      * @return ServerMessage
+      */
+      public static ServerMessage MSG_350() {
+          MessageParameters params = new MessageParameters();
+          return getCommonInstance().getMessage(Messages.MSG_350, params);
+      }
+      
+      /**
+       * Message Text: "Le montant est positif. Cela signifie que vous êtes en train d’encaisser l’assuré(e). Pour payer l’assuré(e), merci de saisir un montant négatif. Etes-vous sur de poursuivre?"
+       * Author : DEEPAK
+       * @return ServerMessage
+       */
+       public static ServerMessage MSG_351() {
+           MessageParameters params = new MessageParameters();
+           return getCommonInstance().getMessage(Messages.MSG_351, params);
+       }
   	/*
   	 * Author : ADA
   	 * Algorithme de création de remise en banque
@@ -388,10 +597,50 @@ public class CmMessageRepository90002 extends AbstractMessageRepository {
          */
          public static final int MSG_300 = 300;
          
+         /**
+          * Message Text: "Le type de compte n’est pas adapté à un paiement non identifié"
+          */
+          public static final int MSG_117 = 117;
+          
+          /**
+           * Message Text: "Le type de compte n’est pas adapté à un paiement non identifié"
+           */
+           public static final int MSG_350 = 350;
+           
+           /**
+            * Message Text: "Le type de compte n’est pas adapté à un paiement non identifié"
+            */
+            public static final int MSG_351 = 351;
+         
         /**
         * Message Text: "test  message hilda"
         */
         public static final int MSG_88888 = 88888;
+        public static final int MSG_301 = 301;
+        public static final int MSG_401 = 401;
+        public static final int MSG_402 = 402;
+        public static final int MSG_403 = 403;
+        public static final int MSG_404 = 404;
+        public static final int MSG_405 = 405;
+        public static final int MSG_406 = 406;
+        public static final int MSG_407 = 407;
+        public static final int MSG_408 = 408;
+        public static final int MSG_409 = 409;
+        public static final int MSG_410 = 410;
+        public static final int MSG_411 = 411;
+        public static final int MSG_412 = 412;
+        public static final int MSG_413 = 413;
+        public static final int MSG_414 = 414;
+        public static final int MSG_415 = 415;
+        public static final int MSG_416 = 416;
+        public static final int MSG_417 = 417;
+        public static final int MSG_418 = 418;
+        public static final int MSG_419 = 419;
+        public static final int MSG_420 = 420;
+        public static final int MSG_421 = 421;
+        public static final int MSG_422 = 422;
+        public static final int MSG_423 = 423;
+        public static final int MSG_424 = 424;
         
         /*
       	 * Author : ADA

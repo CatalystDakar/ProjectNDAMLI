@@ -10,6 +10,7 @@
  ****************************************************************/
 package com.splwg.cm.domain.customMessages;
 
+import com.splwg.base.api.datatypes.Date;
 import com.splwg.base.domain.common.message.AbstractMessageRepository;
 import com.splwg.base.domain.common.message.MessageParameters;
 import com.splwg.cm.domain.customMessages.CmMessageRepository90003.Messages;
@@ -951,6 +952,224 @@ public class CmMessageRepository90000 extends AbstractMessageRepository {
         params.addRawString(paramValue);
         return getCommonInstance().getMessage(Messages.MSG_6006, params);
     }
+    
+    public static ServerMessage MSG_7000() {
+        return getCommonInstance().getMessage(Messages.MSG_7000);
+    }
+    
+    public static ServerMessage MSG_7001() {
+        return getCommonInstance().getMessage(Messages.MSG_7001);
+    }
+    
+    public static ServerMessage MSG_7002(String idType, String idNumber) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(idNumber);
+        params.addRawString(idType);
+        return getCommonInstance().getMessage(Messages.MSG_7002, params);
+    }
+    
+    
+    public static ServerMessage MSG_7003(String idNumber) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(idNumber);
+       // params.addRawString(idType);
+        return getCommonInstance().getMessage(Messages.MSG_7003, params);
+    }
+    
+    public static ServerMessage MSG_7004() {
+        MessageParameters params = new MessageParameters();
+        //params.addRawString(typeDeclaration);
+       // params.addRawString(idType);
+        return getCommonInstance().getMessage(Messages.MSG_7004, params);
+    }
+    
+    public static ServerMessage MSG_7005() {
+        MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_7005, params);
+    }
+  
+    public static ServerMessage MSG_7006() {
+        //MessageParameters params = new MessageParameters();
+        return getCommonInstance().getMessage(Messages.MSG_7006);
+    }
+    
+    public static ServerMessage MSG_7007(Date dateDebutCotisation) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(dateDebutCotisation.toString());
+        return getCommonInstance().getMessage(Messages.MSG_7007, params);
+    }
+    
+    public static ServerMessage MSG_7008(Date dateFinCotisation) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(dateFinCotisation.toString());
+        return getCommonInstance().getMessage(Messages.MSG_7008, params);
+    }
+    
+    public static ServerMessage MSG_7009(Date dateDebutCotisation, Date dateFinCotisation) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(dateDebutCotisation.toString());
+        params.addRawString(dateFinCotisation.toString());
+        return getCommonInstance().getMessage(Messages.MSG_7009, params);
+    }
+    
+    public static ServerMessage MSG_7010(Date dateDebutCotisation, Date dateFinCotisation) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(dateDebutCotisation.toString());
+        params.addRawString(dateFinCotisation.toString());
+        return getCommonInstance().getMessage(Messages.MSG_7010, params);
+    }
+    
+    public static ServerMessage MSG_7011(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        //params.addRawString(prenom);
+        //params.addRawString(nom);
+        return getCommonInstance().getMessage(Messages.MSG_7011, params);
+    }
+    
+    public static ServerMessage MSG_7012(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7012, params);
+    }
+    
+    public static ServerMessage MSG_7013(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7013, params);
+    }
+    
+    public static ServerMessage MSG_7014(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7014, params);
+    }
+    
+    public static ServerMessage MSG_7016(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7016, params);
+    }
+    public static ServerMessage MSG_7017(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7017, params);
+    }
+    public static ServerMessage MSG_7018(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7018, params);
+    }
+    public static ServerMessage MSG_7019(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7019, params);
+    }
+    public static ServerMessage MSG_7020(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7020, params);
+    }
+    public static ServerMessage MSG_7021(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7021, params);
+    }
+    public static ServerMessage MSG_7022(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7022, params);
+    }
+    public static ServerMessage MSG_7023(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7023, params);
+    }
+    
+    public static ServerMessage MSG_7024(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7024, params);
+    }
+    public static ServerMessage MSG_7025(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7025, params);
+    }
+    public static ServerMessage MSG_7026(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7026, params);
+    }
+    public static ServerMessage MSG_7027(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7027, params);
+    }
+    
+    public static ServerMessage MSG_7028() {
+        MessageParameters params = new MessageParameters();
+        //params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7028, params);
+    }
+  
+    public static ServerMessage MSG_7029(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7029, params);
+    }
+    public static ServerMessage MSG_7030(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7030, params);
+    }
+    public static ServerMessage MSG_7031(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7031, params);
+    }
+    public static ServerMessage MSG_7032(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7032, params);
+    }
+  
+    public static ServerMessage MSG_7033() {
+        MessageParameters params = new MessageParameters();
+        //params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7033, params);
+    }
+    
+    public static ServerMessage MSG_7034(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7034, params);
+    }
+    
+    public static ServerMessage MSG_7035(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7035, params);
+    }
+    
+    public static ServerMessage MSG_7036(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7036, params);
+    }
+    
+    public static ServerMessage MSG_7037(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7037, params);
+    }
+    
+    public static ServerMessage MSG_7038(String identifiant) {
+        MessageParameters params = new MessageParameters();
+        params.addRawString(identifiant);
+        return getCommonInstance().getMessage(Messages.MSG_7038, params);
+    }
+
 
     public static class Messages {
 		public static final int MSG_6000 = 6000;
@@ -960,6 +1179,202 @@ public class CmMessageRepository90000 extends AbstractMessageRepository {
         public static final int MSG_6004 = 6004;
         public static final int MSG_6005 = 6005;
         public static final int MSG_6006 = 6006;
+        
+        /**
+    	 * Message texty : Le type d'identifiant ne doit pas etre vide
+    	 */
+    	public static final int MSG_7000 = 7000;
+    	/**
+    	 * Message Text : le numero d'identifiant ne doit pas etre vide 
+    	 */
+    	public static final int MSG_7001 = 7001;
+    	/**
+    	 * Plusieurs person utilisent l'identifiant %1 de type %2
+    	 */
+    	public static final int MSG_7002 = 7002;
+    	
+    	/**
+    	 * L'employeur d'identifiant %1 de type %2 n'existe pas
+    	 */
+    	public static final int MSG_7003 = 7003;
+    	
+    	/**
+    	 * Le type de déclaration ne doit pas etre vide
+    	 */
+    	public static final int MSG_7004 = 7004;
+    	
+    	/**
+    	 * Le date de début de déclaration ne doit pas etre vide
+    	 */
+    	public static final int MSG_7005 = 7005;
+    	
+    	/**
+    	 * La date de fin de cotisation ne doit pas etre vide
+    	 */
+    	public static final int MSG_7006 = 7006;
+    	
+    	/**
+    	 * La date de début cotisation %1 ne correspond pas au premier du mois.
+    	 */
+    	public static final int MSG_7007 = 7007;
+    	
+    	/**
+    	 * La date de fin %1 doit correspondre à la fin du mois
+    	 */
+    	public static final int MSG_7008 = 7008;
+    	
+    	/**
+    	 * Les dates de début %1 et de fin %2 doivent etre dans le meme mois.
+    	 */
+    	public static final int MSG_7009 = 7009;
+    	
+    	/**
+    	 * La période du %1 au %2 n'est pas trimestrielle
+    	 */
+    	public static final int MSG_7010 = 7010;
+    	
+    	/**
+    	 * Le format de l'identifiant %1 est incorrect
+    	 */
+    	public static final int MSG_7011 = 7011;
+    	
+    	/**
+    	 * La date effective du régime cadre du mois 1 est obligatoire pour l'employé d'identifiant %1
+    	 */
+    	public static final int MSG_7012 = 7012;
+    	
+    	/**
+    	 * La date d'effect du régime cadre du mois 2 est obligatoire pour l'employé d'identifiant %1
+    	 */
+    	public static final int MSG_7013 = 7013;
+    	
+    	/**
+    	 * La date d'effect du régime cadre du mois 3 est obligatoire pour l'employé d'identifiant %1
+    	 */
+    	public static final int MSG_7014 = 7014;
+    	
+    	/**
+    	 * Total salaire assujettis PF mois 1 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7016 = 7016;
+    	
+    	/**
+    	 * Total salaire assujettis AT/MP mois 1 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7017 = 7017;
+    	
+    	/**
+    	 * Total salaire assujettis regime général mois 1 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7018 = 7018;
+    	
+    	/**
+    	 * Total salaire assujettis régime cadre mois 1 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7019 = 7019;
+    	
+    	/**
+    	 * Total salaire assujettis PF mois 2 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7020 = 7020;
+    	
+    	/**
+    	 * Total salaire assujettis AT/MP mois 2 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7021 = 7021;
+    	
+    	/**
+    	 * Total salaire assujettis régime général du mois 2 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7022 = 7022;
+    	
+     	/**
+    	 * Total salaire assujettis régime cadre mois 2 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7023 = 7023;
+    	
+    	
+    	
+    	/**
+    	 * Total salaire assujettis PF mois 3 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7024 = 7024;
+    	
+    	/**
+    	 * Total salaire assujettis AT/MP mois 3 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7025 = 7025;
+    	
+    	/**
+    	 * Total salaire assujettis régime général mois 3 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7026 = 7026;
+    	
+     	/**
+    	 * Total salaire assujettis régime cadre mois 3 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7027 = 7027;
+    	
+    	/**
+    	 * Lors de la déclaration du premiére mois du trimestre, les informations du deuxiéme et du troisiéme mois
+    	 * doivent etre vide
+    	 */
+    	public static final int MSG_7028 = 7028;
+    	
+    	
+    	/**
+    	 * Total salaire assujettis PF mois 2 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7029 = 7029;
+    	
+    	/**
+    	 * Total salaire assujettis AT/MP mois 2 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7030 = 7030;
+    	
+    	/**
+    	 * Total salaire assujettis regime général mois 2 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7031 = 7031;
+    	
+    	/**
+    	 * Total salaire assujettis régime cadre mois 2 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7032 = 7032;
+    	
+    	/**
+    	 * Lors de la déclaration du deuxieme mois du trimestre, les informations du troisiéme mois
+    	 * doivent etre vide
+    	 */
+    	public static final int MSG_7033 = 7033;
+    	
+    	
+    	/**
+    	 * Total salaire assujettis PF mois 3 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7034 = 7034;
+    	
+    	/**
+    	 * Total salaire assujettis AT/MP mois 3 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7035 = 7035;
+    	
+    	/**
+    	 * Total salaire assujettis regime général mois 3 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7036 = 7036;
+    	
+    	/**
+    	 * Total salaire assujettis régime cadre mois 3 de l'employé d'identifiant %1 est vide 
+    	 */
+    	public static final int MSG_7037 = 7037;
+    	
+    	
+      	/**
+    	 * L'employeur n'est pas associe a un compte
+    	 */
+    	public static final int MSG_7038 = 7038;
+    	
         /**
         * Message Text: "%1 %2 %3 %4 %5 %6 %7 %8 %9"
         */

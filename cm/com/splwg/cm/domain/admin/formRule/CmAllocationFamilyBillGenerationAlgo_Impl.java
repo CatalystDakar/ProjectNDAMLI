@@ -476,7 +476,7 @@ public class CmAllocationFamilyBillGenerationAlgo_Impl extends CmAllocationFamil
 
 		PreparedStatement psPreparedStatement = null;
 		psPreparedStatement = createPreparedStatement(
-				"select TAX_ROLE_ID from CI_TAX_ROLE where SVC_TYPE_CD = \'"+serviceType+"\' and ACCT_ID = \'"+accId+"\'",
+				"SELECT TAX_ROLE_ID FROM CI_TAX_ROLE WHERE SVC_TYPE_CD = \'"+serviceType+"\' AND ACCT_ID = \'"+accId+"\' AND ASSET_ID= \'"+assetId+"\'",
 				"SELECT");
 		psPreparedStatement.setAutoclose(false);
 		String taxRoleId = null;

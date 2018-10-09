@@ -25,7 +25,7 @@ public class CmPersonDao extends GenericBusinessObject {
 
 	
 	 /**
-     *  Recherche l acteur principal d un compte
+     *  Recherche l'acteur principal d'un compte
      */
     public static final String GET_MAIN_PER_BY_ACCT =
         "select acct_per.per_id "
@@ -68,7 +68,6 @@ public class CmPersonDao extends GenericBusinessObject {
      * @return une personne
      */
     public Person getMainPersonByAccount( Account_Id pAccountId ) {
-        final long vTime = LOGGER.infoStart( " + getMainPersonByAccount => " + pAccountId );
 
         final PreparedStatement vPreparedStatement = this.createPreparedStatement( GET_MAIN_PER_BY_ACCT );
         Person vPerson = null;
@@ -90,22 +89,19 @@ public class CmPersonDao extends GenericBusinessObject {
             }
         }
 
-        LOGGER.info( " - getMainPersonByAccount  ( " + LOGGER.getElapsedTime( vTime ) + " |ms ) => " + vPerson );
         return vPerson;
     }
 
 	
     /**
-     * Recherche l'acteur reliÃ© au point de balance avec le type de relation passÃ© en paramÃ©tre
+     * Recherche l'acteur relié au point de balance avec le type de relation passé en paramètre
      * @param pPersonId Person_Id
      * @param pRelationId PersonRelationshipType_Id
      * @return List Person
      */
     public List<Person> searchPersonPersonByRelation( Person_Id pPersonId, PersonRelationshipType_Id pRelationId ) {
-        LOGGER.info( "Person id : " + pPersonId );
-        LOGGER.info( "Relation Id : " + pRelationId );
-        LOGGER.info( " Relation pRelationId  ########### " + pRelationId.getTrimmedValue() +" ################ " );
-        final PreparedStatement vRequest =
+        
+    	final PreparedStatement vRequest =
             createPreparedStatement( " SELECT per.PER_ID1, per.PER_ID2 " + " FROM CI_PER_PER per " 
             				+ " WHERE ( per.PER_ID1 = '"
                             + pPersonId.getTrimmedValue() + "'" + " OR per.PER_ID2 = '" + pPersonId.getTrimmedValue() + "' )");

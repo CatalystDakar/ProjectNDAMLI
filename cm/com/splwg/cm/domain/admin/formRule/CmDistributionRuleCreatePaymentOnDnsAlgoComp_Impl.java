@@ -43,6 +43,7 @@ import com.splwg.tax.domain.payment.payment.Payment_DTO;
 import com.splwg.tax.domain.payment.payment.Payment_Id;
 import com.splwg.tax.domain.payment.paymentEvent.PaymentEvent;
 import com.splwg.tax.domain.payment.paymentEvent.PaymentEventDistributionDetail;
+import com.splwg.tax.domain.payment.paymentEvent.PaymentEvent_Id;
 import com.splwg.tax.domain.payment.paymentEvent.PaymentTender;
 
 /**
@@ -70,13 +71,13 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 	private String adhocCharacteristicValue;
 	private BigInteger sequence;
 	private Payment_Id paymentId;
-	private Account accId;
 	String taxId = null;
 	String accountId = null;
 	PreparedStatement psPreparedStatement = null;
 	Money epfAmount = Money.ZERO;
 	Money erAmount = Money.ZERO;
 	Money atmpAmount = Money.ZERO;
+	Money tenderAmount = Money.ZERO;
 	Currency currency = null;
 	Map<ServiceAgreement, Money> obligationMoneyMap = new HashMap<>();
 	String obligationContributionArr[] = null;
@@ -86,6 +87,7 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 	String adjustmentTypeMajorationArr[] = null; 
 	String adjustmentTyepeOverpaymentArr[] = null; 
 	Session session = null;
+	Boolean unidentifiedObligationFlag = false;
 	
 	
 	@Override
@@ -103,6 +105,7 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 		logger.info("paymentEvent: " + this.paymentEvent);
 		System.out.println("paymentEvent: " + this.paymentEvent);
 		taxId = getTaxFormIdFromPortalId(this.adhocCharacteristicValue);
+		//taxId = "768493889427";
 		accountId = new TaxForm_Id(taxId).getEntity().getAccountId().getIdValue();
 		System.out.println("Account ID: " + accountId);
 		currency = new TaxForm_Id(taxId).getEntity().getAccountId().getEntity().getCurrency();
@@ -111,18 +114,21 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 		
 		
 		LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>, List<Money>>>> debtOblMap = new LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>, List<Money>>>>();
-		String paymentEventId = String.valueOf(this.paymentEvent.getId());
+		//String paymentEventId = String.valueOf(this.paymentEvent.getId());
 		for (PaymentTender payDTO : this.paymentEvent.getPaymentTenders().asSet()){
 		    System.out.println(payDTO.getCheckNumber());
 		    System.out.println(payDTO.getTenderAmount());
+		     //tenderAmount = new Money(String.valueOf(payDTO.getTenderAmount()), currency.getId());
 		    
 		for (PaymentEventDistributionDetail payDetail : this.paymentEvent.getPaymentEventDistributionDetails().asSet()){    
 		if (payDetail.getAmount().isEqualTo(payDTO.getTenderAmount()))	{
-	    if(!this.adhocCharacteristicValue.isEmpty()){
+			debtOblMap = getDebtObligation(this.adhocCharacteristicValue);
+			/*if(!this.adhocCharacteristicValue.isEmpty()){
 		 debtOblMap = getDebtObligation(this.adhocCharacteristicValue);
 	    }else{
 	     debtOblMap = getDebtObligation(paymentEventId);
-	    }
+	    }*/
+	    
 		logger.info("debtOblMap size: " + debtOblMap.size());
 		logger.info("debtOblMap: " + debtOblMap);
 		System.out.println("debtOblMap: " + debtOblMap.size());
@@ -508,6 +514,7 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 		String adjustmentTypeMajoration = getInterestAdjustmentType();
 		String adjustmentTyepeOverpayment = getOverpaymentAdjustmentType();
 		String paymentEventIdQuery = String.valueOf(this.paymentEvent.getId());
+		//String paymentEventIdQuery = "095986165920";
 		
 		if(obligationContribution.contains(",") || obligationOverPayment.contains(",") || adjustmentTypeContribution.contains(",")
 				 ||  adjustmentTypePenality.contains(",") ||
@@ -532,8 +539,7 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 		HashMap<String, Money> debtOblMap = new HashMap<String, Money>();
 		HashMap<String, HashMap<List<String>,List<Money>>> periodMap = new HashMap<String, HashMap<List<String>,List<Money>>>();
 	    LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>,List<Money>>>> debtPriorityMap = new LinkedHashMap<HashMap<String, Money>, HashMap<String, HashMap<List<String>,List<Money>>>>();
-	 if(session.isOnlineConnection()){
-	    
+	 if(!("0000000000".equalsIgnoreCase(this.adhocCharacteristicValue))){
 	    psPreparedStatement = createPreparedStatement("select distinct OBL.acct_id,OBL.SA_ID,OBL.SA_TYPE_CD,OBL.SA_STATUS_FLG,"
 	    		+ "ADJ.ADJ_TYPE_CD,ADJ.ADJ_ID,ADJ.ADJ_AMT,OBL.START_DT,ADJ.CRE_DT from CI_SA OBL,CI_ADJ ADJ,ci_ft FT "
 	    		+ "where ADJ.SA_ID=OBL.SA_ID and FT.SA_ID=OBL.SA_ID and OBL.SA_ID in(select sa.sa_id from ci_sa sa,"
@@ -541,14 +547,14 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 	    		+ "and taxch.adhoc_char_val= \'"+this.adhocCharacteristicValue+"\') and ADJ.ADJ_TYPE_CD "
 	    		+ "IN("+adjustmentTypeContribution+","+adjustmentTypePenality+","+adjustmentTypeMajoration+","+adjustmentTyepeOverpayment+") "
 	    		+ "and OBL.SA_TYPE_CD in("+obligationContribution+") and OBL.SA_STATUS_FLG=40 ORDER BY OBL.START_DT","select");
-		} else if(!session.isOnlineConnection() && "0000000000".equalsIgnoreCase(this.adhocCharacteristicValue)){
+		} else if("0000000000".equalsIgnoreCase(this.adhocCharacteristicValue)){
  
 		 psPreparedStatement = createPreparedStatement("select distinct OBL.acct_id,OBL.SA_ID,OBL.SA_TYPE_CD,OBL.SA_STATUS_FLG,"
-		 		+ " ADJ.ADJ_TYPE_CD,ADJ.ADJ_ID,ADJ.ADJ_AMT,OBL.START_DT,ADJ.CRE_DT from CI_SA OBL,CI_ADJ ADJ,ci_ft FT where"
-		 		+ " ADJ.SA_ID=OBL.SA_ID and FT.SA_ID=OBL.SA_ID and OBL.SA_ID in(SELECT TNDR.SA_ID FROM CI_TNDR_SRCE TNDR,"
+		 		+ "OBL.START_DT from CI_SA OBL where"
+		 		+ "OBL.SA_ID in(SELECT TNDR.SA_ID FROM CI_TNDR_SRCE TNDR,"
 		 		+ "CI_PEVT_DTL_ST PEVT WHERE TNDR.EXT_SOURCE_ID=PEVT.EXT_SOURCE_ID AND PEVT.PAY_EVENT_ID=\'"+paymentEventIdQuery+"\')"
-		 	    + " and ADJ.ADJ_TYPE_CD IN("+adjustmentTypeContribution+","+adjustmentTypePenality+","+adjustmentTypeMajoration+","+adjustmentTyepeOverpayment+") "
-		 	    + "and OBL.SA_TYPE_CD in("+obligationContribution+") and OBL.SA_STATUS_FLG=40 ORDER BY OBL.START_DT","select");
+		 	    + "and OBL.SA_TYPE_CD in('PAI-SUSP') and OBL.SA_STATUS_FLG=20 ORDER BY OBL.START_DT","select");
+		 unidentifiedObligationFlag = true;
 	 }          
 	    
 	    psPreparedStatement.setAutoclose(false);
@@ -563,6 +569,7 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 					System.out.println("I am In");
 					SQLResultRow lookUpValue = result.next();
 					System.out.println(lookUpValue.getString("SA_ID"));
+					
 					if(!saIdList.contains(lookUpValue.getString("SA_ID"))){
 						saIdList.add(lookUpValue.getString("SA_ID"));
 					try {
@@ -596,9 +603,15 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 								}
 							}
 						}	
+						if(unidentifiedObligationFlag){
+							ServiceAgreement_Id undefinedSaId = new ServiceAgreement_Id(saIdList.get(0));
+							ServiceAgreement undefinedSa = (ServiceAgreement) undefinedSaId.getEntity();
+					    	obligationMoneyMap.put(undefinedSa,this.amount);
+					    	this.createFrozenPayment(obligationMoneyMap);
+					    }
 						if (!debtOblMap.isEmpty() && !periodMap.isEmpty()) {
 							debtPriorityMap.put(debtOblMap, periodMap);
-						} else {
+						} else if(!unidentifiedObligationFlag) {
 							addError(StandardMessages.fieldInvalid(
 									"The DNS ID mentioned for payment is not linked with ID-DNS characteristic type"));
 						}
@@ -608,7 +621,7 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 				}
 					
 			}
-				debtPriorityMap.put(debtOblMap, periodMap);
+				//debtPriorityMap.put(debtOblMap, periodMap);
 		} catch (Exception exception) {
 				exception.printStackTrace();
 			} finally {
@@ -692,7 +705,7 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 	@Override
 	public void setTenderAccount(Account arg0) {
 		// TODO Auto-generated method stub
-		accId = arg0;
+		
 	}
 
 	@Override

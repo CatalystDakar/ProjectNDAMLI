@@ -46,6 +46,93 @@ public class ToDoTest extends ContextTestCase {
 	public void test() {
 				
 		startChanges();
+		BusinessServiceInstance businessServiceInstance = BusinessServiceInstance.create("F1-AddToDoEntry");
+		Role_Id toDoRoleId = new Role_Id("CM-REGTODO");//CMRDNS
+		
+		ProcessFlow_Id processFlowId = new ProcessFlow_Id("90133679228305");
+		System.out.println(processFlowId.getIdValue());
+		Role toDoRole = toDoRoleId.getEntity();
+		businessServiceInstance.getFieldAndMDForPath("sendTo").setXMLValue("SNDR");
+		businessServiceInstance.getFieldAndMDForPath("subject").setXMLValue("Batch Update from PSRM");
+		businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-REGTO");//CMDNS
+		businessServiceInstance.getFieldAndMDForPath("assignedUser").setXMLValue("DENASH");
+		businessServiceInstance.getFieldAndMDForPath("toDoRole").setXMLValue(toDoRole.getId().getTrimmedValue());
+		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue("90133679228305");//963579919834
+		businessServiceInstance.getFieldAndMDForPath("messageCategory").setXMLValue("90007");//90000
+		businessServiceInstance.getFieldAndMDForPath("messageNumber").setXMLValue("301");//10002
+		businessServiceInstance.getFieldAndMDForPath("messageParm1").setXMLValue("denash.kumar@5iapps");
+		businessServiceInstance.getFieldAndMDForPath("messageParm2").setXMLValue(String.valueOf(908070));
+		businessServiceInstance.getFieldAndMDForPath("messageParm3").setXMLValue("Reg.CSV");//SONATEL
+		businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue("90133679228305");
+		BusinessServiceDispatcher.execute(businessServiceInstance);
+		saveChanges();
+		getSession().commit();
+		
+		String query = "select ENTITY_NAME Nom_Employeur, Tab_Dates.ANNEE ANNEE, Tab_Dates.DEBUT DEBUT,"
+				+ " Tab_Dates.FIN FIN, SUM(CAST (Tab_Salaire.Salaire_Periode as NUMBER(20))) TOTAL_SALAIRE"
+				+ " from (select distinct id_employeur Employeur, substr(TO_CHAR(date_debut_periode_cotisation,'DD/MM/YYYY'),-2)"
+				+ " Annee, min (date_debut_periode_cotisation) Debut, max(date_fin_periode_cotisation) Fin"
+				+ " from cm_dmt_historique where NUMERO_PIECE = '12475841756235' group by id_employeur,"
+				+ " substr(TO_CHAR(date_debut_periode_cotisation,'DD/MM/YYYY'),-2) order by Annee) Tab_Dates,"
+				+ "(select distinct id_employeur Employeur, substr(TO_CHAR(date_debut_periode_cotisation,'DD/MM/YYYY'),-2)"
+				+ " Annee, date_debut_periode_cotisation Debut, date_fin_periode_cotisation Fin,"
+				+ " salaire_contractuel * (substr(TO_CHAR(date_fin_periode_cotisation,'DD/MM/YYYY'),4,2)-substr(TO_CHAR(date_debut_periode_cotisation, 'DD/MM/YYYY'),4,2)+1) Salaire_Periode"
+				+ " from cm_dmt_historique where NUMERO_PIECE = '12475841756235' order by Annee) Tab_Salaire, ci_per_name"
+				+ " where Tab_Dates.Annee = Tab_Salaire.Annee and Tab_Dates.Employeur = Tab_Salaire.Employeur"
+				+ " and per_id = Tab_Salaire.Employeur group by ENTITY_NAME, Tab_Dates.Annee, Tab_Dates.Debut, Tab_Dates.Fin order by Tab_Dates.Debut";
+				PreparedStatement preparedStatementt = createPreparedStatement(query, "SELECT");
+				QueryIterator<SQLResultRow> resultIterator = null;
+				try {
+				resultIterator = preparedStatementt.iterate();
+				while (resultIterator.hasNext()) {
+				SQLResultRow result = (SQLResultRow) resultIterator.next();
+				
+				result.getString("NOM_EMPLOYEUR");
+				result.getString("ANNEE");
+				result.getDate("DEBUT");
+				result.getDate("FIN");
+				result.getBigDecimal("TOTAL_SALAIRE"); 
+				}
+				} catch(Exception e) {
+				e.printStackTrace();
+				} 
+		
+		
+		GregorianCalendar gregorianCalendar1 = new GregorianCalendar(); 
+		Date currentDate1 = new Date(gregorianCalendar1.get(GregorianCalendar.YEAR),
+				gregorianCalendar1.get(GregorianCalendar.MONTH), gregorianCalendar1.get(GregorianCalendar.DAY_OF_MONTH));
+		System.out.println(currentDate1);
+
+		PreparedStatement preparedStatement = createPreparedStatement("select BEGIN_DT from "
+				+ "CI_FILING_CAL_PERIOD where filing_cal_cd = 'CM-BILLCAL' and BEGIN_DT = TRUNC(sysdate)",
+				"SELECT");
+		/*preparedStatement.bindString("factorCharValue", factorCharValue, null);
+		preparedStatement.bindString("factor", factorId, null);
+		preparedStatement.bindString("effectiveDate", effectiveDate, null);*/
+		preparedStatement.setAutoclose(false);
+		BigDecimal factorValue = new BigDecimal("130213.19128693462");
+		factorValue = factorValue.setScale(0, BigDecimal.ROUND_UP);
+		//int factorValueI = BigDecimal.ROUND_UP;
+		System.out.println("Round:: " + factorValue);
+		QueryIterator<SQLResultRow> result = null;
+
+		try {
+			result = preparedStatement.iterate();
+			while (result.hasNext()) {
+				SQLResultRow lookUpValue = result.next();
+				System.out.println(lookUpValue.getString("BEGIN_DT"));
+				
+				String fac = lookUpValue.getString("BEGIN_DT");
+			}
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		} finally {
+			preparedStatement.close();
+			preparedStatement = null;
+			result.close();
+		}
+		
+		
 		BigDecimal detailValue = BigDecimal.TEN;
 		System.out.println("detailValue:: " + detailValue.multiply(BigDecimal.valueOf(3)));
 		BigDecimal detailValue1 =  detailValue;
@@ -133,12 +220,12 @@ public class ToDoTest extends ContextTestCase {
 		String effectiveDate = "2018-08-01";
 		String factorCharValue = "DOCUMENT2";
 
-			PreparedStatement preparedStatement = createPreparedStatement(
+			/*PreparedStatement preparedStatement = createPreparedStatement(
 					"SELECT FACTOR_VAL FROM C1_FACTOR_VALUE where FACTOR_CHAR_VAL=\'"+factorCharValue+"\' and FACTOR_CD=\'"+factorId+"\' and TO_CHAR(EFFDT,'YYYY-MM-DD') <=\'"+effectiveDate+"\' order by EFFDT DESC",
 					"SELECT");
-			/*preparedStatement.bindString("factorCharValue", factorCharValue, null);
+			preparedStatement.bindString("factorCharValue", factorCharValue, null);
 			preparedStatement.bindString("factor", factorId, null);
-			preparedStatement.bindString("effectiveDate", effectiveDate, null);*/
+			preparedStatement.bindString("effectiveDate", effectiveDate, null);
 			preparedStatement.setAutoclose(false);
 			BigDecimal factorValue = BigDecimal.ZERO;
 			QueryIterator<SQLResultRow> result = null;
@@ -159,29 +246,8 @@ public class ToDoTest extends ContextTestCase {
 				preparedStatement = null;
 				result.close();
 			}
-		System.out.println("factorValue: " + factorValue);
+		System.out.println("factorValue: " + factorValue);*/
 		
-		BusinessServiceInstance businessServiceInstance = BusinessServiceInstance.create("F1-AddToDoEntry");
-		Role_Id toDoRoleId = new Role_Id("CM-REGTODO");
-		
-		ProcessFlow_Id processFlowId = new ProcessFlow_Id("90133679228305");
-		System.out.println(processFlowId.getIdValue());
-		Role toDoRole = toDoRoleId.getEntity();
-		businessServiceInstance.getFieldAndMDForPath("sendTo").setXMLValue("SNDR");
-		businessServiceInstance.getFieldAndMDForPath("subject").setXMLValue("Batch Update from PSRM");
-		businessServiceInstance.getFieldAndMDForPath("toDoType").setXMLValue("CM-REGTO");
-		businessServiceInstance.getFieldAndMDForPath("assignedUser").setXMLValue("DENASH");
-		businessServiceInstance.getFieldAndMDForPath("toDoRole").setXMLValue(toDoRole.getId().getTrimmedValue());
-		businessServiceInstance.getFieldAndMDForPath("drillKey1").setXMLValue("90133679228305");
-		businessServiceInstance.getFieldAndMDForPath("messageCategory").setXMLValue("90007");
-		businessServiceInstance.getFieldAndMDForPath("messageNumber").setXMLValue("301");
-		businessServiceInstance.getFieldAndMDForPath("messageParm1").setXMLValue("denashkumar@5iapps");
-		businessServiceInstance.getFieldAndMDForPath("messageParm2").setXMLValue(String.valueOf(908070));
-		businessServiceInstance.getFieldAndMDForPath("messageParm3").setXMLValue("Reg.CSV");
-		businessServiceInstance.getFieldAndMDForPath("sortKey1").setXMLValue("90133679228305");
-		BusinessServiceDispatcher.execute(businessServiceInstance);
-		saveChanges();
-		getSession().commit();
 		
 		ServiceAgreement_Id saId = new ServiceAgreement_Id("0959861947");
 		System.out.println(saId.getEntity().getServiceAgreementType().getId().getSaType());

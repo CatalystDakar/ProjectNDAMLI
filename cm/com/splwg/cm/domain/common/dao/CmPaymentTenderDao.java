@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.splwg.base.api.GenericBusinessObject;
-import com.splwg.base.api.datatypes.DateFormat;
 import com.splwg.base.api.sql.PreparedStatement;
 import com.splwg.base.api.sql.SQLResultRow;
 import com.splwg.shared.logging.Logger;
@@ -40,7 +39,6 @@ public class CmPaymentTenderDao extends GenericBusinessObject {
     private static final Logger LOGGER = LoggerFactory.getLogger( CmPaymentTenderDao.class );
 
     
-    private final DateFormat DATE_FORMAT = new DateFormat( "dd-MM-yyyy" );
 
 	
     /**
@@ -58,8 +56,7 @@ public class CmPaymentTenderDao extends GenericBusinessObject {
         final PreparedStatement vPrepareStatement =
             createPreparedStatement( GET_PAYMENTTENDER_BY_TENDERCONTROLID_AND_TENDERTYPE );
         try {
-        	LOGGER.info(" control id "+pTenderControlId);
-        	LOGGER.info(" tender type id "+pTenderTypeId);
+        	
             vPrepareStatement.bindId( "pTenderControlId", pTenderControlId );
             vPrepareStatement.bindId( "pTenderTypeId", pTenderTypeId );
             List<SQLResultRow> vResultRows = vPrepareStatement.list();

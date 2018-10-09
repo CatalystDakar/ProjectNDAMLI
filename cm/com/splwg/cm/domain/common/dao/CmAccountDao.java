@@ -42,7 +42,6 @@ public class CmAccountDao extends GenericBusinessObject {
      * @return le compte 
      */
     public Account getMainAccountByPerId( Person_Id pPersonId ) {
-        final long vTime = LOGGER.infoStart( "+ searchMainAccountByPersonId => " + pPersonId );
 
         String vQuery = GET_MAIN_ACCOUNT_BY_PERSONID;
 

@@ -102,7 +102,7 @@ public class CmImmatriculationEmployer_Impl extends CmImmatriculationEmployer_Ge
 
 		System.out.println("######################## Demarrage executeWorkUnit ############################");
 		
-		/*System.out.println("I am In Invoke method " + this.boKey);
+		System.out.println("I am In Invoke method " + this.boKey);
 		log.info("I am In Invoke method BO intance Key " + this.boKey);
 		this.boInstance = BusinessObjectDispatcher.read(this.boKey, false);
 		log.info("I am In Invoke method BO intance " + this.boInstance);
@@ -111,8 +111,8 @@ public class CmImmatriculationEmployer_Impl extends CmImmatriculationEmployer_Ge
 	    processFlowId = cotsNode.getValue().toString();
 	    System.out.println("processFlowId:: " + processFlowId);
 	    log.info("processFlowId:: " + processFlowId);
-		String nineaNumber = cots.getValue().toString();*/
-		String nineaNumber = "458343243";
+		String nineaNumber = cots.getValue().toString();
+		//String nineaNumber = "458343243";
 		System.out.println("Ninea: " + nineaNumber);// 90909090990EMPLR.xlsx/99009099909099EMPLE.xlsx
 		log.info("Ninea: " + nineaNumber);
 		fileName = this.getFilePath()+nineaNumber + "EMPLR" + ".xlsx";
@@ -676,9 +676,9 @@ public class CmImmatriculationEmployer_Impl extends CmImmatriculationEmployer_Ge
 					processed = false;
 					processStgFlag = false;
 					System.out.println("*****Issue in Processing file***** " + fileName + "NineaNumber:: "
-							+ listesValues.get(3));
+							+ this.nineaNumber);
 					log.info("*****Issue in Processing file***** " + fileName + "NineaNumber:: "
-							+ listesValues.get(3));
+							+ this.nineaNumber);
 					exception.printStackTrace();
 				}
 			}

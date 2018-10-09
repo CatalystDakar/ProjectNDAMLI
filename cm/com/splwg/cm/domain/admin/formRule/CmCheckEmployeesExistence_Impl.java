@@ -22,6 +22,7 @@ import com.splwg.tax.domain.admin.formRule.FormRuleBORuleProcessingAlgorithmSpot
 import com.splwg.tax.domain.admin.idType.IdType_Id;
 import com.splwg.tax.domain.customerinfo.person.Person;
 import com.splwg.tax.domain.customerinfo.person.Person_Id;
+import com.splwg.tax.domain.processFlow.ProcessFlow_Id;
 
 /**
  * @author Catalyst-Demo
@@ -51,6 +52,7 @@ public class CmCheckEmployeesExistence_Impl extends CmCheckEmployeesExistence_Ge
 
 	@Override
 	public void invoke() {
+		
 		BusinessObjectInstance formBusinessObjectInstance = (BusinessObjectInstance) this.inputOutputData
 				.getFormBusinessObject();
 		String personId=formBusinessObjectInstance.getString("taxpayerPersonID");
@@ -88,7 +90,6 @@ public class CmCheckEmployeesExistence_Impl extends CmCheckEmployeesExistence_Ge
 		}
 		
 	}
-
 	
 	/**
 	 * Creation To Do si le salarie n'existe pas ou s'il n'est pas rattache l'employeur

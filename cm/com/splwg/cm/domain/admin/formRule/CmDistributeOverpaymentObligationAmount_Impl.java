@@ -852,19 +852,19 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	@Override
 	public ApplyFormRuleAlgorithmInputOutputData getApplyFormRuleAlgorithmInputOutputData() {
 		// TODO Auto-generated method stub
-		return null;
+		return this.inputOutputData;
 	}
 
 	@Override
-	public void setApplyFormRuleAlgorithmInputData(ApplyFormRuleAlgorithmInputData arg0) {
+	public void setApplyFormRuleAlgorithmInputData(ApplyFormRuleAlgorithmInputData applyFormRuleAlgorithmInputData) {
 		// TODO Auto-generated method stub
-
+		this.inputData = applyFormRuleAlgorithmInputData;
 	}
 
 	@Override
-	public void setApplyFormRuleAlgorithmInputOutputData(ApplyFormRuleAlgorithmInputOutputData arg0) {
+	public void setApplyFormRuleAlgorithmInputOutputData(ApplyFormRuleAlgorithmInputOutputData applyFormRuleAlgorithmInputOutputData) {
 		// TODO Auto-generated method stub
-
+		this.inputOutputData = applyFormRuleAlgorithmInputOutputData;
 	}
 
 }

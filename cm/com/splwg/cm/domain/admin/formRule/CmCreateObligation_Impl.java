@@ -41,12 +41,18 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 	private ApplyFormRuleAlgorithmInputData inputData;
 	private ApplyFormRuleAlgorithmInputOutputData inputOutputData;
 	Logger logger = LoggerFactory.getLogger(CmCreateObligation_Impl.class);
+	private static String TYPE_DECLARATION_MENSUEL = "MENSUEL";
 
 	@Override
 	public void invoke() {
 
 		// TODO Auto-generated method stub
 		BusinessObjectInstance formBoInstance = (BusinessObjectInstance) inputOutputData.getFormBusinessObject();
+		
+		
+		String adjustedFromFormID = formBoInstance.getString("adjustedFromForm");
+		//Condition pour vérifier un ajustment de formulaire
+	    if(isNull(adjustedFromFormID)) {
 
 		String idFormulaire = formBoInstance.getString("taxFormId");
 
@@ -77,6 +83,9 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 		String typeIdentifiant = (String) formBoInstance
 				.getFieldAndMDForPath("informationEmployeur/typeIdentifiant/asCurrent").getValue();
 		String idNumber = (String) formBoInstance.getFieldAndMDForPath("informationEmployeur/idNumber/asCurrent")
+				.getValue();
+		
+		String typeDeclaration = (String) formBoInstance.getFieldAndMDForPath("informationEmployeur/typeDeclaration/asCurrent")
 				.getValue();
 
 		String idEmployeur = getPersonByNinea(typeIdentifiant, idNumber).getId().getIdValue();
@@ -120,7 +129,7 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 			if (!verifierDateFinMonThLy(dateFinCotisation)) {
 				addError(CmMessageRepository90000.MSG_14());
 			} else {
-				if (toTalSalaries >= nombreSalToBD.intValue()) {
+				if (TYPE_DECLARATION_MENSUEL.equalsIgnoreCase(typeDeclaration)) {
 					updateOrInsertCalendrier(taxRoleId, dateDebutCotisation, "SU-MONTHLY");
 					obligationInstance.set("filingCalendar", "SU-MONTHLY");
 				} else if (!verifierDateFinCotisation(dateFinCotisation)) {
@@ -212,7 +221,8 @@ public class CmCreateObligation_Impl extends CmCreateObligation_Gen implements F
 					break;
 				}
 			}
-		}
+		  }
+	   }
 	}
 
 	private boolean verifierDateFinCotisation(Date date) {

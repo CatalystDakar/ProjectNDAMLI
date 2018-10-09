@@ -6,7 +6,7 @@ import com.splwg.base.api.datatypes.Money;
 import com.splwg.base.api.testers.AlgorithmImplementationTestCase;
 import com.splwg.base.domain.common.algorithm.Algorithm;
 import com.splwg.base.domain.common.algorithm.Algorithm_Id;
-import com.splwg.cm.domain.admin.formRule.CmAllocationFamilyBillGenerationAlgo;
+import com.splwg.cm.domain.admin.formRule.CmEmployerRegistrationAlgo;
 import com.splwg.tax.domain.admin.distributionRule.DistributionRule;
 import com.splwg.tax.domain.customerinfo.account.Account;
 import com.splwg.tax.domain.customerinfo.account.Account_Id;
@@ -18,9 +18,9 @@ public class AlgoTest extends AlgorithmImplementationTestCase{
 @SuppressWarnings("deprecation")
 public void testInvoke() {
 		
-	 Algorithm alg = new Algorithm_Id("CM-FALBILALG").getEntity();
+	 Algorithm alg = new Algorithm_Id("CM-EMPLRREG").getEntity();
 	 //alg.getAlgorithmComponent(arg0, arg1)CmFamilyBenefitsBillGenerationAlgo_Impl
-	 CmAllocationFamilyBillGenerationAlgo cc = alg.getAlgorithmComponent(CmAllocationFamilyBillGenerationAlgo.class);
+	 CmEmployerRegistrationAlgo cc = alg.getAlgorithmComponent(CmEmployerRegistrationAlgo.class);
 	 //CmDistributionRuleCreatePaymentOnAccountAlgoComp cc = alg.getAlgorithmComponent(CmDistributionRuleCreatePaymentOnAccountAlgoComp.class);
 	 PaymentEvent paymentEvent;
 	 DistributionRule distributionRule;
@@ -132,7 +132,7 @@ public void testInvoke() {
 	@Override
 	protected Class getAlgorithmImplementationClass() {
 		// TODO Auto-generated method stub
-		return CmAllocationFamilyBillGenerationAlgo.class;
+		return CmEmployerRegistrationAlgo.class;
 	}
 
 }

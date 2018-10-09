@@ -70,7 +70,7 @@ public class CmImmatriculationEmployes_Impl extends CmImmatriculationEmployes_Ge
 		return perSearch.searchPerson(personId);
 	}
 
-	private Person getPersonByNinea(String IdType, String idNumber) {
+	private Person getPersonByIdTypeAndIdNumber(String IdType, String idNumber) {
 		// log.info("*****Starting getpersonId");
 		CmPersonSearchComponent perSearch = new CmPersonSearchComponent.Factory().newInstance();
 		IdType_Id idType = new IdType_Id(IdType);
@@ -213,10 +213,9 @@ public class CmImmatriculationEmployes_Impl extends CmImmatriculationEmployes_Ge
 			logger.info("Inside IF");
 			COTSInstanceNode group = formBoInstance.getGroupFromPath("employe");
 			Iterator<COTSInstanceListNode> iterator = group.getList("employeList").iterator();
-			BigDecimal nineaDec = (BigDecimal) formBoInstance.getFieldAndMDForPath("employeur/ninea/asCurrent")
-					.getValue();
-			String ninea = nineaDec.toString();
-			String idEmployeur = getPersonByNinea("SCI", ninea).getId().getIdValue();
+			String typeIdentifiant = (String) formBoInstance.getFieldAndMDForPath("employeur/typeIdentifiant/asCurrent").getValue();
+			String numberIdentifiant = (String) formBoInstance.getFieldAndMDForPath("employeur/numeroIdentifiant/asCurrent").getValue();
+			String idEmployeur = getPersonByIdTypeAndIdNumber(typeIdentifiant, numberIdentifiant).getId().getIdValue();
 			while (iterator.hasNext()) {
 				COTSInstanceListNode nextElt = iterator.next();
 				if (nextElt != null) {
@@ -593,12 +592,12 @@ public class CmImmatriculationEmployes_Impl extends CmImmatriculationEmployes_Ge
 
 							addresBoInstance.set("bo", addresBoInstance.getBusinessObject());
 							addresBoInstance.set("country", paysDeResidence);
-							addresBoInstance.set("state", regionDeResidence);
+							addresBoInstance.set("address1", regionDeResidence);
 							addresBoInstance.set("county", departementDeResidence);
 							addresBoInstance.set("city", arrondissementResidence);
-							addresBoInstance.set("address1", communeDeResidence);
-							addresBoInstance.set("address2", quartierResidence);
-							addresBoInstance.set("address3", adresseResidence);
+							addresBoInstance.set("address2", communeDeResidence);
+							addresBoInstance.set("address3", quartierResidence);
+							addresBoInstance.set("address4", adresseResidence);
 							if (boitePostale != null) {
 								String boitePostaleTostr = boitePostale.toString();
 								addresBoInstance.set("postal", boitePostaleTostr);
