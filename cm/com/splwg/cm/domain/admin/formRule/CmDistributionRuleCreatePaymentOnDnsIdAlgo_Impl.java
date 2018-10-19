@@ -524,7 +524,6 @@ public class CmDistributionRuleCreatePaymentOnDnsIdAlgo_Impl extends CmDistribut
 			List<String> saIdList = new ArrayList<String>();
 			HashMap<List<String>, List<Money>> oblMoneyMap = new HashMap<List<String>, List<Money>>();
 			while (result.hasNext()) {
-				System.out.println("I am In");
 				SQLResultRow lookUpValue = result.next();
 				System.out.println(lookUpValue.getString("SA_ID"));
 				if (!saIdList.contains(lookUpValue.getString("SA_ID"))) {
@@ -537,7 +536,6 @@ public class CmDistributionRuleCreatePaymentOnDnsIdAlgo_Impl extends CmDistribut
 						psPreparedStatement.setAutoclose(false);
 						QueryIterator<SQLResultRow> oblResultIterator = psPreparedStatement.iterate();
 						while (oblResultIterator.hasNext()) {
-							System.out.println("I am In");
 							SQLResultRow oblResult = oblResultIterator.next();
 							System.out.println(lookUpValue.getString("SA_ID"));
 							if (oblResult.getString("Total") != null

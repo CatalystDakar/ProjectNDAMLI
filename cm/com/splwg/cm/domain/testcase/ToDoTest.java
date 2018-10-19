@@ -9,11 +9,11 @@ import com.ibm.icu.math.BigDecimal;
 import com.splwg.base.api.QueryIterator;
 import com.splwg.base.api.businessObject.BusinessObjectDispatcher;
 import com.splwg.base.api.businessObject.BusinessObjectInstance;
-import com.splwg.base.api.businessObject.COTSFieldDataAndMD;
 import com.splwg.base.api.businessObject.COTSInstanceList;
 import com.splwg.base.api.businessObject.COTSInstanceListNode;
 import com.splwg.base.api.businessService.BusinessServiceDispatcher;
 import com.splwg.base.api.businessService.BusinessServiceInstance;
+import com.splwg.base.api.datatypes.Bool;
 import com.splwg.base.api.datatypes.Date;
 import com.splwg.base.api.sql.PreparedStatement;
 import com.splwg.base.api.sql.SQLResultRow;
@@ -23,22 +23,15 @@ import com.splwg.base.domain.common.businessObject.BusinessObject_Id;
 import com.splwg.base.domain.common.characteristicType.CharacteristicType_Id;
 import com.splwg.base.domain.todo.role.Role;
 import com.splwg.base.domain.todo.role.Role_Id;
-import com.splwg.tax.api.lookup.AutomaticProcessingLookup;
-import com.splwg.tax.domain.admin.calculationControl.CalculationControlVersion_Id;
-import com.splwg.tax.domain.admin.calculationControl.CalculationControl_Id;
 import com.splwg.tax.domain.admin.filingCalendar.FilingCalendar_Id;
 import com.splwg.tax.domain.admin.filingCalendar.FilingPeriod_Id;
-import com.splwg.tax.domain.admin.taxBillType.TaxBillType_Id;
 import com.splwg.tax.domain.customerinfo.person.Person;
 import com.splwg.tax.domain.customerinfo.person.Person_Id;
 import com.splwg.tax.domain.customerinfo.serviceAgreement.ServiceAgreement_Id;
-import com.splwg.tax.domain.customerinfo.taxRole.TaxRole_Id;
 import com.splwg.tax.domain.processFlow.ProcessFlowCharacteristic;
 import com.splwg.tax.domain.processFlow.ProcessFlowCharacteristic_DTO;
 import com.splwg.tax.domain.processFlow.ProcessFlowCharacteristic_Id;
 import com.splwg.tax.domain.processFlow.ProcessFlow_Id;
-import com.splwg.tax.domain.taxBilling.taxBill.TaxBill;
-import com.splwg.tax.domain.taxBilling.taxBill.TaxBill_DTO;
 
 public class ToDoTest extends ContextTestCase {
 
@@ -46,6 +39,24 @@ public class ToDoTest extends ContextTestCase {
 	public void test() {
 				
 		startChanges();
+		
+		BusinessServiceInstance bsInstancee = BusinessServiceInstance.create("CM-PAYDNS");//8629186835
+
+		bsInstancee.set("perId", "3428975080");//results/chkBox
+		bsInstancee = BusinessServiceDispatcher.execute(bsInstancee);
+		COTSInstanceList listt = bsInstancee.getList("results");
+		Bool checkBoxValue = Bool.FALSE;
+		if (!listt.isEmpty()) {
+			COTSInstanceListNode nextElt = listt.iterator().next();
+			if (nextElt != null) {
+				nextElt.getBoolean("chkBox");//results/montantTotal
+				System.out.println("montantTotal:: " + nextElt.getString("montantTotal"));
+				System.out.println("check Box: " + nextElt.getBoolean("chkBox"));
+				checkBoxValue = nextElt.getBoolean("chkBox");
+			}
+
+		}
+		
 		BusinessServiceInstance businessServiceInstance = BusinessServiceInstance.create("F1-AddToDoEntry");
 		Role_Id toDoRoleId = new Role_Id("CM-REGTODO");//CMRDNS
 		

@@ -1,6 +1,4 @@
 package com.splwg.cm.domain.batch;
-
-import java.io.BufferedWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -150,8 +148,6 @@ public class CmGlDlAccount extends CmGlDlAccount_Gen {
 	}
 	
 	
-	
-	
 	public String getJournalNumber(String bankAccNo)
 	{
 		
@@ -182,6 +178,29 @@ public class CmGlDlAccount extends CmGlDlAccount_Gen {
 		return bankJournalCode;
 	}
 	
+	public String getLedgername(String featureName,String ext_opt_type,int seq_no)
+	{
+		PreparedStatement categoryPrepareStatement = null;
+        String Query = "select wfm_opt_val from CI_WFM_OPT where wfm_name=\'"+featureName+"\'"
+   	        		+ "and ext_opt_type=\'"+ext_opt_type+"\' and seq_num=\'"+seq_no+"\'";
+        String LedgerName = null;
+        try{
+        	categoryPrepareStatement = createPreparedStatement(Query);
+        	SQLResultRow sqlResultRow = categoryPrepareStatement.firstRow();
+        	 if(sqlResultRow != null){
+        		  LedgerName = sqlResultRow.getString("WFM_OPT_VAL");
+        	  }
+        }catch(Exception e)
+        {
+        	LOGGER.info( "Error fetching the LedgerName" +e );
+        }finally
+		{
+        	categoryPrepareStatement.close();
+        	categoryPrepareStatement = null;
+        }
+        return LedgerName;
+	}
+	
 	public static class CmGlDlAccountWorker extends CmGlDlAccountWorker_Gen {
 
 		public ThreadExecutionStrategy createExecutionStrategy() {
@@ -194,16 +213,16 @@ public class CmGlDlAccount extends CmGlDlAccount_Gen {
 			PreparedStatement selectPrepareStatement = null;
 			PreparedStatement insertPrepareStatement = null;
 			QueryIterator<SQLResultRow> selectresult = null;
-			String date = "4-SEP-18";
+			//String date = "4-SEP-18";
 			startChanges();
 			try
 			{
 			//Select query for fetching the data.
-			selectPrepareStatement = createPreparedStatement("SELECT GL.FT_ID,GL.GL_SEQ_NBR,FT.FT_TYPE_FLG,GL.GL_ACCT FROM CI_FT FT,CI_FT_GL GL WHERE FT.FT_ID = GL.FT_ID AND  FT.ACCOUNTING_DT=  TO_CHAR(TO_DATE" + "(\'"+date+"\', 'DD-MON-YY')) and length(gl.gl_acct) in (85,87) order by gl.ft_id");
-			//selectPrepareStatement = createPreparedStatement("SELECT GL.FT_ID,GL.GL_SEQ_NBR,FT.FT_TYPE_FLG,GL.GL_ACCT FROM CI_FT FT,CI_FT_GL GL WHERE FT.FT_ID = GL.FT_ID AND  FT.ACCOUNTING_DT=:today_date and length(gl.gl_acct) in (85,87) order by gl.ft_id");
+			//selectPrepareStatement = createPreparedStatement("SELECT GL.FT_ID,GL.GL_SEQ_NBR,FT.FT_TYPE_FLG,GL.GL_ACCT FROM CI_FT FT,CI_FT_GL GL WHERE FT.FT_ID = GL.FT_ID AND  FT.ACCOUNTING_DT=  TO_CHAR(TO_DATE" + "(\'"+date+"\', 'DD-MON-YY')) and length(gl.gl_acct) in (85,87) order by gl.ft_id");
+			selectPrepareStatement = createPreparedStatement("SELECT GL.FT_ID,GL.GL_SEQ_NBR,FT.FT_TYPE_FLG,GL.GL_ACCT FROM CI_FT FT,CI_FT_GL GL WHERE FT.FT_ID = GL.FT_ID AND  FT.ACCOUNTING_DT=:today_date and length(gl.gl_acct) in (85,87) order by gl.ft_id");
 			
 			final String INSERT_QUERY="INSERT INTO CM_INT_GL (LEDGER_NAME,LEDGER_ID,ACCOUNTING_DATE,ACTUAL_FLAG,USER_JE_SOURCE_NAME,USER_JE_CATEGORY_NAME,CURRENCY_CODE,HEADER_NAME,JE_HEADER_ID,HEADER_DESCRIPTION,JE_BATCH_NAME,PERIOD_NAME,CURRENCY_CONVERSION_DATE,CURRENCY_CONVERSION_RATE,JE_LINE_NUM,SEGMENT1,SEGMENT2,SEGMENT3,SEGMENT4,SEGMENT5,SEGMENT6,SEGMENT7,SEGMENT8,SEGMENT9,SEGMENT10,SEGMENT11,SEGMENT12,ACCOUNT_COMBINATION,ENTERED_DR,ENTERED_CR,ACCOUNTED_DR,ACCOUNTED_CR,LINE_DESCRIPTION,CONTEXT,TRANSACTION_DATE,PSRM_TRANSACTION_NUMBER,PSRM_TRANSACTION_STATUS,JGZZ_RECON_REF,BANK_ACCOUNT_NAME,TRX_CODE,TRX_TYPE,REVERSAL_IND,USER_NUM_PSRM,DATE_EXTRACT,STATUS_LINE,ERROR_MESSAGE,DATE_PROCESSED,REQUEST_ID,BUSINESS_GROUP,BUSINESS_GROUP_ID,USER_CURRENCY_CONVERSION_TYPE) VALUES (:LEDGER_NAME,:LEDGER_ID,:ACCOUNTING_DATE,:ACTUAL_FLAG,:USER_JE_SOURCE_NAME,:USER_JE_CATEGORY_NAME,:CURRENCY_CODE,:HEADER_NAME,:JE_HEADER_ID,:HEADER_DESCRIPTION,:JE_BATCH_NAME,:PERIOD_NAME,:CURRENCY_CONVERSION_DATE,:CURRENCY_CONVERSION_RATE,:JE_LINE_NUM,:SEGMENT1,:SEGMENT2,:SEGMENT3,:SEGMENT4,:SEGMENT5,:SEGMENT6,:SEGMENT7,:SEGMENT8,:SEGMENT9,:SEGMENT10,:SEGMENT11,:SEGMENT12,:ACCOUNT_COMBINATION,:ENTERED_DR,:ENTERED_CR,:ACCOUNTED_DR,:ACCOUNTED_CR,:LINE_DESCRIPTION,:CONTEXT,:TRANSACTION_DATE,:PSRM_TRANSACTION_NUMBER,:PSRM_TRANSACTION_STATUS,:JGZZ_RECON_REF,:BANK_ACCOUNT_NAME,:TRX_CODE,:TRX_TYPE,:REVERSAL_IND,:USER_NUM_PSRM,:DATE_EXTRACT,:STATUS_LINE,:ERROR_MESSAGE,:DATE_PROCESSED,:REQUEST_ID,:BUSINESS_GROUP,:BUSINESS_GROUP_ID,:USER_CURRENCY_CONVERSION_TYPE)";
-			//selectPrepareStatement.bindDate("today_date", getSystemDateTime().getDate());
+			selectPrepareStatement.bindDate("today_date", getSystemDateTime().getDate());
 			
 			selectresult  = selectPrepareStatement.iterate();
             String LedgerName,ledgerId,actual_flag,taxType,svcTypeCd,Prestation,currencyCd,headerName,ft_Id,jeBatchName,userJeCategoryName,currencyConvertionType,currencyConvertionRate,currencyPayment,codeBranch,codeGestion,codeSite,CodeComptable,CentreCoutIpres,CodePrestation,DateExercice,project,interBranch,siteBenificiary,reserve1,reserve2,vide,lineDescription,tax_Type,transctionNumber,jgzzReconRef,vide2,fzUser,status,errorDescription,processedDate,requestId,businessGroup,businessGroupId,accno,bankName,bankJournalCode,chequeNumber,cssObgType,ipresObgType,trxCode,trxType;
@@ -241,47 +260,14 @@ public class CmGlDlAccount extends CmGlDlAccount_Gen {
            List<String> ipresList=Arrays.asList(ipresArrLisst);
            LOGGER.info("Ipres Obligation List::"+ipresList);
            
-           PreparedStatement categoryPrepareStatement = null;
+          
 	       if((ftType.fetchIdSaType()!=null) && cssList.contains(ftType.fetchIdSaType().trim()))
            {
-        	   String Query = "select wfm_opt_val from CI_WFM_OPT where wfm_name=\'"+this.getParameters().getLedgerNameFeatureConfig().getId().getIdValue().trim()+"\'"
-   	        		+ "and ext_opt_type=\'"+ext_opt_type+"\' and seq_num='1'";
-   	        try{
-   	        	categoryPrepareStatement = createPreparedStatement(Query);
-   	        	SQLResultRow sqlResultRow = categoryPrepareStatement.firstRow();
-   	        	 if(sqlResultRow != null){
-   	        		LedgerName = sqlResultRow.getString("WFM_OPT_VAL");
-   	        	 LOGGER.info("Css Label Text::"+LedgerName);
-   	        	  }
-   	        } catch(Exception e)
-	        {
-	        	LOGGER.info( "Error fetching the vCotisation" +e );
-	        }finally
-			{
-	        	categoryPrepareStatement.close();
-	        	categoryPrepareStatement = null;
-	        } 
-              
+	    	   LedgerName = c.getLedgername(this.getParameters().getLedgerNameFeatureConfig().getId().getIdValue().trim(), ext_opt_type, 1) ;  
            }
            else
            {
-        	   String Query = "select wfm_opt_val from CI_WFM_OPT where wfm_name=\'"+this.getParameters().getLedgerNameFeatureConfig().getId().getIdValue().trim()+"\'"
-   	        		+ "and ext_opt_type=\'"+ext_opt_type+"\' and seq_num='2'";
-   	        try{
-   	        	categoryPrepareStatement = createPreparedStatement(Query);
-   	        	SQLResultRow sqlResultRow = categoryPrepareStatement.firstRow();
-   	        	 if(sqlResultRow != null){
-   	        		LedgerName = sqlResultRow.getString("WFM_OPT_VAL");
-   	        	 LOGGER.info("Ipres Label Text::"+LedgerName);
-   	        	  }
-   	        } catch(Exception e)
-	        {
-	        	LOGGER.info( "Error fetching the vCotisation" +e );
-	        }finally
-			{
-	        	categoryPrepareStatement.close();
-	        	categoryPrepareStatement = null;
-	        } 
+        	   LedgerName = c.getLedgername(this.getParameters().getLedgerNameFeatureConfig().getId().getIdValue().trim(), ext_opt_type, 3) ;
            }
            
            //2.Setting up Ledger Id
@@ -485,6 +471,9 @@ public class CmGlDlAccount extends CmGlDlAccount_Gen {
            {
            accno = c.getInfo(CmGlConstant.BANK_ACCOUNT_NBR_QUERY,CmGlConstant.ACCOUNT_NBR,ftId);
            bankJournalCode = c.getJournalNumber(accno);
+           }else
+           {
+        	   bankJournalCode = null;
            }
            //42.Setting up TRX_TYPE
            if(ftTypeFlg.equals("PS")||ftTypeFlg.equals("PX"))
@@ -514,7 +503,10 @@ public class CmGlDlAccount extends CmGlDlAccount_Gen {
            chequeNumber = chequeNumber.trim();
            LOGGER.info("Cheque Number::"+chequeNumber);
            }
-           }      
+           }else
+           {
+        	   chequeNumber = null;
+           }
            
            //42. Setting up USER_NUM_PSRM
            fzUser = ft.getFrozenByUserId().getIdValue().trim();
@@ -525,7 +517,7 @@ public class CmGlDlAccount extends CmGlDlAccount_Gen {
            LOGGER.info("Date Extraction::"+today_date);
            
            //44.Setting up STATUS_LINE
-           status = "NEW";
+           status = "N";
            
            //45.Setting ERROR_MESSAGE
            errorDescription = "ERROR_DESC";

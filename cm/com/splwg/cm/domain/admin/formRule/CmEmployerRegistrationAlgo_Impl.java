@@ -93,10 +93,9 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 	@Override
 	public void invoke() {
 
-		System.out.println("I am In Invoke method " + this.boKey);
-		log.info("I am In Invoke method BO intance Key " + this.boKey);
+		log.info("BO intance Key " + this.boKey);
 		this.boInstance = BusinessObjectDispatcher.read(this.boKey, false);
-		log.info("I am In Invoke method BO intance " + this.boInstance);
+		log.info("BO intance " + this.boInstance);
 	    COTSFieldDataAndMD<?> cots = this.boInstance.getFieldAndMDForPath("employerDetails/ninea");
 	    COTSFieldDataAndMD<?> cotsNode = this.boInstance.getFieldAndMDForPath("processFlowId");
 	    processFlowId = cotsNode.getValue().toString();
@@ -144,6 +143,7 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 
 		File file = null;
 		file = new File(regFileName);
+		log.info("filename with Path: " + file);
 		List<String> headerValues = new ArrayList<String>();
 		List<String> listValues = new ArrayList<String>();
 		List<String> formCreatorList = new ArrayList<String>();
@@ -155,11 +155,10 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println("File Not Found ");
+			log.info("File Not Found ");
 		}
 
 		int count = 0;
-
 		while (scanner.hasNextLine()) {
 			String csvValues = scanner.nextLine();
 			if (count == 0) {
@@ -179,9 +178,7 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 			}
 			count++;
 		}
-		System.out.println("***Read value from File****headerValues**** " + headerValues);
 		log.info("***Read value from File****headerValues**** " + headerValues);
-		System.out.println("***Read value from File****listValues**** " + listValues);
 		log.info("***Read value from File****listValues**** " + listValues);
 
 		Iterator<String> headerIterator = headerValues.iterator();
@@ -193,20 +190,9 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 		String establishmentDate = null;
 		String premierEmployeeDate = null;
 		String deliveryDate = null;
-		log.info("Before While:: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
-				"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
-		System.out.println("Before While:: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
-				"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);
+		log.info("Before While:: immatriculationDate:: " + immatriculationDate +" establishmentDate:: "+establishmentDate+
+				" premierEmployeeDate:: "+premierEmployeeDate+ " deliveryDate::"+ deliveryDate);
 		Set<String> headerConstants = getHeaderConstants();
-		try {
-			log.info(URLEncoder.encode(CmEmployerRegConstant.IMMATRICULATION_DATE, CmEmployerRegConstant.UTF));
-			log.info(URLEncoder.encode(CmEmployerRegConstant.ESTABLISHMENT_DATE, CmEmployerRegConstant.UTF));
-			log.info(URLEncoder.encode(CmEmployerRegConstant.PREMIER_EMP_DATE, CmEmployerRegConstant.UTF));
-			log.info(URLEncoder.encode(CmEmployerRegConstant.DATE_DE_DELIVRANCE, CmEmployerRegConstant.UTF));
-			log.info(URLEncoder.encode(CmEmployerRegConstant.DATE_IDENTIFICATION_FISCALE, CmEmployerRegConstant.UTF));
-		}catch(Exception exception) {
-			exception.printStackTrace();
-		}
 		
 		while (headerIterator.hasNext() && listIterator.hasNext()) {
 			String header = headerIterator.next();

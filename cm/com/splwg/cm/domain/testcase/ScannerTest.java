@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import com.splwg.base.api.datatypes.DateFormat;
+import com.splwg.base.api.datatypes.DateFormatParseException;
 import com.splwg.cm.domain.batch.CmEmployerRegConstant;
 
 public class ScannerTest {
@@ -16,6 +18,15 @@ public class ScannerTest {
 		/*String money = "21206";
 		Float.valueOf(money);
 		*/
+		String dateInString = "7-Jun-2013";
+		try {
+			com.splwg.base.api.datatypes.Date date = com.splwg.base.api.datatypes.Date.
+					fromString(dateInString, new DateFormat("dd-MMM-yyyy"));
+			System.out.println("date:: "+ date);
+		} catch (DateFormatParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		List<String> myList = new ArrayList<String>();
 		myList.add("123");

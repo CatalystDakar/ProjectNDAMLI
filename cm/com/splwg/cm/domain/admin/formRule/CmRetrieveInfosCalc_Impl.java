@@ -1,5 +1,6 @@
 package com.splwg.cm.domain.admin.formRule;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -84,16 +85,11 @@ public class CmRetrieveInfosCalc_Impl extends CmRetrieveInfosCalc_Gen implements
 		String plfCssCpf = this.getFactorVal(this.ruleInstance.getString("plfCssCpf"), dateDebutCotisation, dateFinCotisation);
 		String plfCssCatmp = this.getFactorVal(this.ruleInstance.getString("plfCssCatmp"), dateDebutCotisation, dateFinCotisation);
 		String plfIpresCrrg = this.getFactorVal(this.ruleInstance.getString("plfIpresCrrg"), dateDebutCotisation, dateFinCotisation);
-		//String plfIpresCrrg01 = this.getFactorVal(this.ruleInstance.getString("plfIpresCrrg01"), dateDebutCotisation, dateFinCotisation);
 		String plfIpresCrcc = this.getFactorVal(this.ruleInstance.getString("plfIpresCrcc"), dateDebutCotisation, dateFinCotisation);
-		//String plfIpresCrcc01 = this.getFactorVal(this.ruleInstance.getString("plfIpresCrcc01"), dateDebutCotisation, dateFinCotisation);
 		String txeCssCpf = this.getFactorVal(this.ruleInstance.getString("txeCssCpf"), dateDebutCotisation, dateFinCotisation);
 		String txeIpresCrrg = this.getFactorVal(this.ruleInstance.getString("txeIpresCrrg"), dateDebutCotisation, dateFinCotisation);
 		String txeIpresCrcc = this.getFactorVal(this.ruleInstance.getString("txeIpresCrcc"), dateDebutCotisation, dateFinCotisation);
 		String txeCssCatmp = this.getAtRateEmployer(idType, idNumber);
-		//String txsIpresCrrg = this.getFactorVal(this.ruleInstance.getString("txsIpresCrrg"), dateDebutCotisation, dateFinCotisation);
-		//String txsIpresCrcc = this.getFactorVal(this.ruleInstance.getString("txsIpresCrcc"), dateDebutCotisation, dateFinCotisation);
-
 		 while (listSalaries.hasNext()) {
 			   COTSInstanceListNode nextSalarie = listSalaries.next();
 			   if (nextSalarie != null) {
@@ -118,15 +114,26 @@ public class CmRetrieveInfosCalc_Impl extends CmRetrieveInfosCalc_Gen implements
 		 formInstance.getFieldAndMDForPath("primaryTaxpayerIdValue").setXMLValue(idNumber);
 		 formInstance.getFieldAndMDForPath("address1").setXMLValue(address1);
 		 
-		 List<Account> accounts = getAccountsByIdPerson(personId);
-			if (accounts.size() > 1) throw new RuntimeException("Plusieurs compte existe");
-		 Account account = accounts.get(0);
-		 if(isNull(account)) addError(CmMessageRepository90000.MSG_7038(personId));
-		 if(notNull(account.getId())) {
-			 String idAccount = account.getId().getIdValue();
-			 formInstance.getFieldAndMDForPath("account").setXMLValue(idAccount);
-		 }
-		 
+		 BusinessServiceInstance bsInstance = BusinessServiceInstance.create("C1-GetPersonAccounts");
+		 bsInstance.set("personId", personId);
+		 bsInstance = BusinessServiceDispatcher.execute(bsInstance);
+		//List des comptes ratachés à l'employeur
+		Iterator<COTSInstanceListNode> iterator = bsInstance.getList("results").iterator();
+		String accountId = null;
+		String query = "select acct_id, count(acct_id) as NOMBRE_ACCOUNT from ci_acct_per where PER_ID =:perId  group by acct_id";
+		PreparedStatement preparedStatement = createPreparedStatement(query, "SELECT");
+		preparedStatement.bindString("perId", personId, null);
+		SQLResultRow sqlResultRow = preparedStatement.firstRow();
+		BigInteger nombreAccount = null;
+		if (sqlResultRow != null) {
+			accountId = sqlResultRow.getString("ACCT_ID");
+			nombreAccount = sqlResultRow.getInteger("NOMBRE_ACCOUNT");
+			System.out.println("RESULTAT SQL= " + accountId + "   " +nombreAccount);
+		}
+		if (isNull(nombreAccount) || nombreAccount.intValue() ==0 )  addError(CmMessageRepository90000.MSG_7038(personId));
+		if (nombreAccount.intValue() > 1)  throw new RuntimeException("Plusieurs compte existe");
+		formInstance.getFieldAndMDForPath("account").setXMLValue(accountId);
+			 
 	}
 	
 	

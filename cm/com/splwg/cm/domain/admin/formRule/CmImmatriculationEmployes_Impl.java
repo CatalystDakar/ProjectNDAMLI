@@ -28,6 +28,7 @@ import com.splwg.cm.domain.batch.CmProcessRegistrationExcelFileBatch;
 import com.splwg.cm.domain.common.businessComponent.CmAccountRegistrationComponent;
 import com.splwg.cm.domain.common.businessComponent.CmPersonSearchComponent;
 import com.splwg.cm.domain.common.businessComponent.CmTaxRoleRegistrationComponent;
+import com.splwg.cm.domain.customMessages.CmMessageRepository90000;
 import com.splwg.shared.logging.Logger;
 import com.splwg.shared.logging.LoggerFactory;
 import com.splwg.tax.api.lookup.DeliverableLookup;
@@ -208,14 +209,19 @@ public class CmImmatriculationEmployes_Impl extends CmImmatriculationEmployes_Ge
 		// Retrieve the Related Transaction BO from Person Type
 		BusinessObject_Id relatedTransactionBOId = personType.getRelatedTransactionBOId();
 
-		// Transaction BO must exist in order to create the Person
-		if (notNull(relatedTransactionBOId)) {
+		// Transaction BO must exist in order to create the Person in DB
+		if (notNull(relatedTransactionBOId)) {      
 			logger.info("Inside IF");
 			COTSInstanceNode group = formBoInstance.getGroupFromPath("employe");
 			Iterator<COTSInstanceListNode> iterator = group.getList("employeList").iterator();
-			String typeIdentifiant = (String) formBoInstance.getFieldAndMDForPath("employeur/typeIdentifiant/asCurrent").getValue();
+			String typeIdentifiant = (String) formBoInstance.getFieldAndMDForPath("employeur/typeIdentifiant/asCurrent").getValue();         
 			String numberIdentifiant = (String) formBoInstance.getFieldAndMDForPath("employeur/numeroIdentifiant/asCurrent").getValue();
-			String idEmployeur = getPersonByIdTypeAndIdNumber(typeIdentifiant, numberIdentifiant).getId().getIdValue();
+			Person p = getPersonByIdTypeAndIdNumber(typeIdentifiant, numberIdentifiant);
+			if(p==null){
+				addError(CmMessageRepository90000.MSG_10001());         
+			}
+			String idEmployeur = p.getId().getIdValue();
+
 			while (iterator.hasNext()) {
 				COTSInstanceListNode nextElt = iterator.next();
 				if (nextElt != null) {
