@@ -61,7 +61,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 			QueryIterator<SQLResultRow> result = null;
 			try {
 				startChanges();
-				psPreparedStatement = createPreparedStatement(" SELECT * FROM CM_CHEQ_REJET_ST where LOWER(CHEQ_RJT_ST_FLG) = LOWER('Imported') or LOWER(CHEQ_RJT_ST_FLG) = LOWER('IMPORTÉ') ");
+				psPreparedStatement = createPreparedStatement(" SELECT * FROM CM_CHEQ_REJET_ST where LOWER(CHEQ_RJT_ST_FLG) = LOWER('CMUP') or LOWER(CHEQ_RJT_ST_FLG) = LOWER('CMUP') ");//First Conditon to select ALl the Checknumber form Stating table with status CMUP
 				result = psPreparedStatement.iterate();
 				while (result.hasNext()) {
 					SQLResultRow payDetailRow = result.next();
@@ -72,7 +72,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 					if(acctNbr !=null && !acctNbr.isEmpty())
 					{
 					if (checkNumber != null && !checkNumber.isEmpty()) {
-						CmImportReleaseDTO cmImportReleaseDTO = getDeatilsFromTenderSource();
+						CmImportReleaseDTO cmImportReleaseDTO = getDeatilsFromTenderSource();  // function TO Details from DTO and other Details to be filled in Custom table.
 						String getAcctId = cmImportReleaseDTO.getAcctId();
 						String getPayEventId = cmImportReleaseDTO.getPayEventId();
 						String tndCtrId = cmImportReleaseDTO.getTenderCtrlId();
@@ -80,7 +80,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 						if ((isBlankOrNull(getAcctId)) || (isBlankOrNull(getPayEventId)) || (isBlankOrNull(tndCtrId))|| (isBlankOrNull(tndCiPayid))) {
 							if (count == 0) {
 								PreparedStatement psPreparedStatementCiChecknull = null;
-								psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = 'Error', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='53', MESSAGE_TEXT = 'Le numéro de chèque '\'" + checkNumber + "\'' n existe pas dans les lots de règlements avec le même montant - Une vérification manuelle est nécessaire' where CHECK_NBR = \'" + checkNumber + "\' ");
+								psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = '10', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='53', MESSAGE_TEXT = 'Le numéro de chèque '\'" + checkNumber + "\'' n existe pas dans les lots de règlements avec le même montant - Une vérification manuelle est nécessaire' where CHECK_NBR = \'" + checkNumber + "\' and  TENDER_AMT = \'" + tenderAmount + "\' ");
 								int updateCount = psPreparedStatementCiChecknull.executeUpdate();
 								logger.info("updateCount:Number of Rows with Checknumber from table CM_CHEQ_REJET_ST  is not in CI_PAY_TNDR Table: " + updateCount);
 							} else if (count > 1) {
@@ -102,7 +102,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 													
 													
 										    	
-										    	psPreparedStatementCiBankCdCheck = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = 'Error', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='118' , MESSAGE_TEXT = (select message_text from ci_msg_l where message_cat_nbr ='9002' and message_nbr ='118' and language_cd ='FRA') where CHECK_NBR = \'" + checkNumber + "\' ");
+										    	psPreparedStatementCiBankCdCheck = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = '10', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='118' , MESSAGE_TEXT = (select message_text from ci_msg_l where message_cat_nbr ='9002' and message_nbr ='118' and language_cd ='FRA') where CHECK_NBR = \'" + checkNumber + "\' and  TENDER_AMT = \'" + tenderAmount + "\' ");
 															
 												 // psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = 'Error', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='118' , MESSAGE_TEXT = '\'"+msgTextTest+"\' where CHECK_NBR = \'" + checkNumber + "\' ");
 												int updateCount = psPreparedStatementCiBankCdCheck.executeUpdate();
@@ -112,7 +112,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 										    }
 										else {
 										
-								psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = 'Error', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='54', MESSAGE_TEXT = 'Le numéro de chèque '\'" + checkNumber + "\''  de la banque  '\'" + bankCd + "\''   est présent sur plusieurs événements de paiements' where CHECK_NBR = \'" + checkNumber + "\' ");
+								psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = '10', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='54', MESSAGE_TEXT = 'Le numéro de chèque '\'" + checkNumber + "\''  de la banque  '\'" + bankCd + "\''   est présent sur plusieurs événements de paiements' where CHECK_NBR = \'" + checkNumber + "\' and  TENDER_AMT = \'" + tenderAmount + "\' ");
 								int updateCount = psPreparedStatementCiChecknull.executeUpdate();
 								logger.info("updateCount:Number of Rows with Checknumber from table in CI_PAY_TNDR has more than one Entry or result: " + updateCount);
 										}
@@ -122,14 +122,14 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 							updateCmCheckReg(cmImportReleaseDTO);
 						}
 					} else {
-						psPreparedStatement = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = 'Error', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='54' , MESSAGE_TEXT = 'Le numéro de chèque est vide pour l ID de transmission externe  '\'" + extTransmitId + "\''  ' where EXT_TRANSMIT_ID = \'" + extTransmitId + "\' ");
+						psPreparedStatement = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = '10', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='54' , MESSAGE_TEXT = 'Le numéro de chèque est vide pour l ID de transmission externe  '\'" + extTransmitId + "\''  ' where EXT_TRANSMIT_ID = \'" + extTransmitId + "\' ");
 						int updateCount = psPreparedStatement.executeUpdate();
 						logger.info("updateCount:Checknumber in CM_CHEQ_REJET_ST is empty: " + updateCount);
 					}
 				}
 					else
 					{
-						psPreparedStatement = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = 'Error', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='54' , MESSAGE_TEXT = 'No Account Number found' where EXT_TRANSMIT_ID = \'" + extTransmitId + "\' ");
+						psPreparedStatement = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = '10', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='54' , MESSAGE_TEXT = 'No Account Number found' where EXT_TRANSMIT_ID = \'" + extTransmitId + "\' ");
 						int updateCount = psPreparedStatement.executeUpdate();
 						logger.info("updateCount:Checknumber in CM_CHEQ_REJET_ST is empty: " + updateCount);
 					}
@@ -216,7 +216,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 		}
 		
 		
-			
+		
 		
 
 		private String getPersonIdAcctId(String accountId) {
@@ -246,8 +246,8 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 		}
 
 		public void updateCmCheckReg(CmImportReleaseDTO cmImportReleaseDTO) {
-			PreparedStatement psPreparedStatementCmPayUpdate =  psPreparedStatementCmPayUpdate = createPreparedStatement("UPDATE CM_CHEQ_REJET_ST SET  EXT_SOURCE_ID=:EXT_SOURCE_ID, PROCESS_DTTM=:PROCESS_DTTM, ACCOUNTING_DT=:ACCOUNTING_DT, CUST_ID=:CUST_ID,NAME1=:NAME1, CHEQ_RJT_ST_FLG='CHARGE',TNDR_CTL_ID =:TNDR_CTL_ID, ACCT_ID =:PAYOR_ACCT_ID, " 
-					+ " PAY_EVENT_ID=:PAY_EVENT_ID, BANK_CD=:BANK_CD, PAY_TENDER_ID=:PAY_TENDER_ID, MESSAGE_CAT_NBR=null, MESSAGE_NBR=null ,MESSAGE_TEXT=null WHERE CHECK_NBR =:CHECK_NBR");
+			PreparedStatement psPreparedStatementCmPayUpdate =  psPreparedStatementCmPayUpdate = createPreparedStatement("UPDATE CM_CHEQ_REJET_ST SET  EXT_SOURCE_ID=:EXT_SOURCE_ID, PROCESS_DTTM=:PROCESS_DTTM, ACCOUNTING_DT=:ACCOUNTING_DT, CUST_ID=:CUST_ID,NAME1=:NAME1, CHEQ_RJT_ST_FLG='20',TNDR_CTL_ID =:TNDR_CTL_ID, ACCT_ID =:PAYOR_ACCT_ID, " 
+					+ " PAY_EVENT_ID=:PAY_EVENT_ID, BANK_CD=:BANK_CD, PAY_TENDER_ID=:PAY_TENDER_ID, MESSAGE_CAT_NBR=null, MESSAGE_NBR=null ,MESSAGE_TEXT=null WHERE CHECK_NBR =:CHECK_NBR and TENDER_AMT = \'" + tenderAmount + "\'");
 			try {
 				    bankCd = getBankCd(acctNbr);
 				    if(!isEmptyOrNull(bankCd))
@@ -273,7 +273,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 				} else {
 
 					PreparedStatement psPreparedStatementCiChecknull = null;
-					psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = 'Error', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='51' , MESSAGE_TEXT = 'Le '\'" + extTransmitId + "\'' ext_source_id du EXT_TRANSMIT_ID  ne peut-être retrouvé - Il est nécessaire de faire une vérification manuelle' where CHECK_NBR = \'" + checkNumber + "\' ");
+					psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = '10', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='51' , MESSAGE_TEXT = 'Le '\'" + extTransmitId + "\'' ext_source_id du EXT_TRANSMIT_ID  ne peut-être retrouvé - Il est nécessaire de faire une vérification manuelle' where CHECK_NBR = \'" + checkNumber + "\' ");
 					int updateCount = psPreparedStatementCiChecknull.executeUpdate();
 					logger.info("updateCount:: " + updateCount);
 
@@ -292,7 +292,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 							
 							
 				    	
-				    			  psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = 'Error', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='118' , MESSAGE_TEXT = (select message_text from ci_msg_l where message_cat_nbr ='9002' and message_nbr ='118' and language_cd ='FRA') where CHECK_NBR = \'" + checkNumber + "\' ");
+				    			  psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = '10', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='118' , MESSAGE_TEXT = (select message_text from ci_msg_l where message_cat_nbr ='9002' and message_nbr ='118' and language_cd ='FRA') where CHECK_NBR = \'" + checkNumber + "\' ");
 									
 						 // psPreparedStatementCiChecknull = createPreparedStatement(" UPDATE CM_CHEQ_REJET_ST SET CHEQ_RJT_ST_FLG = 'Error', MESSAGE_CAT_NBR ='9002' , MESSAGE_NBR ='118' , MESSAGE_TEXT = '\'"+msgTextTest+"\' where CHECK_NBR = \'" + checkNumber + "\' ");
 						int updateCount = psPreparedStatementCiChecknull.executeUpdate();
@@ -325,8 +325,8 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 			try {
 
                 
-				psPreparedStatementCiPay = createPreparedStatement(" SELECT * FROM ci_pay_tndr where CHECK_NBR= \'" + checkNumber + "\' and  TENDER_AMT = \'" + tenderAmount + "\'  ");
-				psPreparedStatementCiCount = createPreparedStatement(" SELECT * FROM ci_pay_tndr where CHECK_NBR= \'" + checkNumber + "\'and  TENDER_AMT = \'" + tenderAmount + "\' ");
+				psPreparedStatementCiPay = createPreparedStatement(" SELECT * FROM ci_pay_tndr where CHECK_NBR= \'" + checkNumber + "\'   ");
+				psPreparedStatementCiCount = createPreparedStatement(" SELECT * FROM ci_pay_tndr where CHECK_NBR= \'" + checkNumber + "\' ");
 				resultCiPayCount = psPreparedStatementCiCount.iterate();
 				if (resultCiPayCount.hasNext()) {
 					while (resultCiPayCount.hasNext()) {
@@ -334,9 +334,9 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 						resultCiPayCount.next();
 					}
 				}
-			//	psPreparedStatementCiCount.close();
+			//	/psPreparedStatementCiCount.close();
 				count = countl;
-				if (countl == 1) {
+				if (countl == 1) { // just only one record found all fields are fine. just update.
 					resultCiPay = psPreparedStatementCiPay.list();
 					SQLResultRow payDetailRowCiPay = resultCiPay.get(0);
 					importDto.setTenderIdCiPay(payDetailRowCiPay.getString("PAY_TENDER_ID"));
@@ -346,6 +346,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 					importDto.setAcctId(payDetailRowCiPay.getString("PAYOR_ACCT_ID"));
 					importDto.setTenderAmt(payDetailRowCiPay.getString("TENDER_AMT"));
 				}
+				
 				else if (countl > 1)
 				{
 					
@@ -366,7 +367,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 					Map<String, String> bankCdCount = new HashMap<String, String>();
 					PreparedStatement PreparedStatementBankCd = null;
 					QueryIterator<SQLResultRow> resultBankCd = null;		
-					PreparedStatementBankCd = createPreparedStatement(" select b.srch_char_val as BANKNAME , count (b.srch_char_val) as BANKCOUNT  from ci_pay_tndr a, ci_pay_tndr_char b where a.pay_tender_id =b.pay_tender_id and b.char_type_cd ='CM-BANQT' and a.check_nbr = \'" + checkNumber + "\' and TENDER_AMT = \'" + tenderAmount + "\' and tender_type_cd ='CHEC' and tndr_status_flg ='25'group by b.SRCH_CHAR_VAL ");
+					PreparedStatementBankCd = createPreparedStatement(" select b.srch_char_val as BANKNAME , count (b.srch_char_val) as BANKCOUNT  from ci_pay_tndr a, ci_pay_tndr_char b where a.pay_tender_id =b.pay_tender_id and b.char_type_cd ='CM-BANQT' and a.check_nbr = \'" + checkNumber + "\' and  tender_type_cd ='CHEC' and tndr_status_flg ='25'group by b.SRCH_CHAR_VAL ");
 					resultBankCd = PreparedStatementBankCd.iterate();
 					if (resultBankCd.hasNext())
 						
@@ -415,7 +416,7 @@ public class CmImportReleasePaymentBatch extends CmImportReleasePaymentBatch_Gen
 				
 					PreparedStatement PreparedStatementBankCdCustomTable = null;
 					QueryIterator<SQLResultRow> resultBankCdCustomtTable = null;		
-					PreparedStatementBankCdCustomTable = createPreparedStatement(" select distinct bank_cd,Pay_TENDER_ID from  ci_pay_tndr a,  ci_tndr_ctl b, ci_tndr_srce c where a.tndr_ctl_id=b.tndr_ctl_id and b.tndr_source_cd=c.TNDR_SOURCE_CD and a.pay_tender_id in (select  b. pay_tender_id  from ci_pay_tndr a, ci_pay_tndr_char b where a.pay_tender_id =b.pay_tender_id and b.char_type_cd ='CM-BANQT' and a.check_nbr =\'" + checkNumber + "\' and TENDER_AMT = \'" + tenderAmount + "\' and tender_type_cd ='CHEC' and tndr_status_flg ='25') ");
+					PreparedStatementBankCdCustomTable = createPreparedStatement(" select distinct bank_cd,Pay_TENDER_ID from  ci_pay_tndr a,  ci_tndr_ctl b, ci_tndr_srce c where a.tndr_ctl_id=b.tndr_ctl_id and b.tndr_source_cd=c.TNDR_SOURCE_CD and a.pay_tender_id in (select  b. pay_tender_id  from ci_pay_tndr a, ci_pay_tndr_char b where a.pay_tender_id =b.pay_tender_id and b.char_type_cd ='CM-BANQT' and a.check_nbr =\'" + checkNumber + "\'  and tender_type_cd ='CHEC' and tndr_status_flg ='25') ");
 					resultBankCdCustomtTable = PreparedStatementBankCdCustomTable.iterate();
 					if (resultBankCdCustomtTable.hasNext())
 						

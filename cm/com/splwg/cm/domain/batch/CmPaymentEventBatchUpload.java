@@ -65,6 +65,7 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 			int year = cal.get(Calendar.YEAR);
 			int month = cal.get(Calendar.MONTH)+1;
 			int date = cal.get(Calendar.DATE);
+			boolean returnFlag = true;
 			com.splwg.base.api.datatypes.Date dtime = new com.splwg.base.api.datatypes.Date(year, month, date);
 			try {
 				startChanges();
@@ -162,7 +163,7 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 								}
 								try {
 									startChanges();
-									psPreparedStatement = createPreparedStatement("UPDATE CM_PEVT_DTL_UP_ST SET EXT_SOURCE_ID=:EXT_SOURCE_ID,PEVT_STG_ST_UP_FLG = 'Chargé' WHERE EXT_TRANSMIT_ID = :EXT_TRANSMIT_ID");
+									psPreparedStatement = createPreparedStatement("UPDATE CM_PEVT_DTL_UP_ST SET EXT_SOURCE_ID=:EXT_SOURCE_ID,PEVT_STG_ST_UP_FLG = 'Chargé',MESSAGE_CAT_NBR = NULL,MESSAGE_NBR = NULL,MESSAGE_TEXT = NULL WHERE EXT_TRANSMIT_ID = :EXT_TRANSMIT_ID");
 		
 									psPreparedStatement.bindString("EXT_SOURCE_ID", externalSrcId,null);
 									psPreparedStatement.bindString("EXT_TRANSMIT_ID", payDetailRow.getString("EXT_TRANSMIT_ID"),null);
@@ -179,13 +180,14 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 							} 
 						}
 					} catch (Exception exception) {
+						returnFlag = false ;
 						exception.printStackTrace();
 					} finally {
 						saveChanges();
 						result.close();
 						psPreparedStatement = null;
 					}
-					return true;
+					return returnFlag;
 		}
 		
 		private String getAccountId(String personId) {
@@ -523,7 +525,7 @@ public class CmPaymentEventBatchUpload extends CmPaymentEventBatchUpload_Gen {
 				updateErrorFlag = true;
 				
 			} catch (Exception excep) {
-				log.error("Exception in updating updateErrorMessage : " + excep);
+				updateErrorFlag = false;
 			} finally {
 				saveChanges();
 				psPreparedStatement.close();

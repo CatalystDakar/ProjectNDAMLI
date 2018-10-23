@@ -290,7 +290,7 @@ public class CmEmployerRegistrationAlgo_Impl extends CmEmployerRegistrationAlgo_
 					}
 
 				} else if (!isBlankOrNull(headerName) && headerName.equalsIgnoreCase(
-						URLEncoder.encode(CmEmployerRegConstant.IMMATRICULATION_DATE.trim(), CmEmployerRegConstant.UTF))) {
+						URLEncoder.encode(CmEmployerRegConstant.DATE_IMM_REGISTER_DE_COMMERCE.trim(), CmEmployerRegConstant.UTF))) {
 				
 					log.info("Inside IMMATRICULATION_DATE :: immatriculationDate:: " + immatriculationDate +"establishmentDate:: "+establishmentDate+
 							"premierEmployeeDate:: "+premierEmployeeDate+ "deliveryDate::"+ deliveryDate);

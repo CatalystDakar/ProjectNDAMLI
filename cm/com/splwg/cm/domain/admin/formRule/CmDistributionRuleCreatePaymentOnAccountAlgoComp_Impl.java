@@ -138,7 +138,10 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 								logger.info("DebtMoney: " + debtMoneyforSingleSA);
 								logger.info("Amount before the payment creation:: " + this.amount);
 								System.out.println("Amount before the payment creation:: " + this.amount);
-								obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+								if(debtMoneyforSingleSA.isGreaterThan(Money.ZERO)){
+									obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+								}
+								
 							}
 							overPayAmount = this.amount.subtract(totalDebtAmountToBePaid);
 							if (!overPayAmount.isZero() && overPayAmount.isPositive()) {
@@ -198,7 +201,9 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 									System.out.println("ServiceAgreement: " + debtObligation);
 									logger.info("OverPayAmount Amount " + overPayAmount +"OverPayAmount Amount per SA: " + moneyToBePaid);
 									System.out.println("OverPayAmount Amount " + overPayAmount +"OverPayAmount Amount per SA: " + moneyToBePaid);
-									obligationMoneyMap.put(debtObligation, moneyToBePaid);
+									if (moneyToBePaid.isGreaterThan(Money.ZERO)) {
+										obligationMoneyMap.put(debtObligation, moneyToBePaid);
+									}
 								}
 							}
 							this.createFrozenPayment(obligationMoneyMap);
@@ -252,7 +257,10 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 													logger.info("prorateMoney: " + debtMoneyforSingleSA);
 													logger.info("Amount before the payment creation:: " + this.amount);
 													System.out.println("Amount before the payment creation:: " + this.amount);
-													obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+													if(debtMoneyforSingleSA.isGreaterThan(Money.ZERO)){
+														obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+													}
+													
 												}
 												if (!this.amount.isZero() && this.amount.isPositive()) {
 													this.createFrozenPayment(obligationMoneyMap);
@@ -278,7 +286,9 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 														logger.info("DebtMoney:" + debtMoneyforSingleSA);
 														logger.info("Amount before the payment creation :: " + this.amount);
 														System.out.println("Amount before the payment creation:: " + this.amount);
-														obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+														if(debtMoneyforSingleSA.isGreaterThan(Money.ZERO)){
+															obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+														}
 													}
 													if (!this.amount.isZero() && this.amount.isPositive()) {
 														this.createFrozenPayment(obligationMoneyMap);
@@ -321,7 +331,9 @@ public class CmDistributionRuleCreatePaymentOnAccountAlgoComp_Impl extends
 						
 					}
 					logger.info("Amount before the payment creation:: " + obligationMoneyMap);
-					obligationMoneyMap.put(debtObligation, debtMoneyforOverPaySA);
+					if(debtMoneyforOverPaySA.isGreaterThan(Money.ZERO)){
+						obligationMoneyMap.put(debtObligation, debtMoneyforOverPaySA);
+					}
 				}
 				
 				this.createFrozenPayment(obligationMoneyMap);

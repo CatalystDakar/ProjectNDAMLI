@@ -167,7 +167,9 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 					logger.info("DebtMoney: " + debtMoneyforSingleSA);
 					logger.info("Amount before the payment creation:: " + this.amount);
 					System.out.println("Amount before the payment creation:: " + this.amount);
+					if(debtMoneyforSingleSA.isGreaterThan(Money.ZERO)){
 					obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+					}
 					
 		        }
 				overPayAmount = this.amount.subtract(totalDebtAmountToBePaid);
@@ -229,7 +231,9 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 						System.out.println("ServiceAgreement: " + debtObligation);
 						logger.info("OverPayAmount Amount " + overPayAmount +"OverPayAmount Amount per SA: " + moneyToBePaid);
 						System.out.println("OverPayAmount Amount " + overPayAmount +"OverPayAmount Amount per SA: " + moneyToBePaid);
+						if(moneyToBePaid.isGreaterThan(Money.ZERO)){
 						obligationMoneyMap.put(debtObligation, moneyToBePaid);
+						}
 					}
 				
 				
@@ -286,7 +290,9 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 										logger.info("prorateMoney: " + debtMoneyforSingleSA);
 										logger.info("Amount before the payment creation:: " + this.amount);
 										System.out.println("Amount before the payment creation:: " + this.amount);
+										if(debtMoneyforSingleSA.isGreaterThan(Money.ZERO)){
 										obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+										}
 								 	}
 							 		if (!this.amount.isZero() && this.amount.isPositive()) {
 										this.createFrozenPayment(obligationMoneyMap);
@@ -313,7 +319,9 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 											logger.info("Amount before the payment creation :: " + this.amount);
 											System.out
 													.println("Amount before the payment creation:: " + this.amount);
+											if(debtMoneyforSingleSA.isGreaterThan(Money.ZERO)){
 											obligationMoneyMap.put(debtObligation, debtMoneyforSingleSA);
+											}
 										}
 							 			if (!this.amount.isZero() && this.amount.isPositive()) {
 											this.createFrozenPayment(obligationMoneyMap);
@@ -352,7 +360,9 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 						
 					}
 					logger.info("Amount before the payment creation:: " + obligationMoneyMap);
+					if(debtMoneyforOverPaySA.isGreaterThan(Money.ZERO)){
 					obligationMoneyMap.put(debtObligation, debtMoneyforOverPaySA);
+					}
 				}
 				
 				this.createFrozenPayment(obligationMoneyMap);
@@ -606,7 +616,9 @@ public class CmDistributionRuleCreatePaymentOnDnsAlgoComp_Impl extends CmDistrib
 						if(unidentifiedObligationFlag){
 							ServiceAgreement_Id undefinedSaId = new ServiceAgreement_Id(saIdList.get(0));
 							ServiceAgreement undefinedSa = (ServiceAgreement) undefinedSaId.getEntity();
+							if(this.amount.isGreaterThan(Money.ZERO)){
 					    	obligationMoneyMap.put(undefinedSa,this.amount);
+							}
 					    	this.createFrozenPayment(obligationMoneyMap);
 					    }
 						if (!debtOblMap.isEmpty() && !periodMap.isEmpty()) {

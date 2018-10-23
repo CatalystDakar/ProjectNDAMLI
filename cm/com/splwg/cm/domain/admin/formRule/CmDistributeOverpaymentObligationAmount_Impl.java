@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.splwg.base.api.QueryIterator;
 import com.splwg.base.api.businessObject.BusinessObjectInstance;
 import com.splwg.base.api.businessObject.COTSInstanceNode;
@@ -57,6 +59,7 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 	private Money overPaymentTotalAmount = Money.ZERO;
 	String overpaymentObligationId = null;
 	List<String> saList = new ArrayList<String>();
+	String adjustmentTypeContributionArr[] = null;
 	
 	@SuppressWarnings("deprecation")
 	@Override
@@ -598,7 +601,7 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
             
 			  }
 			   }else {
-			    logger.info("There is oblogation to pay");
+			    logger.info("There is no oblogation to pay");
 			   } 
 			
 			}}} catch(Exception exception){
@@ -625,9 +628,19 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 		  String oblType1 = getObligationTypeContributionPf();
 		  String oblType2 = getObligationTypeContributionAtmp();
 		  String oblType3 = getObligationTypeContributionEr();
-		  String adjType1 = "CPF";
+		  //String adjType1 = "CPF";
+		  //String adjType2 = "CATMP";
+		  //String adjType3 = "CR";
+		  String adjustmentTypeContribution = getAdjustmentTypeContribution();
+		  /*String adjType1 = "CPF";
 		  String adjType2 = "CATMP";
 		  String adjType3 = "CR";
+		  String adjType4 = "CATMPHE";
+		  String adjType5 = "CPFHE";
+		  String adjType6 = "CRHE";	*/	  
+		  
+		  adjustmentTypeContributionArr = adjustmentTypeContribution.split(","); 
+		  adjustmentTypeContribution = "'" + StringUtils.join(adjustmentTypeContributionArr,"','") + "'";
 		
 		  String period = null;
 		  LinkedHashMap<String, Money> debtOblMap = new LinkedHashMap<String, Money>();
@@ -638,9 +651,17 @@ public class CmDistributeOverpaymentObligationAmount_Impl extends CmDistributeOv
 		                +" ADJ.ADJ_TYPE_CD,ADJ.ADJ_ID,ADJ.ADJ_AMT,OBL.START_DT,ADJ.CRE_DT from CI_SA OBL,CI_ADJ ADJ "
 		                +" where ADJ.SA_ID=OBL.SA_ID "
 		                +" and OBL.acct_id = \'"+accountId+"\' "
-		                +" and ADJ.ADJ_TYPE_CD IN(\'"+adjType1+"\',\'"+adjType2+"\',\'"+adjType3+"\') "
+		                +" and ADJ.ADJ_TYPE_CD IN("+adjustmentTypeContribution.trim()+") "
 		                +" and OBL.SA_TYPE_CD in(\'"+oblType1+"\',\'"+oblType2+"\',\'"+oblType3+"\') "
 		                +" and OBL.SA_STATUS_FLG=40 ORDER BY OBL.START_DT","select");
+		     
+		     /*psPreparedStatement = createPreparedStatement("select OBL.acct_id,OBL.SA_ID,OBL.SA_TYPE_CD,OBL.SA_STATUS_FLG, "
+		                +" ADJ.ADJ_TYPE_CD,ADJ.ADJ_ID,ADJ.ADJ_AMT,OBL.START_DT,ADJ.CRE_DT from CI_SA OBL,CI_ADJ ADJ "
+		                +" where ADJ.SA_ID=OBL.SA_ID "
+		                +" and OBL.acct_id = \'"+accountId+"\' "
+		                +" and ADJ.ADJ_TYPE_CD IN(\'"+adjType1+"\',\'"+adjType2+"\',\'"+adjType3+"\',\'"+adjType4+"\',\'"+adjType5+"\',\'"+adjType6+"\') "
+		                +" and OBL.SA_TYPE_CD in(\'"+oblType1+"\',\'"+oblType2+"\',\'"+oblType3+"\') "
+		                +" and OBL.SA_STATUS_FLG=40 ORDER BY OBL.START_DT","select");*/
 		                
 		     
 		     psPreparedStatement.setAutoclose(false);
